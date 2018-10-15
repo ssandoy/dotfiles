@@ -35,8 +35,9 @@ bindsym $mod+Shift+Return exec i3-sensible-terminal
 # kill focused window
 bindsym $mod+Shift+q kill
 
-# start dmenu (a program launcher)
-bindsym $mod+space exec dmenu_run
+# start rofi (a program launcher)
+#bindsym $mod+space exec rofi -show run -lines 3 -eh 2 -width 100 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg  "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
@@ -92,16 +93,16 @@ bindsym $mod+a focus parent
 # focus the child container
 #bindsym $mod+d focus child
 
-set $workspace1 "1:   Chrome"
-set $workspace2 "2:   Chat"
-set $workspace3 "3:   Code"
-set $workspace4 "4:   Util"
+set $workspace1 "1: "
+set $workspace2 "2: "
+set $workspace3 "3: "
+set $workspace4 "4: "
 set $workspace5 "5: "
 set $workspace6 "6"
 set $workspace7 "7"
 set $workspace8 "8"
 set $workspace9 "9"
-set $workspace10 "10:   Mail"
+set $workspace10 "10: "
 
 
 # switch to workspace
@@ -139,12 +140,14 @@ for_window [class="jetbrains-idea" title="Favorites"] floating disable
 for_window [class="jetbrains-idea" title="Find"] floating disable
 for_window [class="^jetbrains-.+"][window_type=dialog] focus
 
+#spotify
+for_window [class="Spotify"] move to workspace $workspace4         
 #slack
 assign [class="Slack"] $workspace2
 #Evolution
-assign [class="Evolution"] $workspace10
+#assign [class="Evolution"] $workspace10
 #Hipchat
-assign [class="Hipchat"] $workspace2
+#assign [class="Hipchat"] $workspace2
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -187,16 +190,16 @@ set $inactive-text-color #676E7D
 set $urgent-bg-color     #E53935
 
 # window colors
-#                        border              background         text                 indicator
-client.focused          $bg-color           $bg-color          $text-color          #00ff00
-client.unfocused        $inactive-bg-color $inactive-bg-color $inactive-text-color #00ff00
-client.focused_inactive $inactive-bg-color $inactive-bg-color $inactive-text-color #00ff00
-client.urgent           $urgent-bg-color    $urgent-bg-color   $text-color          #00ff00
+#                       border               background         text                 indicator
+client.focused          $bg-color            $bg-color          $text-color          #00ff00
+client.unfocused        $inactive-bg-color   $inactive-bg-color $inactive-text-color #00ff00
+client.focused_inactive $inactive-bg-color   $inactive-bg-color $inactive-text-color #00ff00
+client.urgent           $urgent-bg-color     $urgent-bg-color   $text-color          #00ff00
 
 hide_edge_borders both
 
 bar {
-        status_command SCRIPT_DIR=/usr/local/libexec/i3blocks i3blocks
+        status_command i3blocks -c ~/.config/i3/i3blocks.conf
 	font pango: FontAwesome 13
 	colors {
                 background $bg-color
@@ -219,3 +222,22 @@ popup_during_fullscreen smart
 
 # mouse settings:
 focus_follows_mouse no
+
+# start rofi (a program launcher)
+bindsym $mod+space exec rofi -show run -lines 3 -eh 2 -width 50 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+
+#startup apps
+exec google-chrome
+exec spotify
+exec_always compton -f
+exec_always feh --bg-scale /home/ssandoy/Pictures/bakgrunn.jpg
+
+# key-bindings for volume-buttons
+# change volume or toggle mute FIXME
+bindsym XF86AudioRaiseVolume exec "pactl set-sink-volume 0 +5%; pactl set-sink-mute 0 0" exec pkill -RTMIN+10 i3blocks 
+bindsym XF86AudioLowerVolume exec "pactl set-sink-volume 0 -5%; patcl set-sink-mute 0 0" exec pkill -RTMIN+10 i3blocks 
+bindsym XF86AudioMute exec "pactl set-sink-mute 0 toggle" exec pkill -RTMIN+10 i3blocks 
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioPause exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
