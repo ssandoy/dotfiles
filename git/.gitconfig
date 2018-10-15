@@ -1,0 +1,9 @@
+[push]
+	default = simple
+[user]
+	name = Sander F. Sandøy
+	email = sanderfsandoy@hotmail.com
+[alias]
+	st = status --short --branch
+	ci = commit
+	co = checkout
