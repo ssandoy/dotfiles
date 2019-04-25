@@ -163,6 +163,9 @@ for_window [class="jetbrains-idea" title="Favorites"] floating disable
 for_window [class="jetbrains-idea" title="Find"] floating disable
 for_window [class="^jetbrains-.+"][window_type=dialog] focus 
 
+#spotify	
+#for_window [class="Spotify"] move to workspace $workspace4   
+
 #slack
 assign [class="Slack"] $workspace2
 #Evolution
@@ -251,3 +254,18 @@ exec google-chrome
 exec slack
 exec idea.sh
 
+exec_always compton -f	exec idea.sh
+exec_always feh --bg-scale /home/ssandoy/Pictures/bakgrunn.jpg	
+
+ # key-bindings for volume-buttons	
+ # # change volume or toggle mute FIXME	
+ # bindsym XF86AudioRaiseVolume exec "pactl set-sink-volume 0 +5%; pactl set-sink-mute 0 0" exec pkill -RTMIN+10 i3blocks 	
+ # bindsym XF86AudioLowerVolume exec "pactl set-sink-volume 0 -5%; patcl set-sink-mute 0 0" exec pkill -RTMIN+10 i3blocks 	
+ # bindsym XF86AudioMute exec "pactl set-sink-mute 0 toggle" exec pkill -RTMIN+10 i3blocks 	
+ # bindsym XF86AudioPlay exec playerctl play-pause	
+ # bindsym XF86AudioPause exec playerctl play-pause	
+ # bindsym XF86AudioNext exec playerctl next	
+ # bindsym XF86AudioPrev exec playerctl previous	
+
+# start rofi (a program launcher)	# Startup programs
+# bindsym $mod+space exec rofi -show run -lines 3 -eh 2 -width 50 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
