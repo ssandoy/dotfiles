@@ -1,4 +1,4 @@
-*foreground:   #c2c2b0
+*.foreground:   #c2c2b0
 *.background:   #222222
 *.cursorColor:  #c2c2b0
 ! black
@@ -30,7 +30,7 @@
 *.colorBD:      #d3d3d3
 *.colorUL:      #528b8b
 
-urxvt.perl-lib:  /home/brreg.no/sfs/.urxvt
+urxvt.perl-lib:  $HOME/.urxvt
 
 urxvt*.font:  xft:DejaVu Sans Mono:autohint=true:pixelsize=15
 
