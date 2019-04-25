@@ -1,2 +1,2 @@
-# vm_setup
-Setup for my RHEL7 i3wm 
+# dotfiles
+Setup for my RHEL7 and Ubuntu i3wms
