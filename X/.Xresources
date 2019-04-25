@@ -39,3 +39,5 @@ URxvt.url-launcher: /usr/bin/google-chrome
 URxvt.matcher.button: 1
 
 URxvt.keysym.M-Down:  resize-font:smaller
+
+URxvt.scrollBar: false
