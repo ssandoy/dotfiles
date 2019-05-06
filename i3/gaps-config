@@ -30,13 +30,14 @@ font pango: System San Francisco Display 13
 floating_modifier $mod
 
 # start a terminal
-bindsym $mod+Shift+Return exec urxvt
+bindsym $mod+Shift+Return exec i3-sensible-terminal
 
 # kill focused window
 bindsym $mod+Shift+q kill
 
-# start dmenu (a program launcher)
-bindsym $mod+space exec dmenu_run
+# start rofi (a program launcher)
+#bindsym $mod+space exec rofi -show run -lines 3 -eh 2 -width 100 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg  "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
@@ -65,26 +66,6 @@ bindsym $mod+Shift+Left move left
 bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
-
-##
-## move floating windows with keys
-bindsym $mod+m mode "move" focus floating
-mode "move" {
-    bindsym $mod+Tab focus right
-    bindsym Left  move left
-    bindsym Down  move down
-    bindsym Up    move up
-    bindsym Right move right
- 
-    bindsym h     move left 
-    bindsym j     move down
-    bindsym k     move up
-    bindsym l     move right
-
-    # back to normal: Enter or Escape
-    bindsym Return mode "default"
-    bindsym Escape mode "default"
-}
 
 # split in horizontal orientation
 bindsym $mod+h split h
@@ -115,7 +96,7 @@ bindsym $mod+a focus parent
 set $workspace1 "1: "
 set $workspace2 "2: "
 set $workspace3 "3: "
-set $workspace4 "4: "
+set $workspace4 "4: "
 set $workspace5 "5: "
 set $workspace6 "6"
 set $workspace7 "7"
@@ -148,9 +129,10 @@ bindsym $mod+Shift+8 move container to workspace $workspace8
 bindsym $mod+Shift+9 move container to workspace $workspace9
 bindsym $mod+Shift+0 move container to workspace $workspace10 
 
-# move to another monitor
-bindsym $mod+ctrl+Left exec i3-msg move workspace to output left
+# move workspace to another monitor
 bindsym $mod+ctrl+Right exec i3-msg move workspace to output right 
+bindsym $mod+ctrl+Left exec i3-msg move workspace to output left
+
 
 #intellij
 assign [class="jetbrains-idea"] $workspace3
@@ -161,17 +143,16 @@ for_window [class="jetbrains-idea" title="Debug"] floating disable
 for_window [class="jetbrains-idea" title="Project"] floating disable
 for_window [class="jetbrains-idea" title="Favorites"] floating disable
 for_window [class="jetbrains-idea" title="Find"] floating disable
-for_window [class="^jetbrains-.+"][window_type=dialog] focus 
+for_window [class="^jetbrains-.+"][window_type=dialog] focus
 
-#spotify	
-#for_window [class="Spotify"] move to workspace $workspace4   
-
+#spotify
+for_window [class="Spotify"] move to workspace $workspace4         
 #slack
 assign [class="Slack"] $workspace2
 #Evolution
-assign [class="Evolution"] $workspace10
+#assign [class="Evolution"] $workspace10
 #Hipchat
-assign [class="Hipchat"] $workspace2
+#assign [class="Hipchat"] $workspace2
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -207,40 +188,26 @@ bindsym $mod+r mode "resize"
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
-set $bg-color 	         #004a5b
-set $inactive-bg-color   #004a5b
-set $text-color          #C4DBC5
+set $bg-color 	         #2f343f
+set $inactive-bg-color   #2f343f
+set $text-color          #f3f4f5
 set $inactive-text-color #676E7D
 set $urgent-bg-color     #E53935
 
 # window colors
-#                        border              background         text                 indicator
-client.focused          $bg-color           $bg-color          $text-color          #00ff00
-client.unfocused        $inactive-bg-color $inactive-bg-color $inactive-text-color #00ff00
-client.focused_inactive $inactive-bg-color $inactive-bg-color $inactive-text-color #00ff00
-client.urgent           $urgent-bg-color    $urgent-bg-color   $text-color          #00ff00
+#                       border               background         text                 indicator
+client.focused          $bg-color            $bg-color          $text-color          #00ff00
+client.unfocused        $inactive-bg-color   $inactive-bg-color $inactive-text-color #00ff00
+client.focused_inactive $inactive-bg-color   $inactive-bg-color $inactive-text-color #00ff00
+client.urgent           $urgent-bg-color     $urgent-bg-color   $text-color          #00ff00
 
 hide_edge_borders both
 
-bar {
-	position top
-        status_command i3blocks -c ~/.config/i3/i3blocks.conf
- 	font pango: FontAwesome 13
-	colors {
-                background $bg-color
-                separator #757575
-                #                  border             background         text
-                focused_workspace  $bg-color          $bg-color          $text-color
-                inactive_workspace $inactive-bg-color $inactive-bg-color $inactive-text-color
-                urgent_workspace   $urgent-bg-color   $urgent-bg-color   $text-color
-        }        
-}
-
-bindsym $mod+shift+x exec i3lock --color "$bg-color"
+bindsym $mod+shift+x exec /home/ssandoy/.scripts/lock.sh
  
 # Screen brightness controls
- bindsym XF86MonBrightnessUp exec xbacklight -inc 20 # increase screen brightness
- bindsym XF86MonBrightnessDown exec xbacklight -dec 20 # decrease screen brightness
+bindsym XF86MonBrightnessUp exec --no-startup-id xbacklight -inc 20
+bindsym XF86MonBrightnessDown exec --no-startup-id xbacklight -dec 20
 
 # popup settings:
 popup_during_fullscreen smart
@@ -248,25 +215,83 @@ popup_during_fullscreen smart
 # mouse settings:
 focus_follows_mouse no
 
-# Startup programs
+# start rofi (a program launcher)
+bindsym $mod+space exec rofi -show run -lines 3 -eh 2 -width 50 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
 
+#startup apps
 exec google-chrome
-exec slack
-exec idea.sh
+exec spotify
+exec_always compton -f
+exec_always feh --bg-scale $HOME/Pictures/bakgrunn.jpg
+exec_always --no-startup-id $HOME/.config/polybar/launch.sh
 
-#autostart applications
-exec_always compton -f	exec idea.sh
-exec_always feh --bg-scale /home/ssandoy/Pictures/bakgrunn.jpg	
-exec_always --no-startup-id ~/.config/polybar/launch.sh
- # key-bindings for volume-buttons	
- # # change volume or toggle mute FIXME	
- # bindsym XF86AudioRaiseVolume exec "pactl set-sink-volume 0 +5%; pactl set-sink-mute 0 0" exec pkill -RTMIN+10 i3blocks 	
- # bindsym XF86AudioLowerVolume exec "pactl set-sink-volume 0 -5%; patcl set-sink-mute 0 0" exec pkill -RTMIN+10 i3blocks 	
- # bindsym XF86AudioMute exec "pactl set-sink-mute 0 toggle" exec pkill -RTMIN+10 i3blocks 	
- # bindsym XF86AudioPlay exec playerctl play-pause	
- # bindsym XF86AudioPause exec playerctl play-pause	
- # bindsym XF86AudioNext exec playerctl next	
- # bindsym XF86AudioPrev exec playerctl previous	
+#set resolution
+exec xrandr --output eDP1 --mode "1920x1200"     
 
-# start rofi (a program launcher)	# Startup programs
-# bindsym $mod+space exec rofi -show run -lines 3 -eh 2 -width 50 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+# key-bindings for volume-buttons
+# change volume or toggle mute FIXME
+bindsym XF86AudioRaiseVolume exec "amixer -D pulse  set Master 5%+ unmute" exec pkill -RTMIN+10 i3blocks 
+bindsym XF86AudioLowerVolume exec "amixer -D pulse  set Master 5%- unmute" exec pkill -RTMIN+10 i3blocks 
+bindsym XF86AudioMute exec "amixer -D pulse set Master 1+ toggle" exec pkill -RTMIN+10 i3blocks 
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioPause exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
+
+# GAPS
+#############################
+### settings for i3-gaps: ###
+#############################
+
+# Set inner/outer gaps
+gaps inner 10
+gaps outer -4
+
+# Additionally, you can issue commands with the following syntax. This is useful to bind keys to changing the gap size.
+# gaps inner|outer current|all set|plus|minus <px>
+# gaps inner all set 10
+# gaps outer all plus 5
+
+# Smart gaps (gaps used if only more than one container on the workspace)
+smart_gaps on
+
+# Smart borders (draw borders around container only if it is not the only container on this workspace) 
+# on|no_gaps (on=always activate and no_gaps=only activate if the gap size to the edge of the screen is 0)
+smart_borders on
+
+# Press $mod+Shift+g to enter the gap mode. Choose o or i for modifying outer/inner gaps. Press one of + / - (in-/decrement for current workspace) or 0 (remove gaps for current workspace). If you also press Shift with these keys, the change will be global for all workspaces.
+set $mode_gaps Gaps: (o) outer, (i) inner
+set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)
+set $mode_gaps_inner Inner Gaps: +|-|0 (local), Shift + +|-|0 (global)
+bindsym $mod+Shift+g mode "$mode_gaps"
+
+mode "$mode_gaps" {
+        bindsym o      mode "$mode_gaps_outer"
+        bindsym i      mode "$mode_gaps_inner"
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
+mode "$mode_gaps_inner" {
+        bindsym plus  gaps inner current plus 5
+        bindsym minus gaps inner current minus 5
+        bindsym 0     gaps inner current set 0
+
+        bindsym Shift+plus  gaps inner all plus 5
+        bindsym Shift+minus gaps inner all minus 5
+        bindsym Shift+0     gaps inner all set 0
+
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
+mode "$mode_gaps_outer" {
+        bindsym plus  gaps outer current plus 5
+        bindsym minus gaps outer current minus 5
+        bindsym 0     gaps outer current set 0
+
+        bindsym Shift+plus  gaps outer all plus 5
+        bindsym Shift+minus gaps outer all minus 5
+        bindsym Shift+0     gaps outer all set 0
+
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
