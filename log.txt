@@ -1,1 +1,0 @@
-20. mai 2019 kl. 13.21 +0200 - ERROR: Another window manager seems to be running (X error 10)
