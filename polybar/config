@@ -27,14 +27,42 @@ primary = #ffb52a
 secondary = #e60053
 alert = #bd2c40
 
-[bar/top]
-;monitor = ${env:MONITOR:HDMI-1}
+[bar/bottom]
 width = 100%
 height = 30
-;offset-x = 1%
-;offset-y = 1%
+enable-ipc = true
+bottom = true
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+font-0 = Font Awesome 5 Free:pixelsize=12:weight=bold;0
+font-1 = Inconsolata Nerd Font Mono:pixelsize=12
+font-2 = siji:pixelsize=10;1
+
+line-size = 4
+line-color = #f00
+
+module-margin-left = 2
+module-margin-right = 2
+
+modules-center = memory cpu 
+modules-left = network
+module-right = xbacklight
+tray-position = right
+tray-detached = false
+tray-maxsize = 20
+tray-padding = 2
+;tray-background = #0063ff
+
+
+[bar/top]
+monitor = ${env:MONITOR:}
+width = 100%
+height = 30
 radius = 6.0
-fixed-center = false
+fixed-center = true
+border-bottom-size = 4
+border-bottom-color =  #ffb52a
 
 background = ${colors.background}
 foreground = ${colors.foreground}
@@ -51,18 +79,14 @@ padding-right = 2
 module-margin-left = 1
 module-margin-right = 2
 
-font-0 = fontawesome-webfont:pixelsize=12:weight=bold;0
+font-0 = Font Awesome 5 Free:pixelsize=12:weight=bold;0
 font-1 = Inconsolata Nerd Font Mono:pixelsize=12
 font-2 = siji:pixelsize=10;1
 
 modules-left = i3
 modules-center = date
-modules-right = xbacklight pulseaudio memory cpu wireless-network eth battery temperature powermenu
+modules-right = pulseaudio wireless-network battery player-mpris-tail
 
-tray-position = center
-tray-detached = false
-tray-padding = 2
-;tray-background = #0063ff
 
 ;wm-restack = bspwm
 ;wm-restack = i3
@@ -82,7 +106,6 @@ cursor-scroll = ns-resize
 type = internal/i3
 
 pin-workspaces = true
-;strip-wsnumbers = true
 index-sort = true
 enable-scroll = false
 
@@ -92,58 +115,97 @@ format-padding-right = 2
 label-unfocused-foreground = #8a7f8f
 label-unfocused-padding = 1
 
-label-focused-foreground = #c16772
+label-focused-foreground = #ed8712
 label-focused-padding = 1
 
 label-urgent-foreground = #e4b226
 label-urgent-padding = 1
 
 [module/xbacklight]
-type = internal/xbacklight
-
-format = <label> <bar>
-label = 
-
-bar-width = 10
-bar-indicator = |
-bar-indicator-foreground = #fff
-bar-indicator-font = 2
-bar-fill = ─
-bar-fill-font = 2
-bar-fill-foreground = #9f78e1
-bar-empty = ─
-bar-empty-font = 2
-bar-empty-foreground = ${colors.foreground-alt}
-
-[module/backlight-acpi]
-inherit = module/xbacklight
 type = internal/backlight
 card = intel_backlight
+
+format = <label> 
+label =  %percentage%%
+
 
 [module/cpu]
 type = internal/cpu
 interval = 2
-format-prefix = " "
-format-prefix-foreground = ${colors.foreground-alt}
-format-underline = #f90000
-label = %percentage:2%%
+format = <label> <ramp-coreload>
+
+; Available tokens:
+;   %percentage% (default) - total cpu load averaged over all cores
+;   %percentage-sum% - Cumulative load on all cores
+;   %percentage-cores% - load percentage for each core
+;   %percentage-core[1-9]% - load percentage for specific core
+label = CPU %percentage%%
+
+; Spacing between individual per-core ramps
+ramp-coreload-spacing = 1
+ramp-coreload-0 = %{F#ccff66}▁%{F-}
+ramp-coreload-1 = %{F#ccff66}▂%{F-}
+ramp-coreload-2 = %{F#ccff66}▃%{F-}
+ramp-coreload-3 = %{F#ffff00}▄%{F-}
+ramp-coreload-4 = %{F#ffff00}▅%{F-}
+ramp-coreload-5 = %{F#f00}▆%{F-}
+ramp-coreload-6 = %{F#f00}▇%{F-}
+ramp-coreload-7 = %{F#f00}█%{F-}
 
 [module/memory]
 type = internal/memory
 interval = 2
-format-prefix = " "
-format-prefix-foreground = ${colors.foreground-alt}
-format-underline = #4bffdc
-label = %percentage_used%%
+format = <label> <ramp-used>
+label = RAM %gb_used%/%gb_total%
 
-[module/wlan]
+; Available tokens:
+;   %percentage_used% (default)
+;   %percentage_free%
+;   %gb_used%
+;   %gb_free%
+;   %gb_total%
+;   %mb_used%
+;   %mb_free%
+;   %mb_total%
+;   %percentage_swap_used%
+;   %percentage_swap_free%
+;   %mb_swap_total%
+;   %mb_swap_free%
+;   %mb_swap_used%
+;   %gb_swap_total%
+;   %gb_swap_free%
+;   %gb_swap_used%
+
+
+
+; Only applies if <ramp-used> is used
+ramp-used-0 = ▁
+ramp-used-1 = ▂
+ramp-used-2 = ▃
+ramp-used-3 = ▄
+ramp-used-4 = ▅
+ramp-used-5 = ▆
+ramp-used-6 = ▇
+ramp-used-7 = █
+
+; Only applies if <ramp-free> is used
+ramp-free-0 = ▁
+ramp-free-1 = ▂
+ramp-free-2 = ▃
+ramp-free-3 = ▄
+ramp-free-4 = ▅
+ramp-free-5 = ▆
+ramp-free-6 = ▇
+ramp-free-7 = █
+
+[module/network]
 type = internal/network
 interface = wlp3s0
 interval = 3.0
 
 format-connected = <ramp-signal> <label-connected>
 ;format-connected-underline = #00ff00
-label-connected = %essid%
+label-connected = %{F#5AF78E} %downspeed:min%%{F-} %{F#ed8712} %upspeed:min%%{F-} %{F#e4b226}%local_ip%%{F-}
 
 format-disconnected =
 ;format-disconnected = <label-disconnected>
@@ -158,9 +220,6 @@ ramp-signal-3 = 
 ramp-signal-4 = 
 ramp-signal-foreground = ${colors.foreground-alt}
 
-format-connected-underline = #55aa55
-;format-connected-prefix = " "
-;format-connected-prefix-foreground = ${colors.foreground-alt}
 ;label-connected = %local_ip%
 
 ;format-disconnected = <label-disconnected>
@@ -181,64 +240,46 @@ time-alt = %H:%M:%S
 format = <label>
 format-padding = 1
 format-prefix-foreground = ${colors.foreground-alt}
-format-underline = #0a6cf5
 
-label =  %date% %time%
+label = %date% %time%
 
 [module/pulseaudio]
 type = internal/pulseaudio
 
-format-volume = <label-volume> <bar-volume>
+format-volume = <label-volume> 
 label-volume =  %percentage%%
 label-volume-foreground = ${root.foreground}
 
 label-muted =   muted
 label-muted-foreground = #666
 
-bar-volume-width = 10
-bar-volume-foreground-0 = #55aa55
-bar-volume-foreground-1 = #55aa55
-bar-volume-foreground-2 = #55aa55
-bar-volume-foreground-3 = #55aa55
-bar-volume-foreground-4 = #55aa55
-bar-volume-foreground-5 = #f5a70a
-bar-volume-foreground-6 = #ff5555
-bar-volume-gradient = false
-bar-volume-indicator = |
-bar-volume-indicator-font = 2
-bar-volume-fill = ─
-bar-volume-fill-font = 2
-bar-volume-empty = ─
-bar-volume-empty-font = 2
-bar-volume-empty-foreground = ${colors.foreground-alt}
+;bar-volume-width = 10
+;bar-volume-foreground-0 = #55aa55
+;bar-volume-foreground-1 = #55aa55
+;bar-volume-foreground-2 = #55aa55
+;bar-volume-foreground-3 = #55aa55
+;bar-volume-foreground-4 = #55aa55
+;bar-volume-foreground-5 = #f5a70a
+;bar-volume-foreground-6 = #ff5555
+;bar-volume-gradient = false
+;bar-volume-indicator = |
+;bar-volume-indicator-font = 2
+;bar-volume-fill = ─
+;bar-volume-fill-font = 2
+;bar-volume-empty = ─
+;bar-volume-empty-font = 2
+;bar-volume-empty-foreground = ${colors.foreground-alt}
 
-[module/alsa]
-type = internal/alsa
-
-format-volume = <label-volume> <bar-volume>
-label-volume = VOL
-label-volume-foreground = ${root.foreground}
-
-format-muted-prefix = " "
-format-muted-foreground = ${colors.foreground-alt}
-label-muted = sound muted
-
-bar-volume-width = 10
-bar-volume-foreground-0 = #55aa55
-bar-volume-foreground-1 = #55aa55
-bar-volume-foreground-2 = #55aa55
-bar-volume-foreground-3 = #55aa55
-bar-volume-foreground-4 = #55aa55
-bar-volume-foreground-5 = #f5a70a
-bar-volume-foreground-6 = #ff5555
-bar-volume-gradient = false
-bar-volume-indicator = |
-bar-volume-indicator-font = 2
-bar-volume-fill = ─
-bar-volume-fill-font = 2
-bar-volume-empty = ─
-bar-volume-empty-font = 2
-bar-volume-empty-foreground = ${colors.foreground-alt}
+[module/player-mpris-tail]
+type = custom/script
+exec = ~/.scripts/polybar-scripts/player-mpris-tail.py -f '{icon} {artist} - {title}'
+tail = true
+label = %output%'
+label-maxlen = 25
+click-left = ~/.scripts/polybar-scripts/player-mpris-tail.py play-pause
+click-right = ~/.scripts/polybar-scripts/player-mpris-tail.py next
+click-middle = ~/.scripts/polybar-scripts/player-mpris-tail.py previous
+;format-underline = #1db954
 
 [module/battery]
 type = internal/battery
@@ -246,31 +287,39 @@ battery = BAT0
 adapter = ADP1
 full-at = 98
 
-format-charging = <animation-charging> <label-charging>
-format-charging-underline = #ffb52a
+poll-interval = 5
 
-format-discharging = <animation-discharging> <label-discharging>
-format-discharging-underline = ${self.format-charging-underline}
+format-charging = <animation-charging> <label-charging>
+format-discharging = <ramp-capacity> <label-discharging>
 
 format-full-prefix = " "
 format-full-prefix-foreground = ${colors.foreground-alt}
-format-full-underline = ${self.format-charging-underline}
 
-ramp-capacity-0 = 
-ramp-capacity-1 = 
-ramp-capacity-2 = 
-ramp-capacity-foreground = ${colors.foreground-alt}
+label-charging = %percentage%%
 
-animation-charging-0 = 
-animation-charging-1 = 
-animation-charging-2 = 
-animation-charging-foreground = ${colors.foreground-alt}
+label-discharging = %percentage%%
+
+label-full = %percentage%%
+
+ramp-capacity-0 = 
+ramp-capacity-1 = 
+ramp-capacity-2 = 
+ramp-capacity-3 = 
+ramp-capacity-4 = 
+ramp-capacity-foreground = ${colors.foreground}
+
+animation-charging-0 = 
+animation-charging-1 = 
+animation-charging-2 = 
+animation-charging-3 = 
+animation-charging-4 = 
+animation-charging-foreground = ${colors.foreground}
 animation-charging-framerate = 750
 
-animation-discharging-0 = 
-animation-discharging-1 = 
-animation-discharging-2 = 
-animation-discharging-foreground = ${colors.foreground-alt}
+animation-discharging-0 = 
+animation-discharging-1 = 
+animation-discharging-2 = 
+animation-discharging-foreground = ${colors.foreground}
 animation-discharging-framerate = 750
 
 [module/temperature]
@@ -344,9 +393,9 @@ format-connected-padding = 2
 format-disconnected = <label-disconnected>
 format-disconnected-padding = 2
 
-label-connected =  %essid%
-
-label-disconnected =  None
+label-connected = %{A1:nm-applet:} %essid%%{A}
+label-disconnected = %{A1:nm-applet:} Not Connected%{A}
 
 
 ; vim:ft=dosini
+
