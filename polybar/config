@@ -132,14 +132,14 @@ label =  %percentage%%
 [module/cpu]
 type = internal/cpu
 interval = 2
-format = <label> <ramp-coreload>
+format = CPU <ramp-coreload> <label>
 
 ; Available tokens:
 ;   %percentage% (default) - total cpu load averaged over all cores
 ;   %percentage-sum% - Cumulative load on all cores
 ;   %percentage-cores% - load percentage for each core
 ;   %percentage-core[1-9]% - load percentage for specific core
-label = CPU %percentage%%
+label = %percentage%%
 
 ; Spacing between individual per-core ramps
 ramp-coreload-spacing = 1
@@ -155,8 +155,8 @@ ramp-coreload-7 = %{F#f00}█%{F-}
 [module/memory]
 type = internal/memory
 interval = 2
-format = <label> <ramp-used>
-label = RAM %gb_used%/%gb_total%
+format = RAM <ramp-used> <label> 
+label = %gb_used%/%gb_total%
 
 ; Available tokens:
 ;   %percentage_used% (default)
@@ -179,24 +179,15 @@ label = RAM %gb_used%/%gb_total%
 
 
 ; Only applies if <ramp-used> is used
-ramp-used-0 = ▁
-ramp-used-1 = ▂
-ramp-used-2 = ▃
-ramp-used-3 = ▄
-ramp-used-4 = ▅
-ramp-used-5 = ▆
-ramp-used-6 = ▇
-ramp-used-7 = █
+ramp-used-0 = %{F#ccff66}▁%{F-}
+ramp-used-1 = %{F#ccff66} ▂%{F-}
+ramp-used-2 = %{F#ffff00}▃%{F-}
+ramp-used-3 = %{F#ffff00}▄%{F-}
+ramp-used-4 = %{F#ffff00}▅%{F-}
+ramp-used-5 =  %{F#f00}▆%{F-}
+ramp-used-6 =  %{F#f00}▇%{F-}
+ramp-used-7 =  %{F#f00}█%{F-}
 
-; Only applies if <ramp-free> is used
-ramp-free-0 = ▁
-ramp-free-1 = ▂
-ramp-free-2 = ▃
-ramp-free-3 = ▄
-ramp-free-4 = ▅
-ramp-free-5 = ▆
-ramp-free-6 = ▇
-ramp-free-7 = █
 
 [module/network]
 type = internal/network

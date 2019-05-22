@@ -138,7 +138,7 @@ new_window pixel 2
 new_float normal
 
 #intellij
-assign [class="jetbrains-idea"] $workspaqce3
+assign [class="jetbrains-idea"] $workspace3
 for_window [class="jetbrains-idea" instance="sun-awt-X11-XDialogPeer"] floating enable
 for_window [class="jetbrains-idea" instance="sun-awt-X11-XDialogPeer"] floating enable
 for_window [class="jetbrains-idea" title="Run"] floating disable
