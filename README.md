@@ -1,5 +1,5 @@
 # dotfiles
-Setup for my RHEL7 and Ubuntu i3wms
+Setup for my Ubuntu i3wm
 
 ## Requirements
 
