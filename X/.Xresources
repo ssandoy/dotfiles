@@ -1,6 +1,6 @@
-*.foreground:   #c2c2b0
+*.foreground:   #12D08E
 *.background:   #222222
-*.cursorColor:  #c2c2b0
+*.cursorColor:  #10bbff
 ! black
 *.color0:       #111111
 *.color8:       #181818
@@ -31,16 +31,13 @@
 *.colorBD:      #d3d3d3
 *.colorUL:      #528b8b
 
-urxvt.perl-lib:  $HOME/.urxvt
+urxvt*.font:xft:DejaVu Sans Mono:autohint=true:pixelsize=16
 
-URxvt*.font:xft:DejaVu Sans Mono:autohint=true:pixelsize=15
-
-URxvt.perl-ext-common: default,matches,resize-font,
-URxvt.url-launcher: /usr/bin/google-chrome
-URxvt.matcher.button: 1
-
+URxvt.perl-ext-common:default,matcher,resize-font,
+urxvt.url-launcher: /usr/bin/google-chrome
+urxvt.matcher.button: 1
 
 URxvt.keysym.C-Down:  resize-font:smaller
 URxvt.keysym.C-Up:  resize-font:bigger
 
-URxvt.scrollBar: false
+urxvt.scrollBar: false
