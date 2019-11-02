@@ -36,8 +36,12 @@ background = ${colors.background}
 foreground = ${colors.foreground}
 
 font-0 = Font Awesome 5 Free:pixelsize=12:weight=bold;0
-font-1 = Inconsolata Nerd Font Mono:pixelsize=12
-font-2 = siji:pixelsize=10;1
+font-1 = Font Awesome 5 Brands:style=Regular:pixelsize=12:weight=bold;0
+font-2 = VL PGothic
+font-3 = Inconsolata Nerd Font Mono:pixelsize=12
+font-4 = siji:pixelsize=10;1
+
+padding-right = 1
 
 line-size = 4
 line-color = #f00
@@ -45,14 +49,16 @@ line-color = #f00
 module-margin-left = 2
 module-margin-right = 2
 
-modules-center = memory cpu 
+
+
+modules-center = filesystem memory cpu 
 modules-left = network
-module-right = xbacklight
+modules-right = xbacklight weather 
 tray-position = right
 tray-detached = false
 tray-maxsize = 20
 tray-padding = 2
-;tray-background = #0063ff
+tray-background = ${colors.background}
 
 
 [bar/top]
@@ -64,37 +70,33 @@ fixed-center = true
 border-bottom-size = 4
 border-bottom-color =  #ffb52a
 
+separator = %{F#c69e9e}%{F-}
+
 background = ${colors.background}
 foreground = ${colors.foreground}
 
 line-size = 4
 line-color = #f00
 
-border-size = 4
-border-color = #00000000
+;border-size = 0
+;border-color = #00000000
 
 padding-left = 0
-padding-right = 2
+padding-right = 1.5
 
-module-margin-left = 1
+module-margin-left = 2
 module-margin-right = 2
 
 font-0 = Font Awesome 5 Free:pixelsize=12:weight=bold;0
 font-1 = Inconsolata Nerd Font Mono:pixelsize=12
 font-2 = siji:pixelsize=10;1
-
+font-3 = Font Awesome 5 Brands:style=Regular:pixelsize=12:weight=bold;0
+font-4 = VL PGothic
 modules-left = i3
 modules-center = date
-modules-right = pulseaudio wireless-network battery player-mpris-tail
-
-
-;wm-restack = bspwm
-;wm-restack = i3
+modules-right = pulseaudio wireless-network battery player-mpris-tail powermenu
 
 ;override-redirect = true
-
-;scroll-up = bspwm-desknext
-;scroll-down = bspwm-deskprev
 
 scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
@@ -156,7 +158,7 @@ ramp-coreload-7 = %{F#f00}█%{F-}
 type = internal/memory
 interval = 2
 format = RAM <ramp-used> <label> 
-label = %gb_used%/%gb_total%
+label = %percentage_used%%
 
 ; Available tokens:
 ;   %percentage_used% (default)
@@ -184,9 +186,9 @@ ramp-used-1 = %{F#ccff66} ▂%{F-}
 ramp-used-2 = %{F#ffff00}▃%{F-}
 ramp-used-3 = %{F#ffff00}▄%{F-}
 ramp-used-4 = %{F#ffff00}▅%{F-}
-ramp-used-5 =  %{F#f00}▆%{F-}
-ramp-used-6 =  %{F#f00}▇%{F-}
-ramp-used-7 =  %{F#f00}█%{F-}
+ramp-used-5 = %{F#ffff00}▆%{F-}
+ramp-used-6 = %{F#f00}▇%{F-}
+ramp-used-7 = %{F#f00}█%{F-}
 
 
 [module/network]
@@ -196,7 +198,7 @@ interval = 3.0
 
 format-connected = <ramp-signal> <label-connected>
 ;format-connected-underline = #00ff00
-label-connected = %{F#5AF78E} %downspeed:min%%{F-} %{F#ed8712} %upspeed:min%%{F-} %{F#e4b226}%local_ip%%{F-}
+label-connected = %{F#5AF78E} %downspeed:min%%{F-} %{F#ed8712}  %upspeed:min%%{F-} %{F#e4b226}  %local_ip%%{F-}
 
 format-disconnected =
 ;format-disconnected = <label-disconnected>
@@ -263,13 +265,13 @@ label-muted-foreground = #666
 
 [module/player-mpris-tail]
 type = custom/script
-exec = ~/.scripts/polybar-scripts/player-mpris-tail.py -f '{icon} {artist} - {title}'
+exec = ~/.scripts/polybar-scripts/player-mpris-tail.py --icon-playing   --icon-paused  -f '{icon} {artist} - {title}'
 tail = true
-label = %output%'
+label = %output%
 label-maxlen = 25
 click-left = ~/.scripts/polybar-scripts/player-mpris-tail.py play-pause
-click-right = ~/.scripts/polybar-scripts/player-mpris-tail.py next
-click-middle = ~/.scripts/polybar-scripts/player-mpris-tail.py previous
+double-click-left = ~/.scripts/polybar-scripts/player-mpris-tail.py next
+click-right = ~/.scripts/polybar-scripts/player-mpris-tail.py previous
 ;format-underline = #1db954
 
 [module/battery]
@@ -290,7 +292,7 @@ label-charging = %percentage%%
 
 label-discharging = %percentage%%
 
-label-full = %percentage%%
+label-full =  %percentage%%
 
 ramp-capacity-0 = 
 ramp-capacity-1 = 
@@ -332,6 +334,12 @@ ramp-1 = 
 ramp-2 = 
 ramp-foreground = ${colors.foreground-alt}
 
+[module/weather]
+type = custom/script
+interval = 60
+exec = "curl -s 'wttr.in?format=%l+%c+%t+%p'"
+label = %output%
+
 [module/powermenu]
 type = custom/menu
 
@@ -339,27 +347,56 @@ expand-right = true
 
 format-spacing = 1
 
-label-open = 
-label-open-foreground = ${colors.secondary}
-label-close =  cancel
-label-close-foreground = ${colors.secondary}
+label-open =  
+label-open-foreground = ${colors.primary}
+label-close =  cancel
+label-close-foreground = ${colors.primary}
 label-separator = |
 label-separator-foreground = ${colors.foreground-alt}
 
-menu-0-0 = reboot
-menu-0-0-exec = menu-open-1
-menu-0-1 = power off
-menu-0-1-exec = menu-open-2
+menu-0-1 = reboot
+menu-0-1-exec = menu-open-1
+menu-0-2 = power off
+menu-0-2-exec = menu-open-2
+menu-0-0 = logout
+menu-0-0-exec = menu-open-3
 
-menu-1-0 = cancel
-menu-1-0-exec = menu-open-0
-menu-1-1 = reboot
-menu-1-1-exec = sudo reboot
+menu-2-0 = cancel
+menu-2-0-exec = menu-open-0
+menu-2-1 = reboot
+menu-2-1-exec = reboot
 
-menu-2-0 = power off
-menu-2-0-exec = sudo poweroff
-menu-2-1 = cancel
-menu-2-1-exec = menu-open-0
+menu-3-0 = power off
+menu-3-0-exec =  poweroff
+menu-3-1 = cancel
+menu-3-1-exec = menu-open-0
+
+menu-1-0 = logout
+menu-1-0-exec = i3-msg exit
+menu-1-1 = cancel
+menu-1-1-exec = menu-open-0
+
+[module/filesystem]
+type = internal/fs
+
+; Mountpoints to display
+mount-0 = /
+
+; Seconds to sleep between updates
+; Default: 30
+interval = 10
+
+; Display fixed precision values
+; Default: false
+fixed-values = false
+
+; Spacing between entries
+; Default: 2
+spacing = 2
+
+format-mounted = <label-mounted>
+label-mounted =  %used% / %total%
+
 
 [settings]
 screenchange-reload = true
@@ -379,10 +416,10 @@ type = internal/network
 interface = wlp3s0
 
 format-connected = <label-connected>
-format-connected-padding = 2
+format-connected-padding = 0
 
 format-disconnected = <label-disconnected>
-format-disconnected-padding = 2
+format-disconnected-padding = 0
 
 label-connected = %{A1:nm-applet:} %essid%%{A}
 label-disconnected = %{A1:nm-applet:} Not Connected%{A}
