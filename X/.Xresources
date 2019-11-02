@@ -31,16 +31,14 @@
 *.colorBD:      #d3d3d3
 *.colorUL:      #528b8b
 
-urxvt.perl-lib:  $HOME/.urxvt
 
 URxvt*.font:xft:DejaVu Sans Mono:autohint=true:pixelsize=15
 
-URxvt.perl-ext-common: default,matches,resize-font,
+URxvt.perl-ext-common: default,matcher,resize-font,
 URxvt.url-launcher: /usr/bin/google-chrome
 URxvt.matcher.button: 1
 
-
-URxvt.keysym.C-Down:  resize-font:smaller
-URxvt.keysym.C-Up:  resize-font:bigger
+URxvt.keysym.C-Down: resize-font:smaller
+URxvt.keysym.C-Up: resize-font:bigger
 
 URxvt.scrollBar: false
