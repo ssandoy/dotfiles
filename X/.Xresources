@@ -38,7 +38,7 @@
 
 
 URxvt*.font:xft:DejaVu Sans Mono for Powerline:autohint=true:pixelsize=16
-
+# Add resize-font to .urxvt/ext/resize-font
 URxvt.perl-ext-common:default,matcher,resize-font,
 urxvt.url-launcher: /usr/bin/google-chrome
 urxvt.matcher.button: 1
