@@ -6,8 +6,8 @@
 
 /* global settings and color variables */
 * {
-   maincolor:        #ed8712;
-   highlight:        bold #ed8712;
+   maincolor:        #71C7EC;
+   highlight:        bold #71C7EC;
    urgentcolor:      #e53714;
 
    fgwhite:          #cfcfcf;

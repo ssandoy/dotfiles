@@ -1,41 +1,49 @@
-*.foreground:   #12D08E
-*.background:   #222222
-*.cursorColor:  #10bbff
+! special
+*.depth:        32
+*.foreground:   #cbdbd2
+*.background:   #1e2e3b
+*.cursorColor:  #cbdbd2
+
 ! black
-*.color0:       #111111
-*.color8:       #181818
+*.color0:       #0d0f0e
+*.color8:       #f37e28
+
 ! red
-*.color1:       #aa4450
+*.color1:       #171a18
+*.color9:       #fc403d
 
-*.color9:       #ff6a6a
 ! green
-*.color2:       #719611
-*.color10:      #b1d631
-! yellow
-*.color3:       #ff9800
-*.color11:      #87875f
-! blue
-*.color4:       #6688aa
-*.color12:      #90b0d1
-! magenta
-*.color5:       #8f6f8f
-*.color13:      #8181a6
-! cyan
-*.color6:       #528b8b
-*.color14:      #87ceeb
-! white
-*.color7:       #d3d3d3
-*.color15:      #c1cdc1
-! stylized
-*.colorIT:      #719611
-*.colorBD:      #d3d3d3
-*.colorUL:      #528b8b
+*.color2:       #f2ff61
+*.color10:      #b3ba57
 
-urxvt*.font:xft:DejaVu Sans Mono:autohint=true:pixelsize=16
+! yellow
+*.color3:       #f37e28
+*.color11:      #50a1b0
+
+! blue
+*.color4:       #59c1d3
+*.color12:      #59c1d3
+
+! magenta
+*.color5:       #7e8883
+*.color13:      #a3a85e
+
+! cyan
+*.color6:       #a7b4ad
+*.color14:      #53bf3d
+
+! white
+*.color7:       #d7e6de
+*.color15:      #329bab
+
+
+URxvt*.font:xft:DejaVu Sans Mono for Powerline:autohint=true:pixelsize=16
 
 URxvt.perl-ext-common:default,matcher,resize-font,
 urxvt.url-launcher: /usr/bin/google-chrome
 urxvt.matcher.button: 1
+urxvt*background: rgba:0000/0000/0200/c800
+urxvt*cursorColor: #329bab
 
 URxvt.keysym.C-Down:  resize-font:smaller
 URxvt.keysym.C-Up:  resize-font:bigger
