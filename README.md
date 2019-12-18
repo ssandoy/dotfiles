@@ -11,3 +11,4 @@ Setup for my Ubuntu i3wm
 - FontAwesome 5 (https://fontawesome.com/download)
 - URxvt (sudo apt install rxvt-unicode)
 - Stow (sudo apt install stow)
+- Betterlockscreen (./betterlockscreen.sh)
