@@ -17,51 +17,57 @@
 ;==========================================================
 
 [colors]
-;background = ${xrdb:color0:#222}
-background = #222
-background-alt = #444
-;foreground = ${xrdb:color7:#222}
+background = #2E3440
 foreground = #dfdfdf
 foreground-alt = #555
 primary = #71C7EC
+border_color = #99d1ce
 secondary = #e60053
-alert = #bd2c40
+red1 = #BF3B48
+pulse_color = #81A1C1
+file_color = #81A1C1
+mem_color = #756a78
+battery_color = #5E81AC
+cpu_color = #5E81AC
+power_color = #3B4252
+light_color = #3B4252
+network_color = #756a78
+yellow1 = #CF9B36
+focus = #8C8C8C
+unfocus = #8a7f8f
+underline = #5E81AC
 
 
 [bar/top]
-monitor = ${env:MONITOR:}
+;monitor = ${env:MONITOR:}
 width = 100%
 height = 30
-radius = 6.0
 fixed-center = true
-border-bottom-size = 4
-border-bottom-color = ${colors.primary}
+border-bottom-size = 3
+border-bottom-color = ${colors.border_color}
 
-separator = %{F#107DAC}%{F-}
+;separator = %{F#107DAC}%{F-}
 
 background = ${colors.background}
 foreground = ${colors.foreground}
 
-line-size = 4
-line-color = #f00
+line-size = 5
 
-;border-size = 0
-;border-color = #00000000
+padding-left = 3
+padding-right = 0
 
-padding-left = 0
-padding-right = 1.5
+module-margin-left = 0
+module-margin-right = 0
 
-module-margin-left = 2
-module-margin-right = 2
+font-0 = UbuntuMono Nerd Font:pixelsize=12;2"
+font-1 = UbuntuMono Nerd Font:pixelsize=35.8;2"
+font-2 = "Font Awesome 5 Free:style=Solid:pixelsize=12;0"
+font-3 = "Font Awesome 5 Brands:pixelsize=12;0"
+font-4 = Inconsolata Nerd Font Mono:pixelsize=12
 
-font-0 = "Font Awesome 5 Free:style=Regular:pixelsize=12;0"
-font-1 = "Font Awesome 5 Free:style=Solid:pixelsize=12;0"
-font-2 = "Font Awesome 5 Brands:pixelsize=12;0"
-font-3 = Inconsolata Nerd Font Mono:pixelsize=12
-
-modules-left = i3
-modules-center = date
-modules-right = pulseaudio wireless-network battery player-mpris-tail powermenu
+modules-left = popup-calendar
+modules-center = i3
+modules-right = pulse_arrow pulseaudio net_arrow wireless-network battery_arrow battery power_arrow powermenu end_arrow_right
 
 ;override-redirect = true
 
@@ -79,25 +85,22 @@ bottom = true
 background = ${colors.background}
 foreground = ${colors.foreground}
 border-top-size = 4
-border-top-color = ${colors.primary}
+border-top-color = ${colors.border_color}
 
-font-0 = "Font Awesome 5 Free:style=Regular:pixelsize=12;0"
-font-1 = "Font Awesome 5 Free:style=Solid:pixelsize=12;0"
-font-2 = "Font Awesome 5 Brands:pixelsize=12;0"
-font-3 = Dejavu Sans Mono
+font-0 = UbuntuMono Nerd Font:pixelsize=12;2"
+font-1 = UbuntuMono Nerd Font:pixelsize=39;2"
+font-2 = "Font Awesome 5 Free:style=Solid:pixelsize=12;0"
+font-3 = "Font Awesome 5 Brands:pixelsize=12;0"
+font-4 = Inconsolata Nerd Font Mono:pixelsize=12
+padding-right = 0
 
-padding-right = 1
-
-line-size = 4
-line-color = #f00
-
-module-margin-left = 2
-module-margin-right = 2
+module-margin-left = 0
+module-margin-right = 0
 
 
-modules-center = filesystem memory cpu 
+modules-center = file_arrow filesystem mem_arrow memory cpu_arrow cpu light_arrow xbacklight light_end_arrow
 modules-left = network
-modules-right = xbacklight weather 
+modules-right =  weather 
 tray-position = right
 tray-detached = false
 tray-maxsize = 20
@@ -114,23 +117,54 @@ index-sort = true
 enable-scroll = false
 
 format = <label-state> <label-mode>
-format-padding-right = 2
 
-label-unfocused-foreground = #8a7f8f
-label-unfocused-padding = 1
+label-unfocused-foreground = ${colors.unfocus}
+label-unfocused-padding = 2
+label-focused-underline = ${colors.underline}
 
 label-focused-foreground = ${colors.primary}
-label-focused-padding = 1
+label-focused-padding = 2
 
-label-urgent-foreground = #e4b226
-label-urgent-padding = 1
+label-urgent-foreground = ${colors.yellow1}
+label-urgent-padding = 2
 
 [module/xbacklight]
 type = internal/backlight
 card = intel_backlight
 
+format-background = ${colors.light_color}
+
 format = <label> 
-label =  %percentage%%
+label =   %percentage%%
+
+[module/popup-calendar]
+type = custom/script
+exec = ~/i3-setup/dotfiles/polybar/scripts/popup-calendar.sh
+interval = 1
+click-left = ~/i3-setup/dotfiles/polybar/scripts/popup-calendar.sh --popup &
+
+[module/cpu_arrow]
+; mem to cpu
+type = custom/text
+content = "%{T2}◢%{T-}"
+content-foreground = ${colors.cpu_color}
+content-background = ${colors.mem_color}
+
+[module/light_arrow]
+; cpu to light
+type = custom/text
+content = "%{T2}◢%{T-}"
+content-foreground = ${colors.light_color}
+content-background = ${colors.cpu_color}
+
+[module/light_end_arrow]
+; cpu to light
+type = custom/text
+content = "%{T2}◤%{T-}"
+content-foreground = ${colors.light_color}
+content-background = ${colors.background}
+format-padding = 0
+
 
 
 [module/cpu]
@@ -144,6 +178,7 @@ format = CPU <ramp-coreload> <label>
 ;   %percentage-cores% - load percentage for each core
 ;   %percentage-core[1-9]% - load percentage for specific core
 label = %percentage%%
+format-background = ${colors.cpu_color}
 
 ; Spacing between individual per-core ramps
 ramp-coreload-spacing = 1
@@ -156,30 +191,19 @@ ramp-coreload-5 = %{F#f00}▆%{F-}
 ramp-coreload-6 = %{F#f00}▇%{F-}
 ramp-coreload-7 = %{F#f00}█%{F-}
 
+[module/mem_arrow]
+; file to mem
+type = custom/text
+content = "%{T2}◢%{T-}"
+content-foreground = ${colors.mem_color}
+content-background = ${colors.file_color}
+
 [module/memory]
 type = internal/memory
 interval = 2
 format = RAM <ramp-used> <label> 
 label = %percentage_used%%
-
-; Available tokens:
-;   %percentage_used% (default)
-;   %percentage_free%
-;   %gb_used%
-;   %gb_free%
-;   %gb_total%
-;   %mb_used%
-;   %mb_free%
-;   %mb_total%
-;   %percentage_swap_used%
-;   %percentage_swap_free%
-;   %mb_swap_total%
-;   %mb_swap_free%
-;   %mb_swap_used%
-;   %gb_swap_total%
-;   %gb_swap_free%
-;   %gb_swap_used%
-
+format-background = ${colors.mem_color}
 
 
 ; Only applies if <ramp-used> is used
@@ -199,7 +223,6 @@ interface = wlp3s0
 interval = 3.0
 
 format-connected = <ramp-signal> <label-connected>
-;format-connected-underline = #00ff00
 label-connected = %{F#5AF78E} %downspeed:min%%{F-} %{F#ed8712}  %upspeed:min%%{F-} %{F#e4b226}  %local_ip%%{F-}
 
 format-disconnected =
@@ -238,32 +261,25 @@ format-prefix-foreground = ${colors.foreground-alt}
 
 label = %date% %time%
 
+[module/pulse_arrow]
+; grey to Blue
+;▶◀
+type = custom/text
+content = "%{T2}◢%{T-}"
+content-foreground = ${colors.pulse_color}
+content-background = ${colors.background}
+
 [module/pulseaudio]
 type = internal/pulseaudio
 
 format-volume = <label-volume> 
 label-volume =  %percentage%%
-label-volume-foreground = ${root.foreground}
+label-volume-foreground = ${colors.foreground}
+label-volume-background = ${colors.pulse_color}
 
-label-muted =   muted
+label-muted =  
 label-muted-foreground = #666
-
-;bar-volume-width = 10
-;bar-volume-foreground-0 = #55aa55
-;bar-volume-foreground-1 = #55aa55
-;bar-volume-foreground-2 = #55aa55
-;bar-volume-foreground-3 = #55aa55
-;bar-volume-foreground-4 = #55aa55
-;bar-volume-foreground-5 = #f5a70a
-;bar-volume-foreground-6 = #ff5555
-;bar-volume-gradient = false
-;bar-volume-indicator = |
-;bar-volume-indicator-font = 2
-;bar-volume-fill = ─
-;bar-volume-fill-font = 2
-;bar-volume-empty = ─
-;bar-volume-empty-font = 2
-;bar-volume-empty-foreground = ${colors.foreground-alt}
+label-muted-background = ${colors.pulse_color}
 
 [module/player-mpris-tail]
 type = custom/script
@@ -274,7 +290,14 @@ label-maxlen = 25
 click-left = ~/.scripts/polybar-scripts/player-mpris-tail.py play-pause
 double-click-left = ~/.scripts/polybar-scripts/player-mpris-tail.py next
 click-right = ~/.scripts/polybar-scripts/player-mpris-tail.py previous
-;format-underline = #1db954
+
+[module/battery_arrow]
+; network to battery
+type = custom/text
+content = "%{T2} ◢%{T-}"
+content-foreground = ${colors.battery_color}
+content-background = ${colors.network_color}
+
 
 [module/battery]
 type = internal/battery
@@ -286,10 +309,12 @@ poll-interval = 5
 
 format-charging = <animation-charging> <label-charging>
 format-discharging = <ramp-capacity> <label-discharging>
+format-discharging-background = ${colors.battery_color}
 
 format-full-prefix = " "
 format-full-prefix-foreground = ${colors.foreground-alt}
-
+format-full-background = ${colors.battery_color}
+format-charging-background = ${colors.battery_color}
 label-charging = %percentage%%
 
 label-discharging = %percentage%%
@@ -342,31 +367,63 @@ interval = 60
 exec = "curl -s 'wttr.in?format=%l+%c+%t+%p'"
 label = %output%
 
+
+[module/power_arrow]
+; battery to power
+type = custom/text
+content = "%{T2} ◢%{T-}"
+content-foreground = ${colors.power_color}
+content-background = ${colors.battery_color}
+
+[module/end_arrow_right]
+; battery to power
+type = custom/text
+content = "%{T2}%{T-}"
+content-foreground = ${colors.power_color}
+content-background = ${colors.battery_color}
+
+
+[module/bottom_arrow_right]
+; battery to power
+type = custom/text
+content = "%{T2}◢%{T-}"
+content-foreground = ${colors.battery_color}
+content-background = ${colors.battery_color}
+
+
+
 [module/powermenu]
 type = custom/menu
 
 expand-right = true
 
-format-spacing = 1
-
-label-open =  
+label-open = ⠀
 label-open-foreground = ${colors.primary}
+label-open-background = ${colors.power_color}
 label-close =  cancel
 label-close-foreground = ${colors.primary}
+label-close-background = ${colors.power_color}
 label-separator = |
-label-separator-foreground = ${colors.foreground-alt}
+label-separator-background = ${colors.power_color}
+label-separator-foreground = ${colors.power_color}
+
 
 menu-0-1 = reboot
 menu-0-1-exec = menu-open-1
+menu-0-1-background = ${colors.power_color}
 menu-0-2 = power off
 menu-0-2-exec = menu-open-2
+menu-0-2-background = ${colors.power_color}
 menu-0-0 = logout
 menu-0-0-exec = menu-open-3
+menu-0-0-background = ${colors.power_color}
 
 menu-2-0 = cancel
 menu-2-0-exec = menu-open-0
+menu-2-0-background = ${colors.power_color}
 menu-2-1 = poweroff
 menu-2-1-exec = poweroff
+menu-2-1-background = ${colors.power_color}
 
 menu-3-0 = power off
 menu-3-0-exec =  poweroff
@@ -377,6 +434,14 @@ menu-1-0 = logout
 menu-1-0-exec = i3-msg exit
 menu-1-1 = cancel
 menu-1-1-exec = menu-open-0
+
+[module/file_arrow]
+; network to battery
+type = custom/text
+content = "%{T2}◢%{T-}"
+content-foreground = ${colors.file_color}
+content-background = ${colors.background}
+
 
 [module/filesystem]
 type = internal/fs
@@ -397,8 +462,8 @@ fixed-values = false
 spacing = 2
 
 format-mounted = <label-mounted>
+format-mounted-background = ${colors.file_color}
 label-mounted =  %used% / %total%
-
 
 [settings]
 screenchange-reload = true
@@ -412,6 +477,15 @@ screenchange-reload = true
 margin-top = 5
 margin-bottom = 5
 
+
+[module/net_arrow]
+; pulse to network
+type = custom/text
+content = "%{T2} ◢%{T-}"
+content-foreground = ${colors.network_color}
+content-background = ${colors.pulse_color}
+
+
 [module/wireless-network]
 type = internal/network
 
@@ -419,9 +493,11 @@ interface = wlp3s0
 
 format-connected = <label-connected>
 format-connected-padding = 0
+format-connected-background = ${colors.network_color}
 
 format-disconnected = <label-disconnected>
 format-disconnected-padding = 0
+format-disconnected-background = ${colors.network_color}
 
 label-connected = %{A1:nm-applet:} %essid%%{A}
 label-disconnected = %{A1:nm-applet:} Not Connected%{A}
