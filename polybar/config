@@ -39,7 +39,7 @@ underline = #5E81AC
 
 
 [bar/top]
-;monitor = ${env:MONITOR:}
+monitor = ${env:MONITOR:}
 width = 100%
 height = 30
 fixed-center = true
@@ -53,7 +53,7 @@ foreground = ${colors.foreground}
 
 line-size = 5
 
-padding-left = 3
+padding-left = 0
 padding-right = 0
 
 module-margin-left = 0
@@ -65,9 +65,9 @@ font-2 = "Font Awesome 5 Free:style=Solid:pixelsize=12;0"
 font-3 = "Font Awesome 5 Brands:pixelsize=12;0"
 font-4 = Inconsolata Nerd Font Mono:pixelsize=12
 
-modules-left = popup-calendar
+modules-left = end_arrow_left popup-calendar light_end_arrow
 modules-center = i3
-modules-right = pulse_arrow pulseaudio net_arrow wireless-network battery_arrow battery power_arrow powermenu end_arrow_right
+modules-right = pulse_arrow pulseaudio net_arrow wireless-network battery_arrow battery power_arrow powermenu 
 
 ;override-redirect = true
 
@@ -140,8 +140,11 @@ label =   %percentage%%
 [module/popup-calendar]
 type = custom/script
 exec = ~/i3-setup/dotfiles/polybar/scripts/popup-calendar.sh
+content = "%{T2}◢%{T-}"
 interval = 1
 click-left = ~/i3-setup/dotfiles/polybar/scripts/popup-calendar.sh --popup &
+format-foreground = ${colors.primary}
+format-background = ${colors.light_color}
 
 [module/cpu_arrow]
 ; mem to cpu
@@ -375,12 +378,13 @@ content = "%{T2} ◢%{T-}"
 content-foreground = ${colors.power_color}
 content-background = ${colors.battery_color}
 
-[module/end_arrow_right]
-; battery to power
+[module/end_arrow_left]
+; calendar to background
 type = custom/text
-content = "%{T2}%{T-}"
+content = "%{T2} %{T-}"
 content-foreground = ${colors.power_color}
-content-background = ${colors.battery_color}
+content-background = ${colors.power_color}
+
 
 
 [module/bottom_arrow_right]
