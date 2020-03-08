@@ -150,6 +150,8 @@ for_window [class="jetbrains-idea" title="Project"] floating disable
 for_window [class="jetbrains-idea" title="Favorites"] floating disable
 for_window [class="jetbrains-idea" title="Find"] floating disable
 for_window [class="^jetbrains-.+"][window_type=dialog] focus
+#float yad-calendar
+for_window [class="Yad"] floating enable
 
 #spotify
 for_window [class="Spotify"] move to workspace $workspace4         

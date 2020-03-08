@@ -1,6 +1,6 @@
 [global]
     frame_width = 2
-    frame_color = "#ffb52a"
+    frame_color = "#71C7EC"
     
     font = PragmataPro 12
     
@@ -181,17 +181,17 @@
 [urgency_low]
     # IMPORTANT: colors have to be defined in quotation marks.
     # Otherwise the "#" and following would be interpreted as a comment.
-    background = "#141021"
+    background = "#2E3440"
     foreground = "#c4b7c5"
     timeout = 10
 
 [urgency_normal]
-    background = "#141021"
+    background = "#2E3440"
     foreground = "#c4b7c5"
     timeout = 10
 
 [urgency_critical]
-    background = "#141021"
+    background = "#2E3440"
     foreground = "#c4b7c5"
     timeout = 0
 
@@ -270,24 +270,6 @@
 #    summary = *Feeds*
 #    background = "#A8EB41"
 #    foreground = "#FFFFFF"
-#
-[irc]
-        appname = weechat
-        timeout = 0
-        background = "#0033bb"
-        foreground = "#dddddd"
-#
-[weechat hl]
-     appname = weechat
-     category = weechat.HL
-     background = "#FF5C47"
-     foreground = "#FFFFFF"
-#
-[weechat pn]
-     appname = weechat
-     category = weechat.PM
-     background = "#D53B84"
-     foreground = "#FFFFFF"
 #
 #[CMUS]
 #    appname = CMUS
