@@ -237,7 +237,7 @@ exec_always compton
 #exec spotify
 #https://unsplash.com/photos/0okz_5PFhuU
 #https://unsplash.com/photos/bUq1AeFRjec
-exec_always feh --bg-scale $HOME/i3-setup/dotfiles/background.jpg
+exec_always feh --bg-scale $HOME/Pictures/background.jpg
 exec_always --no-startup-id $HOME/.config/polybar/launch.sh
 
 

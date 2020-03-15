@@ -17,50 +17,6 @@ export ZSH=$HOME/.oh-my-zsh
 ZSH_THEME="agnoster"
 DEFAULT_USER=`whoami`
 
-# Set list of themes to load
-# Setting this variable when ZSH_THEME=random
-# cause zsh load theme from this variable instead of
-# looking in ~/.oh-my-zsh/themes/
-# An empty array have no effect
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion. Case
-# sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
@@ -101,16 +57,8 @@ source $ZSH/oh-my-zsh.sh
 #
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
- alias work="cd ~/Work"
- alias work_git="cd ~/Work/Git"
- alias postman="cd ~/Work/Postman; ./Postman"
- alias move_right="i3-msg move workspace to output right"
- alias move_left="i3-msg move workspace to output left"
- alias ER="cd ~/Work/Git/ER"
- alias curltime="curl -s -o /dev/null -w '%{time_starttransfer}\n' "$@""
- alias elastic="sh ~/Work/elasticsearch-5.6.8/bin/elasticsearch"
- alias mvnci="mvn clean install -P all-tests"
- alias ..="cd .."
+alias curltime="curl -s -o /dev/null -w '%{time_starttransfer}\n' "$@""
+
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor line root)
 
 function lpc() {
@@ -119,6 +67,25 @@ function lpc() {
   lpass show $1|grep $field|awk '{print $2}'|xclip -selection c
   echo 'Copied password from '$1 
 
+}
+
+function git_upload_ssh_key () {
+  read -p "Enter github email : " email
+  echo "Using email $email"
+  if [ ! -f ~/.ssh/id_rsa ]; then
+    ssh-keygen -t rsa -b 4096 -C "$email"
+    ssh-add ~/.ssh/id_rsa
+  fi
+  pub=`cat ~/.ssh/id_rsa.pub`
+  read -p "Enter github username: " githubuser
+  echo "Using username $githubuser"
+  read -s -p "Enter github password for user $githubuser: " githubpass
+  echo
+  read -p "Enter github OTP: " otp
+  echo "Using otp $otp"
+  echo
+  confirm
+  curl -u "$githubuser:$githubpass" -X POST -d "{\"title\":\"`hostname`\",\"key\":\"$pub\"}" --header "x-github-otp: $otp" https://api.github.com/user/keys
 }
 
 
