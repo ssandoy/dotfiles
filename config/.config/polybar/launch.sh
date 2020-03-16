@@ -7,8 +7,8 @@ killall -9 -q polybar
 while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
 
 # Launch bar1 and bar2
-polybar top &
-#ln -s /tmp/polybar_mqueue.$! /tmp/ipc-top
+#polybar top &
+ln -s /tmp/polybar_mqueue.$! /tmp/ipc-top
 
 polybar bottom &
 ln -s /tmp/polybar_mqueue.$! /tmp/ipc-bottom

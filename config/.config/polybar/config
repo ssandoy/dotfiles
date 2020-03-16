@@ -139,7 +139,7 @@ label =   %percentage%%
 
 [module/popup-calendar]
 type = custom/script
-exec = ~/i3-setup/dotfiles/polybar/scripts/popup-calendar.sh
+exec = ~/dotfiles/config/.config/polybar/scripts/popup-calendar.sh
 content = "%{T2}◢%{T-}"
 interval = 1
 click-left = ~/i3-setup/dotfiles/polybar/scripts/popup-calendar.sh --popup &

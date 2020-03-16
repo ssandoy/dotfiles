@@ -9,7 +9,7 @@ fi
 
 
 apt_packages=(
-    git 
+    git
     zsh
     rofi
     rxvt-unicode
@@ -23,6 +23,8 @@ apt_packages=(
     feh
     compton
     dunst
+    yad
+    slack
 )
 
 snap_packages=()
@@ -45,12 +47,16 @@ echo "Installing snap classic base-packages"
 snap install ${snap_classic_packages[@]}  --classic
 
 ## TODO ONLY DOWNLAD IF IT ISNT INSTALLED.
-echo "Downlading google-chrome"
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-
-echo "Installing google-chrome"
-apt install ./google-chrome-stable_current_amd64.deb
-rm ./google-chrome-stable_current_amd64.deb
+if ! [ -x "$(command -v google-chrome)" ]; then
+  echo 'Chrome is not installed.' >&2
+  echo "Downlading google-chrome"
+  wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  echo "Installing google-chrome"
+  apt install ./google-chrome-stable_current_amd64.deb
+  rm ./google-chrome-stable_current_amd64.deb
+else
+  echo 'Chrome already installed. Skipping'
+fi
 
 echo "Installing i3-gaps"
 ./i3-install.sh
@@ -65,10 +71,8 @@ stow X
 
 echo "Moving resize-font-script to .urxvt/ext"
 mkdir -p ~/.urxvt/ext
-mv X/scripts/resize-font ~/.urxvt/ext/
-
-echo "Stowing rofi"
-stow rofi
+cp X/scripts/resize-font ~/.urxvt/ext/
+xrdb -merge -I$HOME ~/.Xresources 
 
 echo "Stowing git"
 stow git
@@ -91,4 +95,12 @@ echo "Stowing zsh"
 rm ~/.zshrc
 stow zsh
 
-## TODO SET DEFAULT SHELL?
+echo "Setting zsh as default shell"
+chsh -s $(which zsh)
+
+echo "Install betterlockscreen"
+./betterlockscreen/betterlockscreen.sh
+
+echo "Install nvm"
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | zsh
+

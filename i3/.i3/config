@@ -33,7 +33,7 @@ floating_modifier $mod
 bindsym $mod+Shift+Return exec urxvt
 
 # kill focused window
-bindsym $mod+Shift+q kill
+bindsym $mod+BackSpace kill
 
 # start rofi (a program launcher)
 #bindsym $mod+space exec rofi -show run,window,ssh -lines 3 -eh 2 -width 100 -padding 800 -opacity "85" -bw 0 -bc "$bg-color" -bg  "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"  -show-icons -sidebar-mode
@@ -93,16 +93,16 @@ bindsym $mod+a focus parent
 # focus the child container
 #bindsym $mod+d focus child
 
-set $workspace1 ""
-set $workspace2 ""
-set $workspace3 ""
-set $workspace4 ""
-set $workspace5 ""
-set $workspace6 ""
-set $workspace7 ""
+set $workspace1 "1:"
+set $workspace2 "2:"
+set $workspace3 "3:"
+set $workspace4 "4:"
+set $workspace5 "5:"
+set $workspace6 "6:"
+set $workspace7 "7:"
 set $workspace8 "8"
 set $workspace9 "9"
-set $workspace10 ""
+set $workspace10 "10:"
 
 
 # switch to workspace
@@ -242,7 +242,10 @@ exec_always --no-startup-id $HOME/.config/polybar/launch.sh
 
 
 #set resolution
-exec  xrandr|grep connected|head -n 1|awk '{print $1}' | xargs -I {} xrandr --output {} --mode "1440x900"
+#exec  xrandr|grep connected|head -n 1|awk '{print $1}' | xargs -I {} xrandr --output {} --mode "2560x1600"
+exec xrandr --output VGA-1 --mode 2560x1440
+exec xrandr --output VGA-2 --mode 1440x900 --right-of VGA-1
+
 
 # Bindsym to blueman for bluethooth manager
 bindsym $mod+shift+b exec --no-startup-id blueman-manager
