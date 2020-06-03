@@ -1,5 +1,5 @@
 [push]
-	default = simple
+	default = current
 [user]
 	name = Sander F. Sandøy
 	email = sanderfsandoy@hotmail.com
