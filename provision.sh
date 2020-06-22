@@ -17,6 +17,9 @@ apt_packages=(
     htop
     curl
     vim
+    nodejs
+    npm
+    flameshot
     wget
     neofetch
     blueman
@@ -31,6 +34,7 @@ snap_packages=()
 
 snap_classic_packages=(
     code
+    slack
 )
 echo "Checking for apt updates"
 apt update -qq

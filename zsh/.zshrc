@@ -58,6 +58,8 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 alias curltime="curl -s -o /dev/null -w '%{time_starttransfer}\n' "$@""
+alias nrs="npm run start"
+
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor line root)
 

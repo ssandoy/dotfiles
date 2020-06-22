@@ -9,6 +9,8 @@ dependencies=(
     wget
     libjsoncpp-dev
     cmake
+    libpulse-dev
+    libiw-dev
     xcb-proto
     python-xcbgen
 )

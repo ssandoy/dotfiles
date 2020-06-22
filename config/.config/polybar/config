@@ -67,7 +67,7 @@ font-4 = Inconsolata Nerd Font Mono:pixelsize=12
 
 modules-left = end_arrow_left popup-calendar light_end_arrow
 modules-center = i3
-modules-right = pulse_arrow pulseaudio net_arrow wireless-network battery_arrow battery power_arrow powermenu 
+modules-right = pulse_arrow pulseaudio battery_arrow battery power_arrow powermenu 
 
 ;override-redirect = true
 
@@ -98,9 +98,9 @@ module-margin-left = 0
 module-margin-right = 0
 
 
-modules-center = file_arrow filesystem mem_arrow memory cpu_arrow cpu light_arrow xbacklight light_end_arrow
-modules-left = network
-modules-right =  weather 
+modules-center = 
+modules-left = end_arrow_bottom_left filesystem mem_arrow memory cpu_arrow cpu light_arrow
+modules-right = weather_arrow weather weather_end_arrow
 tray-position = right
 tray-detached = false
 tray-maxsize = 20
@@ -157,7 +157,7 @@ content-background = ${colors.mem_color}
 ; cpu to light
 type = custom/text
 content = "%{T2}◢%{T-}"
-content-foreground = ${colors.light_color}
+content-foreground = ${colors.background}
 content-background = ${colors.cpu_color}
 
 [module/light_end_arrow]
@@ -222,7 +222,7 @@ ramp-used-7 = %{F#f00}█%{F-}
 
 [module/network]
 type = internal/network
-interface = wlp3s0
+interface = auto
 interval = 3.0
 
 format-connected = <ramp-signal> <label-connected>
@@ -299,7 +299,7 @@ click-right = ~/.scripts/polybar-scripts/player-mpris-tail.py previous
 type = custom/text
 content = "%{T2} ◢%{T-}"
 content-foreground = ${colors.battery_color}
-content-background = ${colors.network_color}
+content-background = ${colors.pulse_color}
 
 
 [module/battery]
@@ -364,11 +364,30 @@ ramp-1 = 
 ramp-2 = 
 ramp-foreground = ${colors.foreground-alt}
 
+
+[module/weather_end_arrow]
+; calendar to background
+type = custom/text
+content = "%{T2} %{T-}"
+content-foreground = ${colors.power_color}
+content-background = ${colors.power_color}
+
+[module/weather_arrow]
+; battery to power
+type = custom/text
+content = "%{T2} ◢%{T-}"
+content-foreground = ${colors.power_color}
+
+
+
+
 [module/weather]
 type = custom/script
 interval = 60
 exec = "curl -s 'wttr.in?format=%l+%c+%t+%p'"
 label = %output%
+format-foreground = ${colors.primary}
+format-background = ${colors.power_color}
 
 
 [module/power_arrow]
@@ -386,6 +405,12 @@ content-foreground = ${colors.power_color}
 content-background = ${colors.power_color}
 
 
+[module/end_arrow_bottom_left]
+; calendar to background
+type = custom/text
+content = "%{T2} %{T-}"
+content-foreground = ${colors.file_color}
+content-background = ${colors.file_color}
 
 [module/bottom_arrow_right]
 ; battery to power
