@@ -1,0 +1,44 @@
+#!/bin/bash
+echo "pre-commit-hook"
+kotlin_files=$(git diff --staged --name-only --relative | grep -E '.+?\.kt$')
+if [ "$kotlin_files" ]; then 
+    echo "Running klint in pre-commit-hook"
+    echo "Running ktlint on these staged files:"
+    echo "$kotlin_files"
+    # Pek på din lokale installasjon av ktlint her
+    ~/ktlint -F $kotlin_files 
+​
+    echo "ktlint done linting"
+​
+    echo "adding files:"
+    echo "$kotlin_files"
+    for file in $kotlin_files; do
+        if [ -f $file ]; then
+            git add $file
+        fi
+    done
+​    echo "Ktlint done"
+else 
+    echo "No kotlin files staged"
+fi
+
+js_files=$(git diff --staged --name-only --relative | grep -e '.js' -e 'ts' | grep -v 'json')
+
+if [ "$js_files" ]; then 
+    echo "Running prettier in pre-commit-hook"
+    echo "Running prettier on these staged files:"
+    echo "$js_files"
+    prettier --write $js_files 
+    echo "prettier done linting"
+    echo "adding files:"
+    echo "$js_files"
+    for file in $js_files; do
+        if [ -f $file ]; then
+            git add $file
+        fi
+    done
+​    echo "Prettier done"
+else 
+    echo "No js-files staged"
+fi
+exit 0;

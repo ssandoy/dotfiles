@@ -1,9 +1,11 @@
 [push]
 	default = current
 [user]
-	name = Sander F. Sandøy
+    name = Sander F. Sandøy
 	email = sanderfsandoy@hotmail.com
 [alias]
 	st = status --short --branch
 	ci = commit
 	co = checkout
+[core]
+	hooksPath = /home/sb1a.sparebank1.no/a504a6f/dotfiles/git/.git-templates/hooks
