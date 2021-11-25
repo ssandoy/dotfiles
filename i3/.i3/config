@@ -41,7 +41,7 @@ bindsym $mod+BackSpace kill
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
-bindsym $mod+Shift+d exec --no-startup-id i3-dmenu-desktop
+bindsym $mod+Shift+d exec --no-startup-id i3-dmenu-desktop --dmenu='~/usr/local/bin/rofi -dmenu'
 
 # change foc
 bindsym $mod+j focus left
@@ -229,8 +229,8 @@ popup_during_fullscreen smart
 focus_follows_mouse no
 
 # start rofi (a program launcher)
-bindsym $mod+space exec "rofi -show run -modi run,window,ssh -lines 4 -eh 2 -width 50 -padding 800 -sidebar-mode -show-icons"
-
+bindsym $mod+space exec "/home/sb1a.sparebank1.no/a504a6f/usr/local/bin/rofi -show run -modi run,window,ssh -lines 4 -eh 2 -width 50 -padding 800 -sidebar-mode -show-icons"
+#bindsym $mod+space exec dmenu_run
 #startup apps
 exec google-chrome
 exec_always compton
@@ -239,6 +239,7 @@ exec_always compton
 #https://unsplash.com/photos/bUq1AeFRjec
 exec_always feh --bg-scale $HOME/Pictures/background.jpg
 exec_always --no-startup-id $HOME/.config/polybar/launch.sh
+bindsym $mod+shift+a exec "xrandr --auto;"
 
 
 #set resolution
@@ -262,6 +263,11 @@ bindsym XF86AudioPlay exec playerctl play-pause
 bindsym XF86AudioPause exec playerctl play-pause
 bindsym XF86AudioNext exec playerctl next
 bindsym XF86AudioPrev exec playerctl previous
+
+# Pactl-volume
+bindsym $mod+shift+u exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym $mod+shift+y exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym $mod+shift+m+ exec pactl set-sink-mute 1 toggle
 
 # key-bindings for polybar-statistics-bar
 bindsym $mod+Shift+S exec polybar-msg cmd toggle

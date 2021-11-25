@@ -10,12 +10,12 @@ while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
 #polybar top &
 ln -s /tmp/polybar_mqueue.$! /tmp/ipc-top
 
-polybar bottom &
+~/polybar/build/bin/polybar bottom &
 ln -s /tmp/polybar_mqueue.$! /tmp/ipc-bottom
 
 
-for m in $(polybar --list-monitors | cut -d":" -f1); do
-    MONITOR=$m polybar --reload top &
+for m in $(~/polybar/build/bin/polybar --list-monitors | cut -d":" -f1); do
+    MONITOR=$m ~/polybar/build/bin/polybar --reload top &
 done
 
 echo "Bars launched..."

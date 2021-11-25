@@ -17,6 +17,8 @@ HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt SHARE_HISTORY
+VIRTUAL_ENV=`whoami`
+
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
@@ -60,6 +62,7 @@ source $ZSH/oh-my-zsh.sh
 alias curltime="curl -s -o /dev/null -w '%{time_starttransfer}\n' "$@""
 alias nrs="npm run start"
 alias nrd="npm run dev"
+alias gcan="git commit --amend --no-edit"
 
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor line root)
@@ -91,6 +94,19 @@ function git_upload_ssh_key () {
   curl -u "$githubuser:$githubpass" -X POST -d "{\"title\":\"`hostname`\",\"key\":\"$pub\"}" --header "x-github-otp: $otp" https://api.github.com/user/keys
 }
 
+# CD to root of git project.
+cdr() {
+   if [[ -z "$(git rev-parse --show-toplevel)" ]]; then
+      builtin echo "Error: top level directory not found."
+   else
+      builtin cd "$(git rev-parse --show-toplevel)"
+   fi
+}
+
+mkcd () {
+  mkdir "$1"
+  cd "$1"
+}
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm

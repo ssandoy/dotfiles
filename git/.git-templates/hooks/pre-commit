@@ -27,6 +27,7 @@ js_files=$(git diff --staged --name-only --relative | grep -e '.js' -e 'ts' | gr
 if [ "$js_files" ]; then 
     echo "Running prettier in pre-commit-hook"
     echo "Running prettier on these staged files:"
+    # TODO FIX ISSUE WITH FORMATTING AND ADDING WHOLE FILE
     echo "$js_files"
     prettier --write $js_files 
     echo "prettier done linting"

@@ -1,8 +1,7 @@
 ! special
-*.depth:        32
-*.foreground:   #cbdbd2
-*.background:   #1e2e3b
-*.cursorColor:  #cbdbd2
+urxvt.foreground:   #cbdbd2
+urxvt.background: #1e2e3b
+*.cursorColor:  #f2ff61
 
 ! black
 *.color0:       #0d0f0e
@@ -38,14 +37,11 @@
 
 
 URxvt*.font:xft:DejaVu Sans Mono for Powerline:autohint=true:pixelsize=16
-! Add resize-font to .urxvt/ext/resize-font
+
 URxvt.perl-ext-common:default,matcher,resize-font,
 urxvt.url-launcher: /usr/bin/google-chrome
 urxvt.matcher.button: 1
-urxvt*background: rgba:0000/0000/0200/c800
-urxvt*cursorColor: #329bab
 
 URxvt.keysym.C-Down:  resize-font:smaller
 URxvt.keysym.C-Up:  resize-font:bigger
-
 urxvt.scrollBar: false
