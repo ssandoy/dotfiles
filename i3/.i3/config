@@ -154,7 +154,7 @@ for_window [class="^jetbrains-.+"][window_type=dialog] focus
 for_window [class="Yad"] floating enable
 
 #spotify
-for_window [class="Spotify"] move to workspace $workspace4         
+#for_window [class="Spotify"] move to workspace $workspace4         
 #slack
 assign [class="Slack"] $workspace2
 #Evolution
@@ -211,7 +211,7 @@ client.urgent           $urgent-bg-color     $urgent-bg-color   $text-color     
 
 #hide_edge_borders both
 
-bindsym $mod+shift+x exec "betterlockscreen --lock dim"
+bindsym $mod+shift+x exec "i3lock"
 
 
 # Set dunst /gsd-print-notifications
@@ -239,14 +239,13 @@ exec_always compton
 #https://unsplash.com/photos/bUq1AeFRjec
 exec_always feh --bg-scale $HOME/Pictures/background.jpg
 exec_always --no-startup-id $HOME/.config/polybar/launch.sh
-bindsym $mod+shift+a exec "xrandr --auto;"
 
 
 #set resolution
 #exec  xrandr|grep connected|head -n 1|awk '{print $1}' | xargs -I {} xrandr --output {} --mode "2560x1600"
 exec xrandr --output VGA-1 --mode 2560x1440
 exec xrandr --output VGA-2 --mode 1440x900 --right-of VGA-1
-
+bindsym $mod+shift+a exec "xrandr --auto;"
 
 # Bindsym to blueman for bluethooth manager
 bindsym $mod+shift+b exec --no-startup-id blueman-manager
