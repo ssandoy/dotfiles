@@ -1,0 +1,23 @@
+[push]
+	default = current
+[user]
+	email = sander.sandoy@statnett.no
+	name = Sander Sand√√∏y
+[core]
+	autocrlf = input
+	eol = lf
+	hooksPath = /home/sander.sandoy/.local/etc/git-hooks
+	editor = vim
+[alias]
+	st = status --short --branch
+	ci = commit
+	co = checkout
+[credential]
+	helper = cache --timeout=144000
+[safe]
+	directory = /home/sander.sandoy/.local/devxp/devxp-linux
+	directory = /home/sander.sandoy/.local/devxp/devxp-linux
+	directory = /home/sander.sandoy/.local/devxp/devxp-linux
+	directory = /home/sander.sandoy/.local/devxp/devxp-linux
+	directory = /home/sander.sandoy/.local/devxp/devxp-linux
+	directory = /home/sander.sandoy/.local/devxp/devxp-linux
