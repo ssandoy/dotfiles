@@ -7,5 +7,6 @@
 	st = status --short --branch
 	ci = commit
 	co = checkout
-[core]
-	hooksPath = /home/sb1a.sparebank1.no/a504a6f/dotfiles/git/.git-templates/hooks
+[rerere]
+  enabled = true
+
