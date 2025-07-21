@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Simple Documentation Guidelines
+
+## Purpose
+
+Provide lightweight documentation for significant changes to help your future self understand why certain choices were made.
+
+## README Files
+
+Add README.md files in key directories with brief explanations:
+
+```
+config/zsh/README.md
+config/nvim/README.md
+```
+
+Example content:
+```markdown
+# Zsh Configuration
+
+## Structure
+- `plugins.zsh`: Plugin management
+- `aliases.zsh`: Command aliases
+- `functions.zsh`: Custom functions
+
+## Key Decisions
+- Using zinit for plugin management (faster than oh-my-zsh)
+- Split configuration into topic-based files for maintainability
+- Added platform detection for cross-platform support
+```
+
+## Code Comments
+
+Add context when making significant configuration choices:
+
+```bash
+# Using this approach instead of alternative because:
+# 1. Better performance (tested 2025-04)
+# 2. Works across macOS and Linux
+# 3. Easier to maintain
+```
+
+## Changelog
+
+For significant changes, add a brief note in a changelog file:
+
+```markdown
+# Changelog
+
+## 2025-04-28
+- Switched from oh-my-zsh to zinit for better startup time
+- Benchmark: Reduced shell startup from 0.8s to 0.4s
+
+## 2025-04-20
+- Migrated vim config to XDG structure
+- Added WSL compatibility for git credentials
+```
+
+## Benchmark Notes
+
+For performance-related changes, include simple benchmark results:
+
+```bash
+# Before: 0.45s startup
+# After: 0.32s startup
+# Tested: macOS 14.4, 2025-04-28
+```
+
+This lightweight approach provides context for your decisions without the formality of full architecture decision records, which are better suited for team projects.
