@@ -1,0 +1,4 @@
+# .stowrc - GNU Stow configuration file
+# Set the default target directory for stow
+--target=$HOME 
+--ignore=.stowrc
