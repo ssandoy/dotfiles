@@ -2,7 +2,7 @@
 	default = current
 [user]
     name = Sander F. Sandøy
-	email = sanderfsandoy@hotmail.com
+	email = sanderfsandoy@gmail.com
 [alias]
 	st = status --short --branch
 	ci = commit

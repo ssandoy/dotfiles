@@ -1,0 +1,11 @@
+[tools]
+python = "3.12"
+node = "latest"
+go = "latest"
+rust = "latest"
+gradle = "8.14.0"
+kubectl = "latest"
+kubectx = "latest"
+kubens = "latest"
+helm = "latest"
+
