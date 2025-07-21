@@ -1,0 +1,76 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# GNU Stow Guidelines
+
+## Overview
+
+GNU Stow is a symlink farm manager that creates symlinks from a central repository to their appropriate locations in the filesystem. It enables:
+
+- Centralized management of dotfiles in version control
+- Selective enabling/disabling of specific applications
+- Seamless syncing between machines
+
+## Installation
+
+```bash
+# macOS
+brew install stow
+
+# Ubuntu/Debian
+sudo apt install stow
+
+# Fedora/RHEL
+sudo dnf install stow
+```
+
+## Repository Structure
+
+Our dotfiles follow this application-based structure:
+
+```
+.dotfiles/
+├── .stowrc              # Stow configuration
+└── config/              # All configuration files
+    ├── zsh/             # Zsh configuration (stow zsh)
+    ├── git/             # Git configuration (stow git)
+```
+
+Each application directory mirrors the structure needed in your home directory:
+
+```
+config/zsh/
+├── .config/         # Goes to ~/.config/
+│   └── zsh/         # Goes to ~/.config/zsh/
+└── .zshrc           # Goes to ~/.zshrc
+```
+
+## Basic Commands
+
+With our `.stowrc` file in place:
+
+```bash
+# Stow all configurations
+./stow-all.sh
+
+# Stow specific applications
+stow zsh git tmux
+
+# Re-stow (update) applications
+stow -R zsh
+
+# Delete symlinks for an application
+stow -D zsh
+```
+
+## Best Practices
+
+### XDG Compliance
+
+Place configuration files in `.config/` directories:
+
+```
+config/git/.config/git/config  # Becomes ~/.config/git/config
+```

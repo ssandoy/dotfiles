@@ -1,0 +1,96 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# mise-en-place Guidelines
+
+## Overview
+
+mise-en-place (mise) is a powerful tool for managing:
+
+- Version-controlled developer tools (Node.js, Python, Ruby, etc.)
+- Environment variables
+- Project-specific tasks
+
+It replaces tools like nvm, pyenv, rbenv with a single unified interface.
+
+## Installation
+
+```bash
+# macOS
+brew install mise
+
+# Using the official installer
+curl https://mise.run | sh
+
+# Manual installation
+# See: https://mise.jdx.dev/getting-started.html
+```
+
+## Configuration
+
+mise uses TOML-based configuration. The global config is at `~/.config/mise/config.toml`:
+
+```toml
+[tools]
+node = "20"
+python = "3.12"
+ruby = "latest"
+
+[env]
+PATH = "$HOME/.local/bin:$PATH"
+
+```
+
+### Project Configuration
+
+Create a `mise.toml` in your project directory:
+
+```toml
+[tools]
+node = "20"
+python = "3.12.0"
+
+[env]
+ENVIRONMENT = "development"
+DEBUG = "true"
+
+[tasks.test]
+description = "Run tests"
+run = "pytest tests/"
+```
+
+## Usage
+
+### Managing Tools
+
+```bash
+# Install and use a specific version
+mise use node@20
+
+# Install a tool globally
+mise use -g python@3.12
+
+# List installed tools
+mise ls
+
+# Run a command with specific tool versions
+mise exec -- npm run build
+
+# Start a shell with all tools activated
+mise shell
+```
+
+### Running Tasks
+
+```bash
+# Run a task defined in mise.toml
+mise run test
+
+# List available tasks
+mise tasks ls
+
+# Add a new task
+mise tasks add build -- "npm run build"
+```

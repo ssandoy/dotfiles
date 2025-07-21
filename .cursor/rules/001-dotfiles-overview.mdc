@@ -1,0 +1,58 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Dotfiles Management Overview
+
+## Core Principles
+
+- **Application-first organization**: Each tool has its own directory
+- **XDG compliance**: Following XDG Base Directory Specification
+- **Platform-agnostic**: Works across macOS and Linux environments
+- **Modular stowing**: Each application can be managed independently
+
+## Repository Structure
+
+```
+.dotfiles/               # Root directory
+├── .stowrc              # Stow configuration 
+└── config/              # All configuration files
+    ├── zsh/             # Zsh configuration
+    │   ├── .config/     # Goes to ~/.config
+    │   │   └── zsh/     # Goes to ~/.config/zsh
+    │   └── .zshrc       # Goes to ~/.zshrc
+    ├── git/             # Common git configuration
+    ├── mise/            # mise-en-place configuration
+    └── tmux/            # Tmux configuration
+```
+
+## Stow Configuration
+
+Our `.stowrc` file simplifies commands:
+
+```
+--dir=./config
+--target=~/
+--ignore=.stowrc
+```
+
+## Core Components
+
+- **GNU Stow**: See [Stow Guidelines](mdc:.cursor/rules/002-stow-guidelines.mdc)
+- **mise-en-place**: See [mise Guidelines](mdc:.cursor/rules/003-mise-guidelines.mdc)
+
+## Basic Usage
+
+```bash
+# Clone and navigate
+git clone https://github.com/username/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+
+# Stow all or specific applications
+./stow-all.sh   # everything
+stow zsh git    # specific apps
+
+# Update after changes
+stow -R .
+```
