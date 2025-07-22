@@ -146,6 +146,9 @@ ssh-add /home/sander.sandoy/.ssh/id_rsa
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /home/sander.sandoy/.local/lib/vault/1.7.0/vault vault
 
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
+
 # CD to root of git project.
 cdr() {
    if [[ -z "$(git rev-parse --show-toplevel)" ]]; then

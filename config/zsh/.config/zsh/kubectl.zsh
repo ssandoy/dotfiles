@@ -43,12 +43,8 @@ kctx() {
 
 # Helper function to switch namespace and inform user
 kns() {
-  if [[ -z "$1" ]]; then
-    kubens
-  else
     echo "Switching to namespace: $1"
-    kubens "$1"
-  fi
+    kubectl config set-context --current --namespace=$1
 }
 
 # Helper function to display pod status with wide output

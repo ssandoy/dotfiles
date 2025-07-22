@@ -1,5 +1,10 @@
 # ~/.zsh_aliases
 
+# General
+alias c='clear'
+alias h='history'
+alias rl='typeset -U path && source ~/.zshrc'
+
 # --- File Management & Listing ---
 alias l='ls -CF'
 alias la='ls -A'
