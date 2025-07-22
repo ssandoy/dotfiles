@@ -94,8 +94,11 @@ export M2_HOME=/usr/share/maven
 export M2=/usr/share/maven/bin
 
 
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+# Set XDG-compliant ZDOTDIR if not already set
+export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
+
 # Zinit plugin manager
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [[ ! -f "${ZINIT_HOME}/zinit.zsh" ]]; then
   echo "Installing zinit..."
   sh -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
@@ -112,12 +115,23 @@ zinit light-mode for \
 # Plugins
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-syntax-highlighting
-zinit light zsh-users/zsh-completions
 
-# Aliases
-if [ -f "$HOME/.config/zsh/.zsh_aliases" ]; then
-  source "$HOME/.config/zsh/.zsh_aliases"
-fi
+# Enable nullglob to prevent errors if no files match
+setopt nullglob
+
+# Source all .zsh and dot-prefixed files in $ZDOTDIR/.config/zsh
+for file in "$ZDOTDIR"/*.zsh "$ZDOTDIR"/.*.zsh; do
+  [ -f "$file" ] && source "$file"
+done
+
+# Optionally, source all files in $ZDOTDIR/.config/zsh/ subdirectory
+for file in "$ZDOTDIR/.config/zsh/"*.zsh "$ZDOTDIR/.config/zsh/".*.zsh; do
+  [ -f "$file" ] && source "$file"
+done
+
+
+
+unsetopt nullglob
 
 
 export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/elhub-sp-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
@@ -139,17 +153,6 @@ cdr() {
    else
       builtin cd "$(git rev-parse --show-toplevel)"
    fi
-}
-kns() {
-  kubectl config set-context --current --namespace=$1
-}
-
-kctx() {
-  kubectl config set-context $1
-}
-
-kpods() {
-  kubectl get pods
 }
 
 /home/sander.sandoy/.local/devxp/devxp-linux/scripts/rc-notifications.sh

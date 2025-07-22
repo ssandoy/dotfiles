@@ -49,10 +49,6 @@ snap install ${snap_packages[@]}
 echo "Installing snap classic base-packages"
 snap install ${snap_classic_packages[@]}  --classic
 
-echo "Installing oh-my-zsh-plugins"
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-
 echo "Setting zsh as default shell"
 chsh -s $(which zsh)
 

@@ -11,6 +11,7 @@ alias gap='git add -p'
 alias gcan='git commit --amend --no-edit'
 alias gcm='git commit -m'
 alias ghprms='gh pr merge --squash'
+alias ghprm='gh pr merge --squash --delete --auto'
 
 # --- NPM Shortcuts ---
 alias nr='npm run'
