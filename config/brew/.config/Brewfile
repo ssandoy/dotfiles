@@ -1,0 +1,54 @@
+# Brewfile for dotfiles setup
+# Based on the Brewfile Guidelines from our dotfiles philosophy
+
+# Taps
+tap "homebrew/bundle"
+tap "homebrew/cask-fonts"
+tap "siderolabs/tap"
+
+# Development Tools
+brew "coreutils"         # GNU core utilities
+brew "fd"                # Fast find alternative
+brew "fzf"               # Fuzzy finder
+brew "gh"                # GitHub CLI
+brew "git"               # Version control
+brew "git-lfs"           # Git extension for versioning large files
+brew "go-task"           # Task runner / Make alternative
+brew "jq"                # JSON processor
+brew "mise"              # Tool version manager (replacing asdf, nvm, etc)
+brew "neovim"            # Improved vim
+brew "ripgrep"           # Fast grep alternative
+brew "sops"              # Secrets management tool
+brew "stow"              # Symlink farm manager for dotfiles
+brew "tree"              # Display directory structure
+brew "yq"                # YAML processor
+
+# Shells and CLI Utilities
+brew "bat"               # Cat with syntax highlighting
+brew "bottom"            # System monitor
+brew "curl"              # URL transfer tool
+brew "exa"               # Modern ls replacement
+brew "grep"              # GNU grep
+brew "htop"              # Interactive process viewer
+brew "mas"               # Mac App Store CLI
+brew "starship"          # Cross-shell prompt
+brew "wget"              # Internet file retriever
+brew "zsh"               # Improved shell
+brew "zsh-completions"   # Additional completions for zsh
+
+# Applications
+cask "firefox"            # Browser
+cask "hammerspoon"        # Automation tooler
+cask "raycast"            # Productivity launcher
+cask "slack"              # Team communication
+cask "spotify"            # Music streaming
+
+# Development Applications
+cask "cursor"            # AI editor
+cask "intellij-idea"     # IDE for JVM languages
+
+# Fonts
+cask "font-jetbrains-mono-nerd-font"   # Developer font with programming ligatures and icons
+
+# Mac App Store applications
+mas "Xcode", id: 497799835
