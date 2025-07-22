@@ -1,7 +1,7 @@
 # dotfiles
 
 ## Overview
-This repository manages all your configuration files (dotfiles) in a unified, modular, and XDG-compliant way using [GNU Stow](https://www.gnu.org/software/stow/).
+This repository manages my configuration files (dotfiles) in a unified, modular, and XDG-compliant way using [GNU Stow](https://www.gnu.org/software/stow/).
 
 - **Application-first organization:** Each tool has its own directory under `config/`
 - **XDG compliance:** XDG configs are placed in `.config/<app>/` subdirectories for seamless symlinking
@@ -74,7 +74,7 @@ This allows you to simply run `stow <package>` from the `config/` directory, and
 
 ### 1. Clone and Enter the Repo
 ```sh
-git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+git clone https://github.com/ssandoy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 

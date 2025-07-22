@@ -1,98 +1,131 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+#shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+#shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+fi
+
+
+find ~/.ssh/ -type f -exec grep -l "PRIVATE" {} \; | xargs ssh-add &> /dev/null
+# END Ansible - ssh-find-agent
+export SCREENDIR=$HOME/.screen
+
+complete -C /home/ssandoy/.local/lib/vault/1.7.0/vault vault
+source /home/sander.sandoy/.vaultrc
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+
+export M2_HOME=/usr/share/maven
+export M2=/usr/share/maven/bin
+
+
+
 # If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:/usr/local/bin:$PATH
-
-
-LANG=en_US.utf8
-
+# export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
 
-# Set name of the theme to load. Optionally, if you set this to "random"
-# it'll load a random theme each time that oh-my-zsh is loaded.
-# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME="agnoster"
-DEFAULT_USER=`whoami`
-HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
-setopt SHARE_HISTORY
-VIRTUAL_ENV=`whoami`
-
-
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(
-	git 
-	zsh-syntax-highlighting 
-	zsh-autosuggestions
-	colored-man-pages)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# ssh
-# export SSH_KEY_PATH="~/.ssh/rsa_id"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-alias curltime="curl -s -o /dev/null -w '%{time_starttransfer}\n' "$@""
-alias nrs="npm run start"
-alias nrd="npm run dev"
-alias gcan="git commit --amend --no-edit"
+# Load custom aliases
+if [ -f "$HOME/.zsh_aliases" ]; then
+  source "$HOME/.zsh_aliases"
+fi
 
 
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor line root)
+export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/elhub-sp-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
+export PATH="$PATH:/home/sander.sandoy/arcanist/bin/"
+export JFROG_USERNAME=sander.sandoy
+export JFROG_EMAIL=sander.sandoy@statnett.no
+export JFROG_PASSWORD_64BIT=TODO
 
-function lpc() {
-  field='Password'
-
-  lpass show $1|grep $field|awk '{print $2}'|xclip -selection c
-  echo 'Copied password from '$1 
-
-}
-
-function git_upload_ssh_key () {
-  read -p "Enter github email : " email
-  echo "Using email $email"
-  if [ ! -f ~/.ssh/id_rsa ]; then
-    ssh-keygen -t rsa -b 4096 -C "$email"
-    ssh-add ~/.ssh/id_rsa
-  fi
-  pub=`cat ~/.ssh/id_rsa.pub`
-  read -p "Enter github username: " githubuser
-  echo "Using username $githubuser"
-  read -s -p "Enter github password for user $githubuser: " githubpass
-  echo
-  read -p "Enter github OTP: " otp
-  echo "Using otp $otp"
-  echo
-  confirm
-  curl -u "$githubuser:$githubpass" -X POST -d "{\"title\":\"`hostname`\",\"key\":\"$pub\"}" --header "x-github-otp: $otp" https://api.github.com/user/keys
-}
+# SSH Activation
+eval $(ssh-agent)
+ssh-add /home/sander.sandoy/.ssh/id_rsa
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C /home/sander.sandoy/.local/lib/vault/1.7.0/vault vault
 
 # CD to root of git project.
 cdr() {
@@ -102,12 +135,20 @@ cdr() {
       builtin cd "$(git rev-parse --show-toplevel)"
    fi
 }
-
-mkcd () {
-  mkdir "$1"
-  cd "$1"
+kns() {
+  kubectl config set-context --current --namespace=$1
 }
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+kctx() {
+  kubectl config set-context $1
+}
+
+kpods() {
+  kubectl get pods
+}
+
+/home/sander.sandoy/.local/devxp/devxp-linux/scripts/rc-notifications.sh
+
+eval "$(oh-my-posh --init --shell zsh --config '~/.poshthemes/catppuccin_macchiato.omp.json')"
+
+source /home/sander.sandoy/.sdkman/.sdkmanshrc # THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
