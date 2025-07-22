@@ -88,30 +88,35 @@ source /home/sander.sandoy/.vaultrc
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 
 export M2_HOME=/usr/share/maven
 export M2=/usr/share/maven/bin
 
 
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+# Zinit plugin manager
+if [[ ! -f "${ZINIT_HOME}/zinit.zsh" ]]; then
+  echo "Installing zinit..."
+  sh -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+fi
+source "${ZINIT_HOME}/zinit.zsh"
 
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+# Load annexes (optional, for extra features)
+zinit light-mode for \
+    zdharma-continuum/zinit-annex-as-monitor \
+    zdharma-continuum/zinit-annex-bin-gem-node \
+    zdharma-continuum/zinit-annex-patch-dl \
+    zdharma-continuum/zinit-annex-rust
 
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
+# Plugins
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
 
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlighting)
-
-source $ZSH/oh-my-zsh.sh
-
-# Load custom aliases
-if [ -f "$HOME/.zsh_aliases" ]; then
-  source "$HOME/.zsh_aliases"
+# Aliases
+if [ -f "$HOME/.config/zsh/.zsh_aliases" ]; then
+  source "$HOME/.config/zsh/.zsh_aliases"
 fi
 
 
