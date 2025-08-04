@@ -38,7 +38,7 @@ alias kn='kubens'
 
 # Helper function to switch context
 kctx() {
-  kubectl config set-context $1
+  kubectl config use-context $1
 }
 
 # Helper function to switch namespace and inform user

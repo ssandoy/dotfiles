@@ -26,6 +26,7 @@ apt_packages=(
     xclip
     fzf
     bat
+    zoxide
 )
 
 snap_packages=()

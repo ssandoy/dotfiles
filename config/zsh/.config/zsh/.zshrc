@@ -83,12 +83,13 @@ find ~/.ssh/ -type f -exec grep -l "PRIVATE" {} \; | xargs ssh-add &> /dev/null
 # END Ansible - ssh-find-agent
 export SCREENDIR=$HOME/.screen
 
+autoload -U +X bashcompinit && bashcompinit
+autoload -U +X compinit && compinit
 complete -C /home/ssandoy/.local/lib/vault/1.7.0/vault vault
 source /home/sander.sandoy/.vaultrc
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
 
 export M2_HOME=/usr/share/maven
 export M2=/usr/share/maven/bin
@@ -115,6 +116,7 @@ zinit light-mode for \
 # Plugins
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
 
 # Enable nullglob to prevent errors if no files match
 setopt nullglob
@@ -136,18 +138,20 @@ unsetopt nullglob
 
 export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/elhub-sp-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
 export PATH="$PATH:/home/sander.sandoy/arcanist/bin/"
-export JFROG_USERNAME=sander.sandoy
-export JFROG_EMAIL=sander.sandoy@statnett.no
-export JFROG_PASSWORD_64BIT=TODO
 
 # SSH Activation
 eval $(ssh-agent)
 ssh-add /home/sander.sandoy/.ssh/id_rsa
-autoload -U +X bashcompinit && bashcompinit
+export ZCOMPDUMPFILE="$HOME/.config/zsh/.zcompdump"
+autoload -Uz compinit && compinit   
 complete -o nospace -C /home/sander.sandoy/.local/lib/vault/1.7.0/vault vault
+export PATH=$PATH:/home/sander.sandoy/.local/bin
 
 # Set up fzf key bindings and fuzzy completion
-source <(fzf --zsh)
+# For fzf-versions greather than 0.46.0, use the following command:
+#source <(fzf --zsh)
+source /usr/share/doc/fzf/examples/key-bindings.zsh # This is for fzf-versions less than 0.46.0
+source /usr/share/doc/fzf/examples/completion.zsh
 
 # CD to root of git project.
 cdr() {
@@ -162,4 +166,5 @@ cdr() {
 
 eval "$(oh-my-posh --init --shell zsh --config '~/.poshthemes/catppuccin_macchiato.omp.json')"
 
+eval "$(zoxide init zsh)"
 source /home/sander.sandoy/.sdkman/.sdkmanshrc # THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
