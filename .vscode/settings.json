@@ -1,4 +1,21 @@
 {
-    "editor.fontFamily": "'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback', 'Font Awesome 5 Brands', 'Font Awesome 5 Free'",
-    "workbench.settings.useSplitJSON": true
+  "remote.autoForwardPortsSource": "hybrid",
+  "files.autoSave": "afterDelay",
+  "git.blame.editorDecoration.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "workbench.sideBar.location": "right",
+  "editor.fontSize": 15,
+  "git.autofetch": true,
+  "workbench.colorTheme": "JetBrains New Dark",
+  "workbench.iconTheme": "bearded-icons",
+  "terminal.integrated.fontSize": 15,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always",
+    "source.fixAll.ts": "always",
+    "source.fixAll.stylelint": "always",
+    "source.sortImports": "always",
+    "source.organizeImports": "always",
+    "source.removeUnusedImports": "always"
+  },
+  "editor.formatOnSave": true
 }
