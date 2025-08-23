@@ -1,0 +1,14 @@
+{
+  "editor.accessibilitySupport": "off",
+  "editor.fontFamily": "'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback', 'Font Awesome 5 Brands', 'Font Awesome 5 Free'",
+  "terminal.explorerKind": "external",
+  "terminal.external.osxExec": "Iterm.app",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "workbench.settings.useSplitJSON": true,
+  "terminal.integrated.env.osx": {
+    "FIG_NEW_SESSION": "1"
+  }
+},
+{
+  "typescript.tsserver.pluginPaths": ["typescript-plugin-css-modules"]
+}

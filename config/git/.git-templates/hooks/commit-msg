@@ -1,0 +1,34 @@
+#! /bin/sh
+
+# put in .git/hooks/commit-msg
+# make executable chmod +x .git/hooks/commit-msg   
+# check that core.hooksPath is set to .git/hooks or not set at all (default is .git/hooks)
+# unset 'git config --unset core.hooksPath' or set 'git config core.hooksPath ./git/hooks'
+# shopt -s nocasematch
+
+# current_branch="$(git rev-parse --abbrev-ref HEAD)"
+# branch_regex='(^APPS-[0-9]+)-.*|merge'
+# commit_regex='(^APPS-[0-9]+)|(^apps-[0-9]+)'
+
+# # Check that branch is a feature branch with jira task prefixed
+# if [[ $current_branch =~ $branch_regex ]]
+# then
+#     echo "JIRA task: ${BASH_REMATCH[1]}"
+# else
+#     echo "Branch is invalid. Feature branches should start with APPS-<DDDD>.<describe-feature-here>. Current branch: $current_branch"
+#     exit 0
+# fi
+
+# jira_task="${BASH_REMATCH[1]}"
+# if [[ $(cat $1) =~ $commit_regex ]]
+# then
+#     echo "Commit message already has jira task: $(cat $1)"
+#     exit 0
+# else
+#     echo $jira_task: "$(cat $1)" > $1
+#     if [ -n "$DESCRIPTION" ] 
+#     then
+#       echo "" >> "$1"
+#       echo $DESCRIPTION >> "$1"
+#     fi
+# fi

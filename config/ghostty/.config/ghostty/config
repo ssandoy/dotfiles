@@ -1,0 +1,53 @@
+# Ghostty configuration
+# See: https://ghostty.org/docs/config
+
+# Theme configuration - using catppuccin theme with auto light/dark switching
+theme = catppuccin-macchiato
+
+# Font configuration
+font-family = JetBrains Mono Nerd Font
+font-size = 14
+font-feature = liga
+font-feature = calt
+font-thicken = true
+font-thicken-strength = 70
+adjust-cell-height = 5%
+
+# Terminal cursor
+cursor-style = block
+cursor-style-blink = false
+cursor-color = #f5e0dc
+
+# Window padding
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true
+
+# Window decorations
+confirm-close-surface = false
+macos-titlebar-style = hidden
+macos-option-as-alt = right
+
+# Window opacity
+background-opacity = 0.95
+background-blur-radius = 15
+unfocused-split-opacity = 0.9
+
+# Basic settings
+scrollback-limit = 10000
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# Shell integration
+shell-integration = detect
+
+# Keybindings for convenient navigation
+keybind = cmd+t=new_tab
+keybind = cmd+w=close_surface
+keybind = cmd+r=reload_config
+keybind = cmd+i=inspector:toggle
+
+# Tab navigation
+keybind = ctrl+tab=next_tab
+keybind = ctrl+shift+tab=previous_tab
+keybind = shift+enter=text:\n

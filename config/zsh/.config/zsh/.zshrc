@@ -20,10 +20,6 @@ HISTCONTROL=ignoreboth
 # append to the history file, don't overwrite it
 #shopt -s histappend
 
-# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=1000
-HISTFILESIZE=2000
-
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 #shopt -s checkwinsize
@@ -88,10 +84,6 @@ find ~/.ssh/ -type f -exec grep -l "PRIVATE" {} \; | xargs ssh-add &> /dev/null
 # END Ansible - ssh-find-agent
 export SCREENDIR=$HOME/.screen
 
-autoload -U +X bashcompinit && bashcompinit
-autoload -U +X compinit && compinit
-complete -C /home/ssandoy/.local/lib/vault/1.7.0/vault vault
-source /home/sander.sandoy/.vaultrc
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -138,27 +130,15 @@ for file in "$ZDOTDIR/.config/zsh/"*.zsh "$ZDOTDIR/.config/zsh/".*.zsh; do
   [ -f "$file" ] && source "$file"
 done
 
-
-
 unsetopt nullglob
 
 
-export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/service-platform-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
-export ELHUB_LOG_DIR=/home/sander.sandoy/logs
-
 # SSH Activation
 eval $(ssh-agent)
-ssh-add /home/sander.sandoy/.ssh/id_rsa
-export ZCOMPDUMPFILE="$HOME/.config/zsh/.zcompdump"
-autoload -Uz compinit && compinit   
-complete -o nospace -C /home/sander.sandoy/.local/lib/vault/1.7.0/vault vault
-export PATH=$PATH:/home/sander.sandoy/.local/bin
+ssh-add $HOME/.ssh/id_rsa
 
 # Set up fzf key bindings and fuzzy completion
-# For fzf-versions greather than 0.46.0, use the following command:
-#source <(fzf --zsh)
-source /usr/share/doc/fzf/examples/key-bindings.zsh # This is for fzf-versions less than 0.46.0
-source /usr/share/doc/fzf/examples/completion.zsh
+source <(fzf --zsh)
 
 # CD to root of git project.
 cdr() {
@@ -169,10 +149,6 @@ cdr() {
    fi
 }
 
-/home/sander.sandoy/.local/devxp/devxp-linux/scripts/rc-notifications.sh
-
 eval "$(oh-my-posh --init --shell zsh --config '~/.poshthemes/catppuccin_macchiato.omp.json')"
-
 eval "$(zoxide init zsh)"
 eval "$(mise activate zsh)"
-source /home/sander.sandoy/.sdkman/.sdkmanshrc # THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
