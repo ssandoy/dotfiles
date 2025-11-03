@@ -136,8 +136,8 @@ done
 unsetopt nullglob
 
 
-export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/elhub-sp-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
-export PATH="$PATH:/home/sander.sandoy/arcanist/bin/"
+export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/service-platform-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
+export ELHUB_LOG_DIR=/home/sander.sandoy/logs
 
 # SSH Activation
 eval $(ssh-agent)
