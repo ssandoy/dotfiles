@@ -1,0 +1,33 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: Markdown Lint
+      tags: documentation
+      files: git diff --name-only --diff-filter=d $(git merge-base origin/master HEAD)..HEAD
+      glob: "*.md"
+      run: markdownlint-cli2 --config $XDG_CONFIG_HOME/.markdownlint-cli2.yaml {files}
+    - name: Detect Secrets
+      tags: secrets
+      run: $XDG_CONFIG_HOME/lefthook/gitleaks.sh pre-push
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: Npm Lint (Elhub-specific)
+      tags: frontend
+      files: git diff --name-only --diff-filter=d --staged
+      run: npm run lint:fix {staged_files}
+      glob: "*.{js,ts,jsx,tsx}"
+    - name: Go Vet
+      tags: backend
+      files: git diff --name-only --diff-filter=d --staged
+      glob: "*.go"
+      run: go vet {files}
+    - name: Detect Secrets
+      tags: secrets
+      run: $XDG_CONFIG_HOME/lefthook/gitleaks.sh pre-commit
