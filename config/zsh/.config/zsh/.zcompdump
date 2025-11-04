@@ -1438,7 +1438,6 @@ _comps=(
 'scselect' '_scselect'
 'scutil' '_scutil'
 'sdd' '_sdd'
-'sdk' '_bash_complete -o default -F _sdk'
 'sdkmanager' '_sdkmanager'
 'seaf-cli' '_seafile'
 'sed' '_sed'

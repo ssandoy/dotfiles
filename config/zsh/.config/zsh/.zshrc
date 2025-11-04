@@ -98,6 +98,8 @@ export M2=/usr/share/maven/bin
 # Set XDG-compliant ZDOTDIR if not already set
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 
+export EDITOR=nvim
+
 # Zinit plugin manager
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [[ ! -f "${ZINIT_HOME}/zinit.zsh" ]]; then
@@ -136,8 +138,8 @@ done
 unsetopt nullglob
 
 
-export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/elhub-sp-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
-export PATH="$PATH:/home/sander.sandoy/arcanist/bin/"
+export ELHUB_CONFIG_DIR=/home/sander.sandoy/git/service-platform-web-api/web-portal-ee-layer-java/web-portal-ee-layer-java-portal/target/appserver-portal/WEB-INF/classes
+export ELHUB_LOG_DIR=/home/sander.sandoy/logs
 
 # SSH Activation
 eval $(ssh-agent)
@@ -167,4 +169,5 @@ cdr() {
 eval "$(oh-my-posh --init --shell zsh --config '~/.poshthemes/catppuccin_macchiato.omp.json')"
 
 eval "$(zoxide init zsh)"
+eval "$(mise activate zsh)"
 source /home/sander.sandoy/.sdkman/.sdkmanshrc # THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!

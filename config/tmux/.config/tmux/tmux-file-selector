@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Open fzf in a tmux popup rooted at the current pane's cwd,
+# then open the chosen file in nvim in that same pane.
+
+# Identify the target pane and its state
+TARGET_PANE="$(tmux display -p -F "#{pane_id}")"
+TARGET_PATH="$(tmux display -p -t "$TARGET_PANE" -F "#{pane_current_path}")"
+TARGET_CMD="$(tmux display -p -t "$TARGET_PANE" -F "#{pane_current_command}")"
+
+# Run everything inside the popup; on cancel, exit 0 cleanly.
+# The popup itself sends keys back to TARGET_PANE, so this wrapper can be lax about exit codes.
+tmux display-popup -d "$TARGET_PATH" -E \
+"bash -lc '
+  set -euo pipefail
+
+  # Build a file list (fd preferred)
+  if command -v fd >/dev/null 2>&1; then
+    LIST_CMD=\"fd --type f --hidden --follow --exclude .git\"
+  else
+    LIST_CMD=\"find . -type f -not -path \\\"*/.git/*\\\" | sed \\\"s|^\\./||\\\" \"
+  fi
+
+  # Pick a file; allow cancel without error
+  sel=\$(bash -lc \"\$LIST_CMD\" | fzf --prompt=\"files> \" --height=80% --reverse) || exit 0
+  [[ -z \${sel:-} ]] && exit 0
+
+  # Absolute path
+  if command -v realpath >/dev/null 2>&1; then
+    abs=\$(realpath -- \"\$sel\")
+  elif command -v readlink >/dev/null 2>&1; then
+    abs=\$(readlink -f -- \"\$sel\" 2>/dev/null || printf \"%s/%s\" \"$TARGET_PATH\" \"\$sel\")
+  else
+    abs=\$(printf \"%s/%s\" \"$TARGET_PATH\" \"\$sel\")
+  fi
+
+  # Open in the original pane
+  if [[ \"$TARGET_CMD\" == \"nvim\" || \"$TARGET_CMD\" == \"vim\" ]]; then
+    tmux send-keys -t \"$TARGET_PANE\" Escape : \"e \" \"\$abs\" Enter
+  else
+    tmux send-keys -t \"$TARGET_PANE\" nvim Space \"\$abs\" Enter
+  fi
+
+  exit 0
+'"

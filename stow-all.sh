@@ -10,7 +10,7 @@ stow -t "$HOME" zsh
 stow -t "$HOME" git
 stow -t "$HOME" vim
 stow -t "$HOME" mise
-
+stow -t "$HOME" nvim
 # Add more as needed 
 
 #stow -t "$HOME/.config" dunst
