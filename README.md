@@ -1,5 +1,7 @@
 # dotfiles
 
+👉 For contributor-focused workflows and conventions, see [Repository Guidelines](AGENTS.md).
+
 ## Overview
 This repository manages my configuration files (dotfiles) in a unified, modular, and XDG-compliant way using [GNU Stow](https://www.gnu.org/software/stow/).
 
