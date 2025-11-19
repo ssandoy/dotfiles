@@ -60,9 +60,3 @@ alias gts='git tag -l'
 # Cherry-pick/Revert/Amend
 alias gcp='git cherry-pick'
 alias grv='git revert' 
-
-# GitHub
-alias ghpr='gh pr view'
-alias ghprc='gh pr create'
-alias ghprms='gh pr merge --squash'
-alias ghprm='gh pr merge -s -d --auto'

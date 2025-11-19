@@ -1,4 +1,4 @@
-#files: 1281	version: 5.8.1
+#files: 1761	version: 5.8.1
 
 _comps=(
 '-' '_precommand'
@@ -1438,6 +1438,7 @@ _comps=(
 'scselect' '_scselect'
 'scutil' '_scutil'
 'sdd' '_sdd'
+'sdk' '_bash_complete -o default -F _sdk'
 'sdkmanager' '_sdkmanager'
 'seaf-cli' '_seafile'
 'sed' '_sed'
@@ -1843,6 +1844,7 @@ _comps=(
 'ytalk' '_other_accounts'
 'yum' '_yum'
 'yumdb' '_yum'
+'z' '__zoxide_z_complete'
 'zargs' '_zargs'
 'zcalc' '_zcalc'
 'zcash-cli' '_zcash-cli'
@@ -2237,6 +2239,102 @@ autoload -Uz _afew _age _android _archlinux-java _artisan \
             _zftp _zle _zmodload _zmv _zparseopts \
             _zpty _zsh-mime-handler _zsocket _zstyle _ztodo \
             _SUSEconfig _hwinfo _osc _yast _zypper \
+            _afew _age _android _archlinux-java _artisan \
+            _atach _avdmanager _bitcoin-cli _bower _bundle \
+            _cap _cask _ccache _cf _chatblade \
+            _choc _chromium _clang-check _clang-format _clang-tidy \
+            _cmake _coffee _conan _concourse _console \
+            _cppcheck _dad _dart _dget _dhcpcd \
+            _diana _direnv _do-release-upgrade _docpad _drush \
+            _ecdsautil _emacs _emacsclient _emulator _envdir \
+            _exportfs _fab _fail2ban-client _fail2ban-regex _ffind \
+            _fleetctl _flutter _fwupdmgr _gas _ghc \
+            _gist _git-flow _git-pulls _git-revise _git-wtf \
+            _glances _golang _google _gpgconf _grpcurl \
+            _gtk-launch _hello _hledger _homestead _httpie \
+            _ibus _include-what-you-use _inxi _jest _jmeter \
+            _jmeter-plugins _jonas _jrnl _kak _kitchen \
+            _knife _l3build _language_codes _lilypond _lscpu \
+            _lunchy _mc _middleman _mina _mix \
+            _mkcert _mssh _mussh _mvn _nano \
+            _nanoc _neo _neofetch _networkQuality _nftables \
+            _node _nvm _openssl _openvpn3 _optirun \
+            _patool _periscope _pgsql_utils _phing _pixz \
+            _pkcon _play _pm2 _port _pre-commit \
+            _protoc _pygmentize _qmk _rails _ralio \
+            _rdfind _redis-cli _rfkill _rkt _rmlint \
+            _rslsync _rspec _rsvm _rubocop _sbt \
+            _scala _screencapture _scrub _sdd _sdkmanager \
+            _setcap _setup.py _sfdx _shallow-backup _shellcheck \
+            _showoff _srm _stack _subliminal _supervisorctl \
+            _supervisord _svm _teamocil _thor _tmuxinator \
+            _tmuxp _tox _ts-node _tsc _udisksctl \
+            _ufw _uuidgen _virtualbox _vnstat _wemux \
+            _wg-quick _xsel _yarn _yfm _zcash-cli \
+            _afew _age _android _archlinux-java _artisan \
+            _atach _avdmanager _bitcoin-cli _bower _bundle \
+            _cap _cask _ccache _cf _chatblade \
+            _choc _chromium _clang-check _clang-format _clang-tidy \
+            _cmake _coffee _conan _concourse _console \
+            _cppcheck _dad _dart _dget _dhcpcd \
+            _diana _direnv _do-release-upgrade _docpad _drush \
+            _ecdsautil _emacs _emacsclient _emulator _envdir \
+            _exportfs _fab _fail2ban-client _fail2ban-regex _ffind \
+            _fleetctl _flutter _fwupdmgr _gas _ghc \
+            _gist _git-flow _git-pulls _git-revise _git-wtf \
+            _glances _golang _google _gpgconf _grpcurl \
+            _gtk-launch _hello _hledger _homestead _httpie \
+            _ibus _include-what-you-use _inxi _jest _jmeter \
+            _jmeter-plugins _jonas _jrnl _kak _kitchen \
+            _knife _l3build _language_codes _lilypond _lscpu \
+            _lunchy _mc _middleman _mina _mix \
+            _mkcert _mssh _mussh _mvn _nano \
+            _nanoc _neo _neofetch _networkQuality _nftables \
+            _node _nvm _openssl _openvpn3 _optirun \
+            _patool _periscope _pgsql_utils _phing _pixz \
+            _pkcon _play _pm2 _port _pre-commit \
+            _protoc _pygmentize _qmk _rails _ralio \
+            _rdfind _redis-cli _rfkill _rkt _rmlint \
+            _rslsync _rspec _rsvm _rubocop _sbt \
+            _scala _screencapture _scrub _sdd _sdkmanager \
+            _setcap _setup.py _sfdx _shallow-backup _shellcheck \
+            _showoff _srm _stack _subliminal _supervisorctl \
+            _supervisord _svm _teamocil _thor _tmuxinator \
+            _tmuxp _tox _ts-node _tsc _udisksctl \
+            _ufw _uuidgen _virtualbox _vnstat _wemux \
+            _wg-quick _xsel _yarn _yfm _zcash-cli \
+            _afew _age _android _archlinux-java _artisan \
+            _atach _avdmanager _bitcoin-cli _bower _bundle \
+            _cap _cask _ccache _cf _chatblade \
+            _choc _chromium _clang-check _clang-format _clang-tidy \
+            _cmake _coffee _conan _concourse _console \
+            _cppcheck _dad _dart _dget _dhcpcd \
+            _diana _direnv _do-release-upgrade _docpad _drush \
+            _ecdsautil _emacs _emacsclient _emulator _envdir \
+            _exportfs _fab _fail2ban-client _fail2ban-regex _ffind \
+            _fleetctl _flutter _fwupdmgr _gas _ghc \
+            _gist _git-flow _git-pulls _git-revise _git-wtf \
+            _glances _golang _google _gpgconf _grpcurl \
+            _gtk-launch _hello _hledger _homestead _httpie \
+            _ibus _include-what-you-use _inxi _jest _jmeter \
+            _jmeter-plugins _jonas _jrnl _kak _kitchen \
+            _knife _l3build _language_codes _lilypond _lscpu \
+            _lunchy _mc _middleman _mina _mix \
+            _mkcert _mssh _mussh _mvn _nano \
+            _nanoc _neo _neofetch _networkQuality _nftables \
+            _node _nvm _openssl _openvpn3 _optirun \
+            _patool _periscope _pgsql_utils _phing _pixz \
+            _pkcon _play _pm2 _port _pre-commit \
+            _protoc _pygmentize _qmk _rails _ralio \
+            _rdfind _redis-cli _rfkill _rkt _rmlint \
+            _rslsync _rspec _rsvm _rubocop _sbt \
+            _scala _screencapture _scrub _sdd _sdkmanager \
+            _setcap _setup.py _sfdx _shallow-backup _shellcheck \
+            _showoff _srm _stack _subliminal _supervisorctl \
+            _supervisord _svm _teamocil _thor _tmuxinator \
+            _tmuxp _tox _ts-node _tsc _udisksctl \
+            _ufw _uuidgen _virtualbox _vnstat _wemux \
+            _wg-quick _xsel _yarn _yfm _zcash-cli \
             _afew _age _android _archlinux-java _artisan \
             _atach _avdmanager _bitcoin-cli _bower _bundle \
             _cap _cask _ccache _cf _chatblade \

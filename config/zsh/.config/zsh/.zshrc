@@ -8,6 +8,11 @@ case $- in
       *) return;;
 esac
 
+# Allow Ctrl+S/Ctrl+Q bindings (needed for tmux shortcuts)
+if command -v stty >/dev/null 2>&1; then
+  stty -ixon
+fi
+
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
