@@ -37,7 +37,7 @@ ghprs() {
     | group_by(.repository.nameWithOwner)
     | map(sort_by(.updatedAt) | reverse)
     | add
-    # Emit TSV: repo, number, title, labels, updatedAt, author, reviewDecision, draftFlag
+    # Emit TSV: repo, number, title, labels, updatedAt, author, draftFlag
     | .[]
     | [
         .repository.nameWithOwner,
@@ -46,7 +46,6 @@ ghprs() {
         ((.labels // []) | map(.name) | join(",")),
         .updatedAt,
         ((.author? // {} | .login) // ""),
-        (.reviewDecision // ""),
         (if .isDraft then "draft" else "" end)
       ]
     | @tsv
@@ -105,7 +104,7 @@ ghprs() {
     --border \
     --info=inline \
     --bind 'enter:execute(gh pr view {2} --repo {1} --web)+abort' \
-    --bind 'alt-a:execute-silent(gh pr review {2} --approve --repo {1})+abort' \
-    --bind 'alt-m:execute-silent(gh pr merge {2} --squash --repo {1})+abort' \
-    --bind 'alt-s:execute-silent(gh pr review {2} --approve --repo {1} && gh pr merge {2} --squash --repo {1})+abort'
+    --bind 'alt-a:execute(gh pr review {2} --approve --repo {1})+abort' \
+    --bind 'alt-m:execute(gh pr merge {2} --squash --repo {1})+abort' \
+    --bind 'alt-s:execute(gh pr review {2} --approve --repo {1} && gh pr merge {2} --squash --repo {1})+abort'
 }
