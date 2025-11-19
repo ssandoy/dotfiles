@@ -39,10 +39,10 @@ ghprs() {
   print -r -- "$rows" | fzf \
     --delimiter=$'\t' \
     --with-nth=1,3 \
-    --header=$'enter: full diff | alt-a: approve | alt-m: squash merge | alt-s: approve+merge' \
+    --header=$'enter: open in web | alt-a: approve | alt-m: squash merge | alt-s: approve+merge' \
     --preview 'echo "PR: {3}"; echo; gh pr diff {2} --repo {1} --color=never 2>/dev/null | sed -n "1,200p"' \
     --preview-window=right:50%:wrap \
-    --bind 'enter:execute(echo "PR: {3}"; echo; gh pr diff {2} --repo {1} 2>/dev/null | ${PAGER:-less -R})' \
+    --bind 'enter:execute(gh pr view {2} --repo {1} --web)+abort' \
     --bind 'alt-a:execute-silent(gh pr review {2} --approve --repo {1})+abort' \
     --bind 'alt-m:execute-silent(gh pr merge {2} --squash --repo {1})+abort' \
     --bind 'alt-s:execute-silent(gh pr review {2} --approve --repo {1} && gh pr merge {2} --squash --repo {1})+abort'
