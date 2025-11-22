@@ -1,2 +1,4 @@
 [user]
 	email = sanderfsandoy@gmail.com
+[credential]
+	helper = store

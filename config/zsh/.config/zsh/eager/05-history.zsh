@@ -22,4 +22,3 @@ setopt hist_find_no_dups        # do not display duplicates when searching
 setopt hist_reduce_blanks       # trim superfluous blanks
 setopt hist_verify              # do not execute line directly after history expansion
 setopt hist_expire_dups_first   # expire duplicates first when trimming
-
