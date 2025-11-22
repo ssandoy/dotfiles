@@ -1,54 +1,91 @@
-# Brewfile for dotfiles setup
-# Based on the Brewfile Guidelines from our dotfiles philosophy
-
-# Taps
-tap "homebrew/bundle"
-tap "homebrew/cask-fonts"
-tap "siderolabs/tap"
-
-# Development Tools
-brew "coreutils"         # GNU core utilities
-brew "fd"                # Fast find alternative
-brew "fzf"               # Fuzzy finder
-brew "gh"                # GitHub CLI
-brew "git"               # Version control
-brew "git-lfs"           # Git extension for versioning large files
-brew "go-task"           # Task runner / Make alternative
-brew "jq"                # JSON processor
-brew "mise"              # Tool version manager (replacing asdf, nvm, etc)
-brew "neovim"            # Improved vim
-brew "ripgrep"           # Fast grep alternative
-brew "sops"              # Secrets management tool
-brew "stow"              # Symlink farm manager for dotfiles
-brew "tree"              # Display directory structure
-brew "yq"                # YAML processor
-
-# Shells and CLI Utilities
-brew "bat"               # Cat with syntax highlighting
-brew "bottom"            # System monitor
-brew "curl"              # URL transfer tool
-brew "exa"               # Modern ls replacement
-brew "grep"              # GNU grep
-brew "htop"              # Interactive process viewer
-brew "mas"               # Mac App Store CLI
-brew "starship"          # Cross-shell prompt
-brew "wget"              # Internet file retriever
-brew "zsh"               # Improved shell
-brew "zsh-completions"   # Additional completions for zsh
-
-# Applications
-cask "firefox"            # Browser
-cask "hammerspoon"        # Automation tooler
-cask "raycast"            # Productivity launcher
-cask "slack"              # Team communication
-cask "spotify"            # Music streaming
-
-# Development Applications
-cask "cursor"            # AI editor
-cask "intellij-idea"     # IDE for JVM languages
-
-# Fonts
-cask "font-jetbrains-mono-nerd-font"   # Developer font with programming ligatures and icons
-
-# Mac App Store applications
-mas "Xcode", id: 497799835
+tap "go-swagger/go-swagger"
+tap "go-task/tap"
+tap "hashicorp/tap"
+tap "homebrew/services"
+tap "jandedobbeleer/oh-my-posh"
+tap "koekeishiya/formulae"
+tap "supabase/tap"
+brew "act"
+brew "glib"
+brew "eza"
+brew "fzf"
+brew "gh"
+brew "go"
+brew "golangci-lint"
+brew "harfbuzz"
+brew "libtiff"
+brew "gradle"
+brew "htop"
+brew "jose"
+brew "jq"
+brew "libgsf"
+brew "libice"
+brew "python@3.9"
+brew "libpst"
+brew "libsm"
+brew "libxft"
+brew "libxt"
+brew "libxmu"
+brew "python@3.11"
+brew "node"
+brew "nvm"
+brew "oh-my-posh"
+brew "oha"
+brew "openjdk@17", link: true
+brew "postgresql@14"
+brew "pre-commit", link: false
+brew "pyenv"
+brew "python@3.10"
+brew "rust"
+brew "rxvt-unicode"
+brew "skaffold"
+brew "stow"
+brew "tfenv"
+brew "tfsec"
+brew "tmux"
+brew "tree"
+brew "typescript"
+brew "virtualenv", link: false
+brew "xclip"
+brew "yq"
+brew "zoxide"
+brew "go-swagger/go-swagger/go-swagger"
+brew "go-task/tap/go-task"
+brew "hashicorp/tap/terraform", link: false
+brew "koekeishiya/formulae/skhd", args: ["HEAD"]
+brew "koekeishiya/formulae/yabai"
+brew "supabase/tap/supabase"
+cask "amethyst"
+cask "cursor"
+cask "docker-desktop"
+cask "gcloud-cli"
+cask "ghostty"
+cask "postman"
+cask "visual-studio-code"
+cask "xquartz"
+vscode "42crunch.vscode-openapi"
+vscode "4ops.terraform"
+vscode "christian-kohler.npm-intellisense"
+vscode "clinyong.vscode-css-modules"
+vscode "dbaeumer.vscode-eslint"
+vscode "esbenp.prettier-vscode"
+vscode "github.copilot"
+vscode "github.copilot-chat"
+vscode "golang.go"
+vscode "google.geminicodeassist"
+vscode "googlecloudtools.cloudcode"
+vscode "hashicorp.terraform"
+vscode "keroc.hex-fmt"
+vscode "maziac.hex-hover-converter"
+vscode "ms-azuretools.vscode-containers"
+vscode "ms-azuretools.vscode-docker"
+vscode "ms-vscode-remote.remote-containers"
+vscode "ms-vscode.hexeditor"
+vscode "ms-vscode.vscode-typescript-next"
+vscode "redhat.vscode-yaml"
+vscode "rogalmic.bash-debug"
+vscode "stylelint.vscode-stylelint"
+vscode "visualstudioexptteam.intellicode-api-usage-examples"
+vscode "visualstudioexptteam.vscodeintellicode"
+vscode "withfig.fig"
+vscode "zhuangtongfa.material-theme"

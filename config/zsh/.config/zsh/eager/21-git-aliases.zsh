@@ -60,3 +60,12 @@ alias gts='git tag -l'
 # Cherry-pick/Revert/Amend
 alias gcp='git cherry-pick'
 alias grv='git revert' 
+
+# CD to root of git project.
+cdr() {
+   if [[ -z "$(git rev-parse --show-toplevel)" ]]; then
+      builtin echo "Error: top level directory not found."
+   else
+      builtin cd "$(git rev-parse --show-toplevel)"
+   fi
+}

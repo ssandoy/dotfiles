@@ -1,0 +1,45 @@
+# Catppuccin Macchiato theme for Ghostty
+# https://github.com/catppuccin/ghostty
+
+# Base colors
+background = #24273a
+foreground = #cad3f5
+cursor-color = #f4dbd6
+selection-background = #5b6078
+selection-foreground = #cad3f5
+
+# Normal colors
+# Surface1
+palette = 0=#494d64
+# Red
+palette = 1=#ed8796
+# Green
+palette = 2=#a6da95
+# Yellow
+palette = 3=#eed49f
+# Blue
+palette = 4=#8aadf4
+# Pink
+palette = 5=#f5bde6
+# Teal
+palette = 6=#8bd5ca
+# Subtext1
+palette = 7=#b8c0e0
+
+# Bright colors
+# Surface2
+palette = 8=#5b6078
+# Red
+palette = 9=#ed8796
+# Green
+palette = 10=#a6da95
+# Yellow
+palette = 11=#eed49f
+# Blue
+palette = 12=#8aadf4
+# Pink
+palette = 13=#f5bde6
+# Teal
+palette = 14=#8bd5ca
+# Subtext0
+palette = 15=#a5adcb
