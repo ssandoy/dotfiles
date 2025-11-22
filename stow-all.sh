@@ -1,20 +1,56 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Get the absolute path to the config directory, relative to this script
-DOTFILES_DIR="$(cd "$(dirname "$0")/config" && pwd)"
-cd "$DOTFILES_DIR" || exit 1
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_DIR="$(cd "$REPO_ROOT/config" && pwd)"
 
-# Configs
-stow -t "$HOME" tmux
-stow -t "$HOME" zsh
-stow -t "$HOME" git
-stow -t "$HOME" vim
-stow -t "$HOME" mise
-stow -t "$HOME" nvim
-stow -t "$HOME" yabai
-stow -t "$HOME" skhd
-stow -t "$HOME" ghostty
-stow -t "$HOME" brew
-stow -t "$HOME" lefthook
+. "$REPO_ROOT/lib/platform.sh"
 
-# Add more as needed
+log() {
+  printf '[stow-all] %s\n' "$*"
+}
+
+if ! command -v stow >/dev/null 2>&1; then
+  log "stow not found in PATH; install stow before running this script"
+  exit 1
+fi
+
+cd "$CONFIG_DIR" || exit 1
+
+packages=(
+  tmux
+  zsh
+  git
+  vim
+  mise
+  nvim
+  ghostty
+  brew
+  lefthook
+)
+
+case "$(detect_platform)" in
+  macos)
+    packages+=(yabai skhd)
+    ;;
+  linux)
+    if ! is_wsl; then
+      packages+=(X fonts)
+    else
+      log "WSL detected; skipping X11/font stows"
+    fi
+    ;;
+  *)
+    log "Unknown platform; stowing only common packages"
+    ;;
+esac
+
+for pkg in "${packages[@]}"; do
+  if [ ! -d "$CONFIG_DIR/$pkg" ]; then
+    log "Skipping $pkg (no config directory)"
+    continue
+  fi
+
+  log "Stowing $pkg"
+  stow -t "$HOME" "$pkg"
+done
