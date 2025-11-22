@@ -1,12 +1,11 @@
 [push]
 	default = current
 [user]
-    name = Sander F. Sandøy
-	email = sanderfsandoy@gmail.com
+    name = Sander Sandøy
+	email = sander.sandoy@fyk.no
 [alias]
 	st = status --short --branch
 	ci = commit
 	co = checkout
 [rerere]
   enabled = true
-
