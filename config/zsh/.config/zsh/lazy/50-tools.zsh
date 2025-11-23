@@ -9,4 +9,7 @@ find ~/.ssh/ -type f -exec grep -l "PRIVATE" {} \; | xargs ssh-add &> /dev/null
 source <(fzf --zsh)
 
 eval "$(oh-my-posh --init --shell zsh --config 'https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin_macchiato.omp.json')"
-eval "$(zoxide init zsh)"
+if command -v zoxide >/dev/null 2>&1; then
+  # Replace cd with zoxide jump while retaining cd fallback behavior.
+  eval "$(zoxide init zsh --cmd cd)"
+fi
