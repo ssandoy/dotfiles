@@ -5,6 +5,14 @@ alias c='clear'
 alias h='history'
 alias rl='typeset -U path && source "${ZDOTDIR:-$HOME/.config/zsh}/.zshrc"'
 
+# --- File Viewing ---
+if command -v bat >/dev/null 2>&1; then
+  alias cat='bat --paging=never'
+elif command -v batcat >/dev/null 2>&1; then
+  alias bat='batcat'
+  alias cat='batcat --paging=never'
+fi
+
 # --- File Management & Listing ---
 alias l='ls -CF'
 alias la='ls -A'

@@ -99,7 +99,11 @@ ghprs() {
     --with-nth=1,3 \
     --prompt='PRs ❯ ' \
     --header=$'enter: open in web | alt-a: approve | alt-m: squash merge | alt-s: approve+merge' \
-    --preview 'echo "PR: {3}"; echo; gh pr diff {2} --repo {1} --color=never 2>/dev/null | sed -n "1,200p"' \
+    --preview 'cat <<EOF
+PR: {3}
+
+$(gh pr diff {2} --repo {1} --color=always 2>/dev/null | sed -n "1,200p")
+EOF' \
     --preview-window=right:50%:wrap \
     --border \
     --info=inline \
