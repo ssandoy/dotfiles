@@ -78,6 +78,7 @@ This allows you to simply run `stow <package>` from the `config/` directory, and
 ```sh
 git clone https://github.com/ssandoy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
+git submodule update --init --recursive  # pulls plugins (e.g., zsh-defer)
 ```
 
 ### 2. Provision and Stow All Configurations

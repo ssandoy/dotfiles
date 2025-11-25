@@ -1,3 +1,7 @@
 .idea
 
 config/zsh/.config/zsh/.zsh_history
+config/zsh/.config/zsh/.zcompdump
+config/zsh/.config/zsh/.zcompdump.zwc
+config/zsh/.config/zsh/.zcompcache/
+config/zsh/.config/zsh/lazy/60-elhub.zsh
