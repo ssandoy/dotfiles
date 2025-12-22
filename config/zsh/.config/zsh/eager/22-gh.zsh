@@ -22,22 +22,42 @@ ghprs() {
   c_dim=$'\033[2m'      # dim
   c_reset=$'\033[0m'
 
-  local rows
-  rows=$({
-    gh search prs --state open --review-requested "@me" \
-      --json repository,number,title,labels,updatedAt,author,isDraft,url
-    gh search prs --state open --reviewed-by "@me" \
-      --json repository,number,title,labels,updatedAt,author,isDraft,url
-  } 2>/dev/null | jq -r -s '
-    # Slurp all inputs, flatten safely (treat null as [])
+  local status_file rows_script rows
+  status_file=$(mktemp -t ghprs-status.XXXXXX)
+  echo "Status: idle" >"$status_file"
+  rows_script=$(mktemp -t ghprs-rows.XXXXXX)
+  cat >"$rows_script" <<'EOF'
+#!/usr/bin/env bash
+# Generate PR rows for fzf: status line + repo<TAB>#id<TAB>title/meta (ansi)
+status_file=${GHPRS_STATUS_FILE:-}
+c_reset=$'\033[0m'
+c_green=$'\033[32m'
+c_red=$'\033[31m'
+c_cyan=$'\033[36m'
+c_magenta=$'\033[35m'
+c_dim=$'\033[2m'
+if [[ -n "$status_file" && -f "$status_file" ]]; then
+  status=$(head -n1 "$status_file")
+  case "$status" in
+    OK*) printf "%s%s%s\n" "$c_green" "$status" "$c_reset" ;;
+    ERR*) printf "%s%s%s\n" "$c_red" "$status" "$c_reset" ;;
+    *) printf "%s%s%s\n" "$c_cyan" "$status" "$c_reset" ;;
+  esac
+else
+  printf "%sghprs: status unavailable%s\n" "$c_red" "$c_reset"
+fi
+printf "%s────────────────────────────────────%s\n" "$c_dim" "$c_reset"
+{
+  gh search prs --state open --review-requested "@me" \
+    --json repository,number,title,labels,updatedAt,author,isDraft,url
+  gh search prs --state open --reviewed-by "@me" \
+    --json repository,number,title,labels,updatedAt,author,isDraft,url
+} 2>/dev/null | jq -r -s '
     reduce .[]? as $x ([]; . + ($x // []))
-    # Deduplicate by repo + number
     | unique_by(.repository.nameWithOwner + "#" + (.number|tostring))
-    # Group by repo, sort each group by updatedAt desc, then flatten back
     | group_by(.repository.nameWithOwner)
     | map(sort_by(.updatedAt) | reverse)
     | add
-    # Emit TSV: repo, number, title, labels, updatedAt, author, draftFlag
     | .[]
     | [
         .repository.nameWithOwner,
@@ -49,8 +69,11 @@ ghprs() {
         (if .isDraft then "draft" else "" end)
       ]
     | @tsv
-  ' | awk -v cr="$c_repo" -v ci="$c_id" -v ct="$c_title" -v cd="$c_dim" -v rs="$c_reset" '
-    BEGIN { FS = "\t"; OFS = "\t" }
+  ' | awk '
+    BEGIN {
+      FS = "\t"; OFS = "\t"
+      cr = "\033[36m"; ci = "\033[33m"; ct = "\033[1m"; cd = "\033[2m"; rs = "\033[0m"
+    }
     {
       repo     = $1
       id       = $2
@@ -86,29 +109,129 @@ ghprs() {
 
       print cr repo rs, ci "#" id rs, line
     }
-  ')
+  '
+EOF
+  chmod +x "$rows_script"
+  trap 'rm -f "$rows_script" "$status_file"' EXIT
+
+  rows=$(GHPRS_STATUS_FILE="$status_file" "$rows_script")
 
   if [[ -z "$rows" ]]; then
     echo "ghprs: no matching open PRs (review-requested / reviewed-by)."
     return 0
   fi
 
-  print -r -- "$rows" | fzf \
+  local preview_cmd
+  preview_cmd=$(cat <<'EOF'
+bash -c '
+repo=$1
+num=$2
+title=$3
+
+pr_url=$(gh pr view "$num" --repo "$repo" --json url -q .url 2>/dev/null)
+
+c_reset=$'\''\033[0m'\''
+c_bold=$'\''\033[1m'\''
+c_cyan=$'\''\033[36m'\''
+c_blue=$'\''\033[34m'\''
+c_green=$'\''\033[32m'\''
+c_yellow=$'\''\033[33m'\''
+c_red=$'\''\033[31m'\''
+c_dim=$'\''\033[2m'\''
+
+printf "%sPR #%s%s %s- %s%s\n%s%s%s\n" \
+  "$c_cyan" "$num" "$c_reset" "$c_dim" "$title" "$c_reset" "$c_dim" "$repo" "$c_reset"
+if [[ -n "$pr_url" ]]; then
+  printf "%sLink:%s %s%s%s\n" "$c_bold" "$c_reset" "$c_blue" "$pr_url" "$c_reset"
+fi
+echo
+
+echo "${c_bold}--- Status / Actions ---${c_reset}"
+jq_script=$(cat <<'"'"'JQ'"'"'
+def yesno(x): if x then "yes" else "no" end;
+def reqs:
+  (.reviewRequests // [])
+  | if type == "array" then . else (.nodes // []) end
+  | map(.login // .name // "?")
+  | join(", ");
+"Draft: " + yesno(.isDraft),
+"Review decision: " + ((.reviewDecision // "UNKNOWN")),
+"Merge state: " + ((.mergeStateStatus // "UNKNOWN")),
+(if (reqs) != "" then "Requested reviewers: " + reqs else "Requested reviewers: none" end)
+JQ
+)
+status_lines=$(gh pr view "$num" --repo "$repo" \
+  --json isDraft,reviewDecision,mergeStateStatus,reviewRequests 2>/dev/null \
+  | jq -r "$jq_script")
+
+if [[ -n "$status_lines" ]]; then
+  echo "${c_dim}────────────────────────────────${c_reset}"
+  echo "${c_bold}Status:${c_reset}"
+  while IFS= read -r line; do
+    color=$c_reset
+    case "$line" in
+      "Draft: yes"*) color=$c_yellow ;;
+      "Draft: no"*) color=$c_green ;;
+      "Review decision: APPROVED"*) color=$c_green ;;
+      "Review decision: CHANGES_REQUESTED"*) color=$c_red ;;
+      "Merge state: CLEAN"*) color=$c_green ;;
+      "Merge state: BLOCKED"*) color=$c_red ;;
+      "Merge state: DIRTY"*) color=$c_yellow ;;
+    esac
+    printf "%s%s%s\n" "$color" "$line" "$c_reset"
+  done <<< "$status_lines"
+else
+  echo "${c_red}Unable to load PR details.${c_reset}"
+fi
+
+echo "${c_dim}────────────────────────────────${c_reset}"
+echo "${c_bold}Checks:${c_reset}"
+
+checks_output=$(gh pr checks "$num" --repo "$repo" 2>/dev/null)
+if [[ -n "$checks_output" ]]; then
+  awk_prog=$(cat <<'AWK'
+    {
+      line = $0
+      color = rs
+      if (match(line, /^[[:space:]]*([[:alnum:]✓✔✗xX×]+)/, m)) {
+        status = m[1]
+        rest   = substr(line, RSTART + RLENGTH)
+        if (status ~ /^(PASS|OK|SUCCESS|✓|✔)/) color = g
+        else if (status ~ /^(FAIL|FAILED|✗|X|×|ERROR|Error)/) color = r
+        else if (status ~ /^(PENDING|IN|QUEUED|WAITING|Running|pending|in)/) color = y
+        printf "  %s%s%s%s\n", color, status, rs, rest
+      } else {
+        print "  ", line
+      }
+    }
+AWK
+)
+  printf "%s\n" "$checks_output" | awk -v g="$c_green" -v r="$c_red" -v y="$c_yellow" -v rs="$c_reset" "$awk_prog"
+else
+  echo "  (no checks)"
+fi
+
+echo
+echo "${c_dim}────────────────────────────────${c_reset}"
+echo "${c_bold}Diff (first 200 lines):${c_reset}"
+gh pr diff "$num" --repo "$repo" --color=always 2>/dev/null | sed -n "1,200p"
+' _ {1} {2} {3}
+EOF
+  )
+
+  fzf <<<"$rows" \
     --ansi \
     --delimiter=$'\t' \
     --with-nth=1,3 \
     --prompt='PRs ❯ ' \
-    --header=$'enter: open in web | alt-a: approve | alt-m: squash merge | alt-s: approve+merge' \
-    --preview 'cat <<EOF
-PR: {3}
-
-$(gh pr diff {2} --repo {1} --color=always 2>/dev/null | sed -n "1,200p")
-EOF' \
+    --header=$'\033[35mkeys:\033[0m enter web | alt-a approve | alt-m squash | alt-s approve+merge' \
+    --header-lines=2 \
+    --preview "$preview_cmd" \
     --preview-window=right:50%:wrap \
     --border \
     --info=inline \
     --bind 'enter:execute(gh pr view {2} --repo {1} --web)+abort' \
-    --bind 'alt-a:execute(gh pr review {2} --approve --repo {1})+abort' \
-    --bind 'alt-m:execute(gh pr merge {2} --squash --repo {1})+abort' \
-    --bind 'alt-s:execute(gh pr review {2} --approve --repo {1} && gh pr merge {2} --squash --repo {1})+abort'
+    --bind "alt-a:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\"; then printf \"OK Approved %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
+    --bind "alt-m:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr merge \"\$num\" --squash --repo \"\$repo\"; then printf \"OK Squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
+    --bind "alt-s:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\" && gh pr merge \"\$num\" --squash --repo \"\$repo\"; then printf \"OK Approved + squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve+merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)"
 }
