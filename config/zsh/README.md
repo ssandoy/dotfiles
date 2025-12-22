@@ -19,7 +19,9 @@ Modular, XDG-first zsh config split into eager (startup-critical) and lazy (defe
   - `45-mise.zsh` — mise activation, deferred completion.
   - `50-tools.zsh` — prompt/zoxide/fzf bindings/ssh-agent.
   - `52-fzf.zsh` — fzf helper functions and bindings.
+  - `53-fzf-update.zsh` — deferred refresh of fzf install script for keybindings/completions.
   - `55-updates.zsh` — update reminders and helpers.
+  - `60-elhub.zsh` — env setup for Elhub contexts.
 - `config/zsh/.config/zsh/plugins/` — git submodules for plugins (e.g., zsh-defer).
 
 ## Adding files

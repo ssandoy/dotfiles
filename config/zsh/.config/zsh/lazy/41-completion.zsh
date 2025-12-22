@@ -14,5 +14,5 @@ _setup_completion() {
   zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
 }
 
-# Defer the completion setup; runs after the prompt appears.
-zsh-defer _setup_completion
+# Defer the completion setup; runs shortly after the prompt appears if idle.
+zsh-defer -t 1 _setup_completion

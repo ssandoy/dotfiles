@@ -19,4 +19,4 @@ load_plugins() {
   zinit light zsh-users/zsh-completions
 }
 
-zsh-defer load_plugins
+zsh-defer -t 1 load_plugins
