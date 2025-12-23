@@ -5,12 +5,19 @@
         "closer": "p:os",
         "pink": "#F5BDE6",
         "lavender": "#B7BDF8",
-        "blue":  "#8AADF4"
+        "blue":  "#8AADF4",
+        "peach": "#F5A97F"
   },
   "blocks": [
     {
       "alignment": "left",
       "segments": [
+        {
+          "foreground": "p:peach",
+          "template": "\ue7ae {{ .Context }}{{ if .Namespace }}:{{ .Namespace }}{{ end }} ",
+          "style": "plain",
+          "type": "kubectl"
+        },
         {
           "foreground": "p:os",
           "style": "plain",
@@ -20,7 +27,7 @@
         {
           "foreground": "p:blue",
           "style": "plain",
-          "template": "{{ .UserName }}@{{ .HostName }} ",
+          "template": "{{ .UserName }} ",
           "type": "session"
         },
         {
