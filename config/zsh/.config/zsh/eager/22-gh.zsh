@@ -102,12 +102,15 @@ printf "%s───────────────────────�
         meta = meta "  · " substr(updated, 1, 10)
       }
 
-      line = ct title rs
+      display_repo  = cr repo rs
+      display_id    = ci "#" id rs
+      display_title = ct title rs
       if (meta != "") {
-        line = line cd meta rs
+        display_title = display_title cd meta rs
       }
 
-      print cr repo rs, ci "#" id rs, line
+      # Fields: raw repo, raw id, raw title, display repo, display id, display title/meta
+      print repo, id, title, display_repo, display_title
     }
   '
 EOF
@@ -187,26 +190,40 @@ fi
 echo "${c_dim}────────────────────────────────${c_reset}"
 echo "${c_bold}Checks:${c_reset}"
 
-checks_output=$(gh pr checks "$num" --repo "$repo" 2>/dev/null)
-if [[ -n "$checks_output" ]]; then
-  awk_prog=$(cat <<'AWK'
-    {
-      line = $0
-      color = rs
-      if (match(line, /^[[:space:]]*([[:alnum:]✓✔✗xX×]+)/, m)) {
-        status = m[1]
-        rest   = substr(line, RSTART + RLENGTH)
-        if (status ~ /^(PASS|OK|SUCCESS|✓|✔)/) color = g
-        else if (status ~ /^(FAIL|FAILED|✗|X|×|ERROR|Error)/) color = r
-        else if (status ~ /^(PENDING|IN|QUEUED|WAITING|Running|pending|in)/) color = y
-        printf "  %s%s%s%s\n", color, status, rs, rest
-      } else {
-        print "  ", line
-      }
-    }
-AWK
+checks_output=""
+if checks_json=$(gh pr checks "$num" --repo "$repo" \
+  --json name,state,bucket,link \
+  2>/dev/null); then
+  checks_jq=$(cat <<'JQ'
+.[]?
+| [
+    (.name // ""),
+    (.bucket // .state // "UNKNOWN"),
+    (.link // "")
+  ]
+| @tsv
+JQ
 )
-  printf "%s\n" "$checks_output" | awk -v g="$c_green" -v r="$c_red" -v y="$c_yellow" -v rs="$c_reset" "$awk_prog"
+  checks_output=$(printf "%s" "$checks_json" | jq -r "$checks_jq")
+fi
+
+if [[ -n "$checks_output" ]]; then
+  truncate_field() {
+    local str="$1" max="$2"
+    if [[ ${#str} -gt $max ]]; then
+      printf '%s…' "${str:0:max-1}"
+    else
+      printf '%s' "$str"
+    fi
+  }
+
+  while IFS=$'\t' read -r check_name check_status check_link; do
+    [[ -z "$check_name$check_status$check_link" ]] && continue
+    printf "  %s — %s\n" "$check_name" "$check_status"
+    if [[ -n "$check_link" ]]; then
+      printf "      %s\n" "$check_link"
+    fi
+  done <<< "$checks_output"
 else
   echo "  (no checks)"
 fi
@@ -222,12 +239,12 @@ EOF
   fzf <<<"$rows" \
     --ansi \
     --delimiter=$'\t' \
-    --with-nth=1,3 \
+    --with-nth=4,5,6 \
     --prompt='PRs ❯ ' \
     --header=$'\033[35mkeys:\033[0m enter web | alt-a approve | alt-m squash | alt-s approve+merge' \
     --header-lines=2 \
     --preview "$preview_cmd" \
-    --preview-window=right:50%:wrap \
+    --preview-window=top:60%:nowrap \
     --border \
     --info=inline \
     --bind 'enter:execute(gh pr view {2} --repo {1} --web)+abort' \
