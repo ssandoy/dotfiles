@@ -27,6 +27,7 @@ packages=(
   ghostty
   brew
   lefthook
+  claude
 )
 
 case "$(detect_platform)" in
