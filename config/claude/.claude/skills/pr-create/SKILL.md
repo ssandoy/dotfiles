@@ -59,7 +59,15 @@ Do not ask for confirmation — infer the best message and commit immediately.
 git commit -m "<inferred message>"
 ```
 
-### 5. Create the PR
+### 5. Push the branch
+
+Push the current branch to origin (set upstream if not already set):
+
+```bash
+git push -u origin HEAD
+```
+
+### 6. Create the PR
 
 Use the conventional commit message as the PR title and summarize the changes in the body. Use `--draft` if no linter was found in step 2 or if you are unsure about anything:
 
