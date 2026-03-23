@@ -195,35 +195,16 @@ if checks_json=$(gh pr checks "$num" --repo "$repo" \
   --json name,state,bucket,link \
   2>/dev/null); then
   checks_jq=$(cat <<'JQ'
-.[]?
-| [
-    (.name // ""),
-    (.bucket // .state // "UNKNOWN"),
-    (.link // "")
-  ]
-| @tsv
+.[] |
+"  \((.name // "") | if length > 40 then .[0:39] + "…" else . end) — \((.bucket // "") | if length > 0 then . else (.state // "UNKNOWN") end)"
+  + (if (.link // "") != "" then "\n      \(.link)" else "" end)
 JQ
 )
   checks_output=$(printf "%s" "$checks_json" | jq -r "$checks_jq")
 fi
 
 if [[ -n "$checks_output" ]]; then
-  truncate_field() {
-    local str="$1" max="$2"
-    if [[ ${#str} -gt $max ]]; then
-      printf '%s…' "${str:0:max-1}"
-    else
-      printf '%s' "$str"
-    fi
-  }
-
-  while IFS=$'\t' read -r check_name check_status check_link; do
-    [[ -z "$check_name$check_status$check_link" ]] && continue
-    printf "  %s — %s\n" "$check_name" "$check_status"
-    if [[ -n "$check_link" ]]; then
-      printf "      %s\n" "$check_link"
-    fi
-  done <<< "$checks_output"
+  printf "%s\n" "$checks_output"
 else
   echo "  (no checks)"
 fi
