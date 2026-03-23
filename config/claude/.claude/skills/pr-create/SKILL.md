@@ -26,7 +26,7 @@ Inspect the project to find how it actually lints — do not assume:
 - Check `go.mod` + a `golangci-lint` config (`.golangci.yml` etc.) and use `golangci-lint run`; fall back to `go vet ./...` if only `go.mod` is present
 - Check for other explicit lint configs (`.eslintrc*`, `pyproject.toml` with `[tool.ruff]`, etc.) and run the corresponding tool
 
-If no lint command can be identified, skip linting and proceed — the PR will be created as a **draft**.
+If no lint command can be identified, skip linting and proceed with a normal PR.
 
 If lint fails, stop and report the errors to the user — do not commit.
 
@@ -69,7 +69,7 @@ git push -u origin HEAD
 
 ### 6. Create the PR
 
-Use the conventional commit message as the PR title and summarize the changes in the body. Use `--draft` if no linter was found in step 2 or if you are unsure about anything:
+Use the conventional commit message as the PR title and summarize the changes in the body. Use `--draft` only if you are unsure about anything material:
 
 ```bash
 gh pr create --title "<type>(<scope>): <summary>" --body "<description>"
