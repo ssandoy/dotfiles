@@ -18,6 +18,7 @@ fi
 cd "$CONFIG_DIR" || exit 1
 
 packages=(
+  codex
   tmux
   zsh
   git
