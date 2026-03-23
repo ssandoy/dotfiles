@@ -19,6 +19,7 @@ cd "$CONFIG_DIR" || exit 1
 
 packages=(
   codex
+  copilot
   tmux
   zsh
   git
