@@ -30,6 +30,7 @@ packages=(
   brew
   lefthook
   claude
+  direnv
 )
 
 case "$(detect_platform)" in
