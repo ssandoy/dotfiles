@@ -25,11 +25,3 @@ if [[ -d "$XDG_CONFIG_HOME/zsh/lazy" ]]; then
     source "$config_file"
   done
 fi
-
-# pnpm
-export PNPM_HOME="/Users/ssandoy/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
