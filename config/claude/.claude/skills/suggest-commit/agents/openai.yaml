@@ -1,0 +1,4 @@
+interface:
+  display_name: "Suggest Commit"
+  short_description: "Draft, copy, or commit change summaries"
+  default_prompt: "Use $suggest-commit to review this conversation and repository diff, highlight the important changes, suggest a Conventional Commit message, and copy or commit it if requested."
