@@ -16,7 +16,7 @@ return {
     event = "VeryLazy",
     opts = {
       plugins = { spelling = true },
-      window = { border = "rounded" },
+      win = { border = "rounded" },
     },
   },
 
@@ -26,11 +26,26 @@ return {
     branch = "0.1.x",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
+      { "<M-o>", "<cmd>Telescope find_files<cr>", desc = "Find files" },
+      { "<M-s>", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },
       { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
       { "<leader>fg", "<cmd>Telescope live_grep<cr>",  desc = "Live grep" },
       { "<leader>fb", "<cmd>Telescope buffers<cr>",    desc = "Buffers" },
       { "<leader>fh", "<cmd>Telescope help_tags<cr>",  desc = "Help tags" },
     },
-    opts = {},
+    opts = {
+      defaults = {
+        path_display = {
+          "truncate",
+        },
+      },
+      pickers = {
+        find_files = {
+          path_display = {
+            "smart",
+          },
+        },
+      },
+    },
   },
 }

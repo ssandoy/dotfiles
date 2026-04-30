@@ -1,6 +1,6 @@
 ---
 name: suggest-commit
-description: Analyze a conversation and the resulting repository changes, highlight the important work, suggest Conventional Commit messages, optionally copy the chosen message to the clipboard, and optionally create the commit. Use when the user asks for a commit suggestion, commit message, conventional commit, change summary, clipboard-ready commit text, or auto-commit from a conversation.
+description: Analyze a conversation and the resulting repository changes, highlight the important work, suggest Conventional Commit messages, always try to copy the chosen message to the clipboard, and optionally create the commit. Use when the user asks for a commit suggestion, commit message, conventional commit, change summary, clipboard-ready commit text, or auto-commit from a conversation.
 ---
 
 # Suggest Commit
@@ -12,7 +12,7 @@ description: Analyze a conversation and the resulting repository changes, highli
 3. Separate user-authored or unrelated work from the changes being summarized. If scope is unclear, call it out instead of blending unrelated edits into the recommendation.
 4. Highlight the work before suggesting commits. Focus on what changed and why, not every implementation detail.
 5. Suggest one primary Conventional Commit message. Add alternatives only when there are genuinely different scopes, types, or split-commit options.
-6. If the user asks to copy the message, copy only the selected commit message, not the analysis or highlights.
+6. Always try to copy the selected commit message to the clipboard. Copy only the selected message, not the analysis or highlights.
 7. If the user asks to auto-commit, stage only the intended files and run `git commit` with the selected message after confirming the diff scope is clear.
 
 ## Output Shape
@@ -33,15 +33,17 @@ Optional body:
 
 Keep the subject line under 72 characters when practical. Use imperative mood and lowercase Conventional Commit types.
 
-## Clipboard Option
+## Clipboard Copy
 
-When the user asks to copy the recommendation, pipe the final selected message to `scripts/copy_commit_message.sh`:
+After choosing the primary recommendation, pipe the final selected message to `scripts/copy_commit_message.sh`:
 
 ```bash
 printf '%s\n' 'type(scope): imperative summary' | path/to/suggest-commit/scripts/copy_commit_message.sh
 ```
 
 For a multi-line commit message, copy the subject, a blank line, and the body. Report whether copying succeeded. If no clipboard tool is available, print the message and explain that it was not copied.
+
+If the user explicitly asks only for analysis and no clipboard interaction, respect that request and skip the copy attempt.
 
 ## Auto-Commit Option
 

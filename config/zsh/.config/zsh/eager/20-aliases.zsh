@@ -4,6 +4,22 @@
 alias c='clear'
 alias h='history'
 alias rl='typeset -U path && source "${ZDOTDIR:-$HOME/.config/zsh}/.zshrc"'
+alias vim='nvim'
+
+unalias n 2>/dev/null
+
+n() {
+  if [[ "$#" -eq 1 && -d "$1" ]]; then
+    local target_dir="$1"
+    local readme_file
+    readme_file=("$target_dir"/(#i)readme(|.*)(N[1]))
+    if [[ -n "${readme_file:-}" ]]; then
+      nvim "$readme_file"
+      return
+    fi
+  fi
+  nvim "$@"
+}
 
 # --- File Viewing ---
 if command -v bat >/dev/null 2>&1; then
