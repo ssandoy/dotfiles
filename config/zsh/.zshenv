@@ -1,5 +1,6 @@
 # ~/.zshenv
 export ZDOTDIR="$HOME/.config/zsh"
+export COPILOT_SKILLS_DIRS="$HOME/.claude/skills"
 
 # Add common package managers early so tools are available.
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
