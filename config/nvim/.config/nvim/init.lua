@@ -22,3 +22,29 @@ vim.opt.incsearch = true              -- show matches as you type
 
 -- Optional: keep 8 lines visible above/below cursor
 vim.opt.scrolloff = 8
+
+vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+  callback = function(args)
+    local buftype = vim.bo[args.buf].buftype
+    if buftype == "" and not vim.bo[args.buf].modifiable then
+      vim.bo[args.buf].modifiable = true
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "FocusLost", "BufLeave" }, {
+  callback = function(args)
+    local buf = args.buf
+    if vim.bo[buf].buftype ~= "" or vim.bo[buf].readonly or not vim.bo[buf].modifiable or not vim.bo[buf].modified then
+      return
+    end
+
+    if vim.api.nvim_buf_get_name(buf) == "" then
+      return
+    end
+
+    vim.api.nvim_buf_call(buf, function()
+      vim.cmd("silent! write")
+    end)
+  end,
+})
