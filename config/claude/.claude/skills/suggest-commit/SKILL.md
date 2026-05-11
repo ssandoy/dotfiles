@@ -7,7 +7,7 @@ description: Analyze a conversation and the resulting repository changes, highli
 
 ## Workflow
 
-1. Gather evidence from the conversation first: user intent, constraints, decisions, files mentioned, commands run, validation results, and unresolved caveats.
+1. Gather evidence from the full current conversation first. Treat the prior thread as primary context because this skill is usually invoked after implementation work is complete. Capture user intent, constraints, decisions, files mentioned, commands run, validation results, and unresolved caveats.
 2. Inspect repository state when available with `git status --short`, `git diff --stat`, and targeted diffs. Do not assume the conversation contains every changed file.
 3. Separate user-authored or unrelated work from the changes being summarized. If scope is unclear, call it out instead of blending unrelated edits into the recommendation.
 4. Highlight the work before suggesting commits. Focus on what changed and why, not every implementation detail.
@@ -86,7 +86,7 @@ Do not invent split commits when the work is cohesive.
 
 ## Quality Bar
 
-- Ground suggestions in observable conversation details and diffs.
+- Ground suggestions in both observable conversation details and diffs. Do not rely on the diff alone when conversation context is available.
 - Mention validation commands and outcomes when they materially support the commit.
 - Flag missing validation as a caveat instead of pretending it happened.
 - Avoid exposing secrets or copying sensitive conversation details into commit text.
