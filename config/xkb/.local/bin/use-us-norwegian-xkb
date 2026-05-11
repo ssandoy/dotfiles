@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+xkb_root="${XKB_CONFIG_ROOT:-$HOME/.config/xkb}"
+
+if ! command -v setxkbmap >/dev/null 2>&1; then
+  printf 'setxkbmap not found; install x11-xkb-utils or your distro equivalent\n' >&2
+  exit 1
+fi
+
+setxkbmap -I"$xkb_root" us-norwegian

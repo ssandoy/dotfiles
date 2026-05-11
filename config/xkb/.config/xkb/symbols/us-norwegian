@@ -1,0 +1,12 @@
+default partial alphanumeric_keys modifier_keys
+xkb_symbols "basic" {
+    include "us(basic)"
+
+    name[Group1] = "English (US, Norwegian letters on Right Alt)";
+
+    key <AC01> { [ a, A, aring, Aring ] };
+    key <AD03> { [ e, E, ae, AE ] };
+    key <AD09> { [ o, O, oslash, Oslash ] };
+
+    include "level3(ralt_switch)"
+};

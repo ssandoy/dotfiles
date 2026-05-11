@@ -35,11 +35,11 @@ packages=(
 
 case "$(detect_platform)" in
   macos)
-    packages+=(yabai skhd)
+    packages+=(yabai skhd karabiner)
     ;;
   linux)
     if ! is_wsl; then
-      packages+=(X fonts)
+      packages+=(X fonts xkb)
     else
       log "WSL detected; skipping X11/font stows"
     fi

@@ -10,4 +10,5 @@ helm = "latest"
 maven = "latest"
 pnpm = "latest"
 node = "22"
-
+kustomize = "latest"
+1password = "2.35.0-beta.01"
