@@ -3,6 +3,17 @@ set -euo pipefail
 
 DELIM='::'
 
+if [[ "${1-}" == "--popup" ]]; then
+    popup_args=(-w90% -h90% -E)
+
+    if [[ -n "${2-}" ]]; then
+        popup_args=(-c "$2" "${popup_args[@]}")
+    fi
+
+    tmux popup "${popup_args[@]}" "$HOME/.config/tmux/tmux-session-browser"
+    exit 0
+fi
+
 if ! sessions=$(tmux list-sessions -F "#{session_name}::#{session_windows} windows::#{?session_attached,attached,detached}::#{session_created_string}" 2>/dev/null); then
     exit 0
 fi
@@ -16,6 +27,8 @@ selected=$(
         --prompt 'tmux sessions > ' \
         --delimiter "${DELIM}" \
         --with-nth '1,2,3,4' \
+        --cycle \
+        --bind 'tab:down,btab:up' \
         --preview 'tmux list-windows -t {1}' \
         --preview-window 'down,60%:wrap' \
         --exit-0
