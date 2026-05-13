@@ -1,7 +1,17 @@
 alias ghpr='gh pr view'
-alias ghprc='gh pr create'
 alias ghprms='gh pr merge --squash'
 alias ghprm='gh pr merge -s -d --auto'
+
+ghprc() {
+  gh pr create "$@"
+  local rc=$?
+
+  if (( rc != 0 )); then
+    return "$rc"
+  fi
+
+  gh pr view --web >/dev/null 2>&1 || true
+}
 
 ghprs() {
   # Get open PRs:
@@ -230,7 +240,7 @@ EOF
     --info=inline \
     --bind 'enter:execute(gh pr view {2} --repo {1} --web)+abort' \
     --bind "ctrl-r:execute-silent(bash -c 'printf \"Status: refreshed at %s\\n\" \"\$(date +%H:%M:%S)\" >\"\$1\"' _ $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
-    --bind "alt-a:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\"; then printf \"OK Approved %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
-    --bind "alt-m:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr merge \"\$num\" --squash --repo \"\$repo\"; then printf \"OK Squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
-    --bind "alt-s:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\" && gh pr merge \"\$num\" --squash --repo \"\$repo\"; then printf \"OK Approved + squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve+merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)"
+    --bind "alt-a:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Approved %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
+    --bind "alt-m:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr merge \"\$num\" --squash --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
+    --bind "alt-s:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\" && gh pr merge \"\$num\" --squash --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Approved + squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve+merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)"
 }
