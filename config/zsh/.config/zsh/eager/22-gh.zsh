@@ -14,6 +14,15 @@ ghprc() {
 }
 
 ghprs() {
+  if [[ -n "${TMUX:-}" && -z "${GHPRS_IN_POPUP:-}" ]]; then
+    tmux display-popup -d "$PWD" -w 90% -h 90% -E "GHPRS_IN_POPUP=1 zsh -lic ghprs"
+    return
+  fi
+
+  _ghprs
+}
+
+_ghprs() {
   # Get open PRs:
   #  - review-requested:@me
   #  - reviewed-by:@me
@@ -242,5 +251,5 @@ EOF
     --bind "ctrl-r:execute-silent(bash -c 'printf \"Status: refreshed at %s\\n\" \"\$(date +%H:%M:%S)\" >\"\$1\"' _ $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
     --bind "alt-a:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Approved %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
     --bind "alt-m:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr merge \"\$num\" --squash --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
-    --bind "alt-s:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\" && gh pr merge \"\$num\" --squash --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Approved + squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve+merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)"
+    --bind "alt-s:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\" && gh pr merge \"\$num\" --squash --repo \"\$repo\"; then printf \"OK Approved + squash merged %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve+merge failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)"
 }
