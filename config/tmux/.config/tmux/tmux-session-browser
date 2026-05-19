@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DELIM='::'
+SESSION_FORMAT="#{session_name}"
 
 if [[ "${1-}" == "--popup" ]]; then
-    popup_args=(-w90% -h90% -E)
+    popup_args=(-w 70% -h 30% -E)
 
     if [[ -n "${2-}" ]]; then
         popup_args=(-c "$2" "${popup_args[@]}")
@@ -14,7 +14,7 @@ if [[ "${1-}" == "--popup" ]]; then
     exit 0
 fi
 
-if ! sessions=$(tmux list-sessions -F "#{session_name}::#{session_windows} windows::#{?session_attached,attached,detached}::#{session_created_string}" 2>/dev/null); then
+if ! sessions=$(tmux list-sessions -F "${SESSION_FORMAT}" 2>/dev/null); then
     exit 0
 fi
 
@@ -24,21 +24,20 @@ fi
 
 selected=$(
     printf "%s\n" "${sessions}" | fzf \
-        --prompt 'tmux sessions > ' \
-        --delimiter "${DELIM}" \
-        --with-nth '1,2,3,4' \
+        --prompt 'session > ' \
+        --layout reverse \
+        --border \
+        --border-label ' Session Browser ' \
         --cycle \
         --bind 'tab:down,btab:up' \
-        --preview 'tmux list-windows -t {1}' \
-        --preview-window 'down,60%:wrap' \
         --exit-0
-)
+) || exit 0
 
 if [[ -z "${selected}" ]]; then
     exit 0
 fi
 
-session_name="${selected%%::*}"
+session_name="${selected}"
 
 if [[ -n "${TMUX-}" ]]; then
     tmux switch-client -t "${session_name}"
