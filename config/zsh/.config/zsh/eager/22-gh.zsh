@@ -73,6 +73,7 @@ emit_pr_rows() {
     --json repository,number,title,labels,updatedAt,author,isDraft,url 2>/dev/null |
     jq -r '
     .[]
+    | select((.repository.nameWithOwner | split("/") | last | startswith("service-platform-")) | not)
     | [
         .repository.nameWithOwner,
         (.number|tostring),
