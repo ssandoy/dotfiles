@@ -41,9 +41,9 @@ _ghprs() {
   c_dim=$'\033[2m'      # dim
   c_reset=$'\033[0m'
 
-  local status_file rows_script rows
+  local status_file rows_script initial_rows
   status_file=$(mktemp -t ghprs-status.XXXXXX)
-  echo "Status: idle" >"$status_file"
+  echo "Status: loading PRs..." >"$status_file"
   rows_script=$(mktemp -t ghprs-rows.XXXXXX)
   cat >"$rows_script" <<'EOF'
 #!/usr/bin/env bash
@@ -55,6 +55,7 @@ c_red=$'\033[31m'
 c_cyan=$'\033[36m'
 c_magenta=$'\033[35m'
 c_dim=$'\033[2m'
+
 if [[ -n "$status_file" && -f "$status_file" ]]; then
   status=$(head -n1 "$status_file")
   case "$status" in
@@ -66,18 +67,12 @@ else
   printf "%sghprs: status unavailable%s\n" "$c_red" "$c_reset"
 fi
 printf "%s────────────────────────────────────%s\n" "$c_dim" "$c_reset"
-{
-  gh search prs --state open --review-requested "@me" \
-    --json repository,number,title,labels,updatedAt,author,isDraft,url
-  gh search prs --state open --reviewed-by "@me" \
-    --json repository,number,title,labels,updatedAt,author,isDraft,url
-} 2>/dev/null | jq -r -s '
-    reduce .[]? as $x ([]; . + ($x // []))
-    | unique_by(.repository.nameWithOwner + "#" + (.number|tostring))
-    | group_by(.repository.nameWithOwner)
-    | map(sort_by(.updatedAt) | reverse)
-    | add
-    | .[]
+
+emit_pr_rows() {
+  gh search prs "$@" \
+    --json repository,number,title,labels,updatedAt,author,isDraft,url 2>/dev/null |
+    jq -r '
+    .[]
     | [
         .repository.nameWithOwner,
         (.number|tostring),
@@ -88,7 +83,13 @@ printf "%s───────────────────────�
         (if .isDraft then "draft" else "" end)
       ]
     | @tsv
-  ' | awk '
+  '
+}
+
+{
+  emit_pr_rows --state open --review-requested "@me"
+  emit_pr_rows --state open --reviewed-by "@me"
+} | awk '
     BEGIN {
       FS = "\t"; OFS = "\t"
       cr = "\033[36m"; ci = "\033[33m"; ct = "\033[1m"; cd = "\033[2m"; rs = "\033[0m"
@@ -100,16 +101,17 @@ printf "%s───────────────────────�
       labels   = $4
       updated  = $5
       author   = $6
-      decision = $7
-      draft    = $8
+      draft    = $7
+      key      = repo "#" id
+
+      if (seen[key]++) {
+        next
+      }
 
       meta = ""
 
       if (draft == "draft") {
         meta = meta " [DRAFT]"
-      }
-      if (decision != "") {
-        meta = meta " [" decision "]"
       }
       if (labels != "") {
         meta = meta " {" labels "}"
@@ -129,19 +131,24 @@ printf "%s───────────────────────�
       }
 
       # Fields: raw repo, raw id, raw title, display repo, display id, display title/meta
-      print repo, id, title, display_repo, display_title
+      print repo, id, title, display_repo, display_id, display_title
+      count++
+    }
+    END {
+      if (count == 0) {
+        print "", "", "", cd "ghprs: no matching open PRs (review-requested / reviewed-by)." rs, "", ""
+      }
     }
   '
 EOF
   chmod +x "$rows_script"
   trap 'rm -f "$rows_script" "$status_file"' EXIT
 
-  rows=$(GHPRS_STATUS_FILE="$status_file" "$rows_script")
-
-  if [[ -z "$rows" ]]; then
-    echo "ghprs: no matching open PRs (review-requested / reviewed-by)."
-    return 0
-  fi
+  initial_rows=$(
+    printf "%sStatus: loading PRs...%s\n" "$c_repo" "$c_reset"
+    printf "%s────────────────────────────────────%s\n" "$c_dim" "$c_reset"
+    printf "\t\t\t%sFetching review-requested and reviewed PRs...%s\t\t\n" "$c_dim" "$c_reset"
+  )
 
   local preview_cmd
   preview_cmd=$(cat <<'EOF'
@@ -149,8 +156,6 @@ bash -c '
 repo=$1
 num=$2
 title=$3
-
-pr_url=$(gh pr view "$num" --repo "$repo" --json url -q .url 2>/dev/null)
 
 c_reset=$'\''\033[0m'\''
 c_bold=$'\''\033[1m'\''
@@ -161,8 +166,16 @@ c_yellow=$'\''\033[33m'\''
 c_red=$'\''\033[31m'\''
 c_dim=$'\''\033[2m'\''
 
+if [[ -z "$repo" || -z "$num" ]]; then
+  echo "${c_dim}Loading PRs...${c_reset}"
+  exit 0
+fi
+
 printf "%sPR #%s%s %s- %s%s\n%s%s%s\n" \
   "$c_cyan" "$num" "$c_reset" "$c_dim" "$title" "$c_reset" "$c_dim" "$repo" "$c_reset"
+
+pr_url=$(gh pr view "$num" --repo "$repo" --json url -q .url 2>/dev/null)
+
 if [[ -n "$pr_url" ]]; then
   printf "%sLink:%s %s%s%s\n" "$c_bold" "$c_reset" "$c_blue" "$pr_url" "$c_reset"
 fi
@@ -236,7 +249,7 @@ gh pr diff "$num" --repo "$repo" --color=always 2>/dev/null | sed -n "1,200p"
 EOF
   )
 
-  fzf <<<"$rows" \
+  fzf <<<"$initial_rows" \
     --ansi \
     --delimiter=$'\t' \
     --with-nth=4,5,6 \
@@ -247,6 +260,7 @@ EOF
     --preview-window=top:60%:nowrap \
     --border \
     --info=inline \
+    --bind "start:reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
     --bind 'enter:execute(gh pr view {2} --repo {1} --web)+abort' \
     --bind "ctrl-r:execute-silent(bash -c 'printf \"Status: refreshed at %s\\n\" \"\$(date +%H:%M:%S)\" >\"\$1\"' _ $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
     --bind "alt-a:execute-silent(bash -c 'status_file=\$3; repo=\$1; num=\$2; if gh pr review \"\$num\" --approve --repo \"\$repo\"; then gh pr view \"\$num\" --repo \"\$repo\" --web >/dev/null 2>&1 || true; printf \"OK Approved %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; else printf \"ERR Approve failed for %s#%s\\n\" \"\$repo\" \"\$num\" >\"\$status_file\"; fi' _ {1} {2} $status_file)+reload(GHPRS_STATUS_FILE=$status_file $rows_script)" \
