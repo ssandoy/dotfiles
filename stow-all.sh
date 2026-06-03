@@ -31,6 +31,7 @@ packages=(
   lefthook
   claude
   direnv
+  acli
 )
 
 case "$(detect_platform)" in

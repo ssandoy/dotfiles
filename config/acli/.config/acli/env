@@ -1,0 +1,3 @@
+# Shared Atlassian defaults.
+export ATLASSIAN_SITE="elhub.atlassian.net"
+export ATLASSIAN_BASE_URL="https://${ATLASSIAN_SITE}"
