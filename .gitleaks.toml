@@ -1,0 +1,32 @@
+title = "dotfiles gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore local-only agent and git metadata"
+paths = [
+  '''(^|/)\.codex/''',
+  '''(^|/)\.git/''',
+]
+
+[[allowlists]]
+description = "Ignore machine-local override files that are excluded from git"
+paths = [
+  '''^config/acli/\.config/acli/env\.local$''',
+  '''^config/zsh/\.config/zsh/lazy/60-elhub\.zsh$''',
+]
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Ignore VS Code keyboard shortcut bindings that look like generic keys"
+condition = "AND"
+regexTarget = "line"
+paths = [
+  '''(^|/)\.vscode/keybindings\.json$''',
+]
+regexes = [
+  '''"key":\s*"[-+a-z0-9]*"''',
+]

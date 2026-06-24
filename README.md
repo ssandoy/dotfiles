@@ -112,6 +112,8 @@ For XDG-compliant apps, configs are placed in `.config/<app>/` subdirectories in
 - Use dot-prefixed filenames for home directory dotfiles (e.g., `.zshrc`)
 - Use `.config/<app>/` for XDG configs
 - Document major changes in this README
+- Run `gitleaks dir --redact .` before committing local file changes
+- Run `gitleaks git --redact .` before pushing history
 
 ---
 
