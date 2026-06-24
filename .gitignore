@@ -1,4 +1,5 @@
 .idea
+.codex
 
 config/zsh/.config/zsh/.zsh_history
 config/zsh/.config/zsh/.zcompdump
