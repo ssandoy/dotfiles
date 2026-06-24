@@ -113,28 +113,26 @@ ffx() {
 # Load FZF shell integration (completions and key bindings)
 # =======================================================
 
-# Source FZF key bindings script (enables Ctrl+R for history search)
+# Source FZF key bindings script (enables Ctrl+R for history search).
+# Avoid ~/.fzf.zsh because it shells out to `fzf --zsh` during startup; when
+# fzf is managed by mise, that can resolve global "latest" tools.
 _fzf_home="$HOME/.fzf"
-if [[ -f ~/.fzf.zsh && $(fzf --help 2>&1) == *"--zsh"* ]]; then
-  source ~/.fzf.zsh
-else
-  [[ -d "${_fzf_home}/bin" && ":$PATH:" != *":${_fzf_home}/bin:"* ]] && PATH="${_fzf_home}/bin:$PATH"
-  if [[ -f "${_fzf_home}/shell/key-bindings.zsh" ]]; then
-    source "${_fzf_home}/shell/key-bindings.zsh"
-  elif [[ -f /usr/local/opt/fzf/shell/key-bindings.zsh ]]; then
-    source /usr/local/opt/fzf/shell/key-bindings.zsh
-  elif [[ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]]; then
-    source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
-  fi
+[[ -d "${_fzf_home}/bin" && ":$PATH:" != *":${_fzf_home}/bin:"* ]] && PATH="${_fzf_home}/bin:$PATH"
+if [[ -f "${_fzf_home}/shell/key-bindings.zsh" ]]; then
+  source "${_fzf_home}/shell/key-bindings.zsh"
+elif [[ -f /usr/local/opt/fzf/shell/key-bindings.zsh ]]; then
+  source /usr/local/opt/fzf/shell/key-bindings.zsh
+elif [[ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]]; then
+  source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+fi
 
-  # Source FZF completions separately if not already loaded by key-bindings
-  if [[ -f "${_fzf_home}/shell/completion.zsh" ]]; then
-    source "${_fzf_home}/shell/completion.zsh"
-  elif [[ -f /usr/local/opt/fzf/shell/completion.zsh ]]; then
-    source /usr/local/opt/fzf/shell/completion.zsh
-  elif [[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]]; then
-    source /opt/homebrew/opt/fzf/shell/completion.zsh
-  fi
+# Source FZF completions separately if not already loaded by key-bindings
+if [[ -f "${_fzf_home}/shell/completion.zsh" ]]; then
+  source "${_fzf_home}/shell/completion.zsh"
+elif [[ -f /usr/local/opt/fzf/shell/completion.zsh ]]; then
+  source /usr/local/opt/fzf/shell/completion.zsh
+elif [[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]]; then
+  source /opt/homebrew/opt/fzf/shell/completion.zsh
 fi
 
 # Explicitly ensure Ctrl+R works properly by setting up the binding

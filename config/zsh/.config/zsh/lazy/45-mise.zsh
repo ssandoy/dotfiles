@@ -1,6 +1,9 @@
 # mise-en-place integration for zsh
-# Defer completions only (activation moved to eager).
+# Activation uses shims during eager startup. Generating completions can still
+# resolve global "latest" tools, so keep it manual instead of running it from
+# the deferred startup queue.
 
-if command -v mise &>/dev/null; then
-  zsh-defer -t 2 'eval "$(mise completion zsh)"'
-fi
+mise-completion-load() {
+  command -v mise >/dev/null 2>&1 || return 1
+  eval "$(mise completion zsh)"
+}

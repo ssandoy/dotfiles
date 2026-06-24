@@ -32,8 +32,24 @@ alias grbc='git rebase --continue'
 # Branch/Checkout
 alias gb='git branch'
 alias gco='git checkout'
-alias gcb='git checkout -b'
 alias gcom='git checkout main'
+
+gcb() {
+   local branch="${1:-}"
+   if [[ -z "$branch" ]]; then
+      builtin echo "Usage: gcb <branch> [start-point]" >&2
+      return 1
+   fi
+   shift
+
+   if git show-ref --verify --quiet "refs/heads/$branch"; then
+      git checkout "$branch"
+   elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+      git checkout --track "origin/$branch"
+   else
+      git checkout -b "$branch" "$@"
+   fi
+}
 
 # Stash
 alias gst='git stash'
