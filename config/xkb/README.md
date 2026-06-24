@@ -4,12 +4,12 @@ Linux keyboard layout for typing Norwegian letters on a US keyboard.
 
 ## Mappings
 
-- `Right Alt+O` -> `ø`
-- `Right Alt+E` -> `æ`
-- `Right Alt+A` -> `å`
-- `Right Alt+Shift+O` -> `Ø`
-- `Right Alt+Shift+E` -> `Æ`
-- `Right Alt+Shift+A` -> `Å`
+- `Alt+O` -> `ø`
+- `Alt+E` -> `æ`
+- `Alt+A` -> `å`
+- `Alt+Shift+O` -> `Ø`
+- `Alt+Shift+E` -> `Æ`
+- `Alt+Shift+A` -> `Å`
 
 ## Setup
 
