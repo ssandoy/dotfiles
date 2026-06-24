@@ -3,7 +3,28 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    selected=$( (find ~/git ~/ -mindepth 1 -maxdepth 1 -type d -not -path '*/.*') | fzf )
+    selected=$(
+        find ~/git -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' |
+            awk -F/ '{printf "\033[1m%s\033[0m\t%s\n", $NF, $0}' |
+            fzf \
+                --ansi \
+                --delimiter='\t' \
+                --with-nth=1 \
+                --prompt='projects > ' \
+                --layout=reverse \
+                --border=rounded \
+                --border-label=' tmux sessionizer ' \
+                --header='enter: switch/create | esc: cancel' \
+                --header-first \
+                --info=inline-right \
+                --preview='printf "\n  %s\n" {2}' \
+                --preview-window='down,3,border-top' \
+                --preview-label=' path ' \
+                --no-scrollbar \
+                --cycle \
+                --color='bg:-1,bg+:#313244,fg:#cdd6f4,fg+:#f5e0dc,hl:#f38ba8,hl+:#f38ba8,prompt:#cba6f7,pointer:#f5c2e7,marker:#a6e3a1,spinner:#f9e2af,info:#89b4fa,border:#45475a,label:#cba6f7,header:#7f849c' |
+            cut -f2-
+    )
 fi
 
 if [[ -z $selected ]]; then

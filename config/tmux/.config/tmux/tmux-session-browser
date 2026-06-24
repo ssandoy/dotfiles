@@ -44,9 +44,19 @@ fi
 selected=$(
     printf "%s\n" "${sessions}" | fzf \
         --prompt 'session > ' \
-        --layout reverse \
-        --border \
+        --layout=reverse \
+        --border=rounded \
         --border-label "${BORDER_LABEL}" \
+        --border-label-pos=2 \
+        --header 'tab/btab: move | enter: switch | esc: cancel' \
+        --header-first \
+        --info=inline-right \
+        --padding=1,2 \
+        --highlight-line \
+        --pointer='>' \
+        --no-scrollbar \
+        --ellipsis='...' \
+        --color='bg:-1,bg+:#313244,fg:#cdd6f4,fg+:#f5e0dc,hl:#f38ba8,hl+:#f38ba8,prompt:#cba6f7,pointer:#f5c2e7,marker:#a6e3a1,spinner:#f9e2af,info:#89b4fa,border:#45475a,label:#cba6f7,header:#7f849c' \
         --no-sort \
         --cycle \
         --bind 'tab:down,btab:up' \
