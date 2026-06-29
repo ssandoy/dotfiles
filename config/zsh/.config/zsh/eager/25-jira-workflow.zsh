@@ -191,9 +191,9 @@ _jira_assign_rest() {
   account_id="$(_jira_account_id_for_assignee "$assignee")" || return 127
 
   if [[ "$yes_flag" != "--yes" ]]; then
-    printf 'Assign %s to %s? [y/N] ' "$key" "$assignee"
+    printf 'Assign %s to %s? [Y/n] ' "$key" "$assignee"
     read -r reply
-    [[ "$reply" == [Yy]* ]] || return 1
+    [[ -z "$reply" || "$reply" == [Yy]* ]] || return 1
   fi
 
   payload="$("$jq_cmd" -nc --arg accountId "$account_id" '{accountId: $accountId}')" || return 1

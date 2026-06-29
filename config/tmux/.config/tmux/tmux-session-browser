@@ -12,7 +12,7 @@ fi
 BORDER_LABEL="${BORDER_LABEL} "
 
 if [[ "${1-}" == "--popup" ]]; then
-    popup_args=(-w 70% -h 30% -E)
+    popup_args=(-w 70% -h 40% -E)
 
     if [[ -n "${2-}" ]]; then
         popup_args=(-c "$2" "${popup_args[@]}")
