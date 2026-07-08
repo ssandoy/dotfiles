@@ -48,6 +48,6 @@ keybind = cmd+r=reload_config
 keybind = cmd+i=inspector:toggle
 
 # Tab navigation
-keybind = ctrl+tab=next_tab
+keybind = ctrl+tab=csi:9;5u
 keybind = ctrl+shift+tab=previous_tab
 keybind = shift+enter=text:\n
