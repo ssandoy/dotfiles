@@ -4,7 +4,10 @@ if [[ $# -eq 1 ]]; then
     selected=$1
 else
     selected=$(
-        find ~/git -mindepth 1 -maxdepth 1 -type d -not -path '*/.*' |
+        {
+            find ~/git -mindepth 1 -maxdepth 1 -type d -not -path '*/.*'
+            echo ~/dotfiles
+        } |
             awk -F/ '{printf "\033[1m%s\033[0m\t%s\n", $NF, $0}' |
             fzf \
                 --ansi \

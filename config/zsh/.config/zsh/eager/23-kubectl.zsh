@@ -16,8 +16,19 @@ alias kdp='kubectl describe pod'
 alias kdd='kubectl describe deployment'
 alias kds='kubectl describe service'
 
-alias kl='kubectl logs'
-alias klf='kubectl logs -f'
+# Pretty-prints structured logs. Set KELORA_EXCLUDE (comma-separated field
+# names) to drop noisy constant fields, e.g. `export KELORA_EXCLUDE=app,environment,version`
+_klog() {
+  kelora -f json,logfmt,line -K "_format${KELORA_EXCLUDE:+,$KELORA_EXCLUDE}"
+}
+
+kl() {
+  kubectl logs "$@" | _klog
+}
+
+klf() {
+  kubectl logs -f "$@" | _klog
+}
 
 alias kaf='kubectl apply -f'
 alias kdel='kubectl delete'
@@ -64,7 +75,7 @@ klp() {
     return 1
   fi
   echo "Following logs for pod: $POD"
-  kubectl logs -f "$POD"
+  kubectl logs -f "$POD" | _klog
 }
 
 # Helper function to exec into the most recent pod matching a pattern
