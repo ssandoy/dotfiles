@@ -6,6 +6,24 @@ alias h='history'
 alias rl='typeset -U path && source "${ZDOTDIR:-$HOME/.config/zsh}/.zshrc"'
 alias vim='nvim'
 
+# Print the current directory and copy it to the clipboard when available.
+cpwd() {
+  local current_path
+  current_path="$PWD"
+
+  print -r -- "$current_path"
+
+  if command -v pbcopy >/dev/null 2>&1; then
+    print -r -- "$current_path" | pbcopy
+  elif command -v wl-copy >/dev/null 2>&1; then
+    print -r -- "$current_path" | wl-copy
+  elif command -v xclip >/dev/null 2>&1; then
+    print -r -- "$current_path" | xclip -selection clipboard
+  elif command -v xsel >/dev/null 2>&1; then
+    print -r -- "$current_path" | xsel --clipboard --input
+  fi
+}
+
 unalias n 2>/dev/null
 
 n() {
