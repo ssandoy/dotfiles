@@ -32,6 +32,7 @@ packages=(
   claude
   direnv
   acli
+  zed
 )
 
 case "$(detect_platform)" in
