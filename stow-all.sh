@@ -24,6 +24,7 @@ packages=(
   zsh
   git
   vim
+  vscode
   mise
   nvim
   ghostty
