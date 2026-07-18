@@ -41,6 +41,7 @@ sketchybar --default \
   background.corner_radius=5
 
 sketchybar --add event aerospace_workspace_change
+sketchybar --add event finance_refresh
 
 workspaces="$(aerospace list-workspaces --all 2>/dev/null || printf '%s\n' {1..10})"
 for workspace in $workspaces; do
@@ -115,18 +116,40 @@ sketchybar --add item volume right \
 
 sketchybar --add item network right \
   --set network \
-    width=142 \
+    width=110 \
     icon="WIFI" \
     icon.color="$MUTED_COLOR" \
     icon.padding_left=8 \
     icon.padding_right=5 \
     label.color="$TEXT_COLOR" \
-    label.max_chars=16 \
+    label.max_chars=10 \
     label.padding_right=8 \
     update_freq=30 \
     script="$PLUGIN_DIR/network.sh"
 
-sketchybar --add item aerospace.layout right \
+sketchybar --add item finance.msft right \
+  --set finance.msft \
+    width=144 \
+    icon="MSFT" \
+    icon.color="$MUTED_COLOR" \
+    icon.padding_left=8 \
+    icon.padding_right=5 \
+    label="--" \
+    label.color="$TEXT_COLOR" \
+    label.padding_right=8
+
+sketchybar --add item finance.stb right \
+  --set finance.stb \
+    width=144 \
+    icon="STB" \
+    icon.color="$MUTED_COLOR" \
+    icon.padding_left=8 \
+    icon.padding_right=5 \
+    label="--" \
+    label.color="$TEXT_COLOR" \
+    label.padding_right=8
+
+sketchybar --add item aerospace.layout left \
   --set aerospace.layout \
     width=82 \
     icon.drawing=off \
@@ -143,5 +166,13 @@ sketchybar --add item aerospace.observer left \
     script="$PLUGIN_DIR/workspaces.sh" \
   --subscribe aerospace.observer aerospace_workspace_change
 
+sketchybar --add item finance.observer right \
+  --set finance.observer \
+    drawing=off \
+    update_freq=300 \
+    script="$PLUGIN_DIR/finance.sh" \
+  --subscribe finance.observer finance_refresh system_woke
+
 sketchybar --trigger aerospace_workspace_change
+sketchybar --trigger finance_refresh
 sketchybar --update
