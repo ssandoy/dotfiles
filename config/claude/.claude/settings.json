@@ -5,6 +5,7 @@
     ]
   },
   "model": "claude-fable-5[1m]",
+  "preferredNotifChannel": "notifications_disabled",
   "enabledPlugins": {
     "tripletex-plugin@fyk-plugin-marketplace": true,
     "regnskapsloven-plugin@fyk-plugin-marketplace": true,
@@ -25,26 +26,6 @@
   },
   "hooks": {
     "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
-          }
-        ]
-      }
-    ],
-    "StopFailure": [
       {
         "hooks": [
           {
