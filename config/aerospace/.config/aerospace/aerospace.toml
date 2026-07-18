@@ -1,0 +1,82 @@
+config-version = 2
+
+start-at-login = true
+auto-reload-config = true
+
+after-startup-command = ['workspace 1', 'exec-and-forget sketchybar']
+persistent-workspaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+
+exec-on-workspace-change = [
+  '/bin/bash',
+  '-c',
+  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE',
+]
+
+gaps.inner.horizontal = 6
+gaps.inner.vertical = 6
+gaps.outer.left = 6
+gaps.outer.bottom = 6
+gaps.outer.top = 14
+gaps.outer.right = 6
+
+[[on-window-detected]]
+if = 'true'
+run = 'move-node-to-workspace 1'
+
+[mode.main.binding]
+# Focus windows.
+ctrl-shift-left = 'focus left'
+ctrl-shift-down = 'focus down'
+ctrl-shift-up = 'focus up'
+ctrl-shift-right = 'focus right'
+
+# Move windows.
+ctrl-alt-left = 'move left'
+ctrl-alt-down = 'move down'
+ctrl-alt-up = 'move up'
+ctrl-alt-right = 'move right'
+
+# Swap windows.
+ctrl-alt-shift-left = 'swap left'
+ctrl-alt-shift-down = 'swap down'
+ctrl-alt-shift-up = 'swap up'
+ctrl-alt-shift-right = 'swap right'
+
+# Switch layouts directly.
+alt-shift-s = 'layout accordion'
+alt-shift-t = 'layout tiles; layout horizontal; balance-sizes'
+alt-shift-v = 'layout tiles; layout vertical; balance-sizes'
+alt-shift-b = 'balance-sizes'
+alt-shift-space = 'layout floating tiling'
+
+# Resize the focused window.
+alt-shift-left = 'exec-and-forget "$HOME/.config/aerospace/resize.sh" left width'
+alt-shift-down = 'exec-and-forget "$HOME/.config/aerospace/resize.sh" down height'
+alt-shift-up = 'exec-and-forget "$HOME/.config/aerospace/resize.sh" up height'
+alt-shift-right = 'exec-and-forget "$HOME/.config/aerospace/resize.sh" right width'
+
+# Focus workspaces.
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8'
+alt-9 = 'workspace 9'
+alt-0 = 'workspace 10'
+
+# Move windows to workspaces and follow them.
+alt-shift-1 = 'move-node-to-workspace --focus-follows-window 1'
+alt-shift-2 = 'move-node-to-workspace --focus-follows-window 2'
+alt-shift-3 = 'move-node-to-workspace --focus-follows-window 3'
+alt-shift-4 = 'move-node-to-workspace --focus-follows-window 4'
+alt-shift-5 = 'move-node-to-workspace --focus-follows-window 5'
+alt-shift-6 = 'move-node-to-workspace --focus-follows-window 6'
+alt-shift-7 = 'move-node-to-workspace --focus-follows-window 7'
+alt-shift-8 = 'move-node-to-workspace --focus-follows-window 8'
+alt-shift-9 = 'move-node-to-workspace --focus-follows-window 9'
+alt-shift-0 = 'move-node-to-workspace --focus-follows-window 10'
+
+ctrl-alt-cmd-shift-q = 'enable off'

@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/sketchybar"
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+BAR_COLOR=0xf214161b
+TEXT_COLOR=0xffe8eaed
+MUTED_COLOR=0xff8b919b
+ACTIVE_COLOR=0xff6bd5ff
+ACTIVE_BACKGROUND=0x3348b8e8
+BORDER_COLOR=0x88444a54
+
+sketchybar --bar \
+  position=top \
+  height=40 \
+  color="$BAR_COLOR" \
+  border_color="$BORDER_COLOR" \
+  border_width=0 \
+  corner_radius=0 \
+  margin=0 \
+  y_offset=0 \
+  padding_left=10 \
+  padding_right=10 \
+  blur_radius=24 \
+  shadow=off \
+  display=main \
+  sticky=on \
+  topmost=window
+
+sketchybar --default \
+  icon.font="SF Pro:Semibold:13.0" \
+  icon.color="$TEXT_COLOR" \
+  icon.padding_left=8 \
+  icon.padding_right=8 \
+  label.font="SF Pro:Medium:12.0" \
+  label.color="$MUTED_COLOR" \
+  label.padding_left=0 \
+  label.padding_right=7 \
+  background.height=24 \
+  background.corner_radius=5
+
+sketchybar --add event aerospace_workspace_change
+
+workspaces="$(aerospace list-workspaces --all 2>/dev/null || printf '%s\n' {1..10})"
+for workspace in $workspaces; do
+  sketchybar --add item "space.$workspace" left \
+    --set "space.$workspace" \
+      width=34 \
+      icon="$workspace" \
+      icon.align=center \
+      label.font="sketchybar-app-font:Regular:15.0" \
+      label.align=center \
+      label.drawing=off \
+      background.color="$ACTIVE_BACKGROUND" \
+      background.height=26 \
+      background.drawing=off \
+      click_script="$PLUGIN_DIR/workspace_click.sh $workspace"
+done
+
+sketchybar --add item workspace_separator left \
+  --set workspace_separator \
+    width=10 \
+    icon="|" \
+    icon.color="$BORDER_COLOR" \
+    icon.padding_left=3 \
+    icon.padding_right=3 \
+    label.drawing=off
+
+sketchybar --add item front_app left \
+  --set front_app \
+    icon.drawing=off \
+    label="Desktop" \
+    label.color="$TEXT_COLOR" \
+    label.max_chars=28 \
+    label.padding_left=8 \
+    label.padding_right=8 \
+    script="$PLUGIN_DIR/front_app.sh" \
+  --subscribe front_app front_app_switched
+
+sketchybar --add item clock right \
+  --set clock \
+    icon.drawing=off \
+    label.color="$TEXT_COLOR" \
+    label.padding_left=10 \
+    label.padding_right=10 \
+    update_freq=10 \
+    script="$PLUGIN_DIR/clock.sh"
+
+sketchybar --add item battery right \
+  --set battery \
+    width=68 \
+    icon="BAT" \
+    icon.color="$MUTED_COLOR" \
+    icon.padding_left=8 \
+    icon.padding_right=5 \
+    label.color="$TEXT_COLOR" \
+    label.padding_right=8 \
+    update_freq=60 \
+    script="$PLUGIN_DIR/battery.sh" \
+  --subscribe battery system_woke power_source_change
+
+sketchybar --add item volume right \
+  --set volume \
+    width=68 \
+    icon="VOL" \
+    icon.color="$MUTED_COLOR" \
+    icon.padding_left=8 \
+    icon.padding_right=5 \
+    label.color="$TEXT_COLOR" \
+    label.padding_right=8 \
+    script="$PLUGIN_DIR/volume.sh" \
+    click_script="$PLUGIN_DIR/volume.sh --toggle" \
+  --subscribe volume volume_change
+
+sketchybar --add item network right \
+  --set network \
+    width=142 \
+    icon="WIFI" \
+    icon.color="$MUTED_COLOR" \
+    icon.padding_left=8 \
+    icon.padding_right=5 \
+    label.color="$TEXT_COLOR" \
+    label.max_chars=16 \
+    label.padding_right=8 \
+    update_freq=30 \
+    script="$PLUGIN_DIR/network.sh"
+
+sketchybar --add item aerospace.layout right \
+  --set aerospace.layout \
+    width=82 \
+    icon.drawing=off \
+    label="TILES" \
+    label.align=center \
+    label.color="$ACTIVE_COLOR" \
+    label.padding_left=8 \
+    label.padding_right=8
+
+sketchybar --add item aerospace.observer left \
+  --set aerospace.observer \
+    drawing=off \
+    update_freq=3 \
+    script="$PLUGIN_DIR/workspaces.sh" \
+  --subscribe aerospace.observer aerospace_workspace_change
+
+sketchybar --trigger aerospace_workspace_change
+sketchybar --update
