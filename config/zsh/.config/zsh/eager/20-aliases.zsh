@@ -14,13 +14,13 @@ cpwd() {
   print -r -- "$current_path"
 
   if command -v pbcopy >/dev/null 2>&1; then
-    print -r -- "$current_path" | pbcopy
+    printf %s "$current_path" | pbcopy
   elif command -v wl-copy >/dev/null 2>&1; then
-    print -r -- "$current_path" | wl-copy
+    printf %s "$current_path" | wl-copy
   elif command -v xclip >/dev/null 2>&1; then
-    print -r -- "$current_path" | xclip -selection clipboard
+    printf %s "$current_path" | xclip -selection clipboard
   elif command -v xsel >/dev/null 2>&1; then
-    print -r -- "$current_path" | xsel --clipboard --input
+    printf %s "$current_path" | xsel --clipboard --input
   fi
 }
 
