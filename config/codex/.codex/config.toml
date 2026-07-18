@@ -35,9 +35,7 @@ hide_gpt5_1_migration_prompt = true
 "gpt-5.4" = "gpt-5.5"
 
 [tui]
-notifications = true
-notification_method = "osc9"
-notification_condition = "unfocused"
+notifications = false
 
 [tui.model_availability_nux]
 "gpt-5.5" = 3
