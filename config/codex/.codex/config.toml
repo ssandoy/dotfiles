@@ -1,0 +1,43 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+personality = "pragmatic"
+notify = ["/Users/ssandoy/.local/bin/agent-notify", "Codex"]
+
+[projects."/Users/ssandoy/git/fyk-web"]
+trust_level = "trusted"
+
+[projects."/Users/ssandoy/git/salary-api"]
+trust_level = "trusted"
+
+[projects."/Users/ssandoy/git/salary-calculator"]
+trust_level = "trusted"
+
+[projects."/Users/ssandoy/git/fyk-data"]
+trust_level = "trusted"
+
+[projects."/Users/ssandoy/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/ssandoy/git/fyk-cloud"]
+trust_level = "trusted"
+
+[projects."/Users/ssandoy/git/fyk-monorepo"]
+trust_level = "trusted"
+
+[notice]
+hide_gpt5_1_migration_prompt = true
+"hide_gpt-5.1-codex-max_migration_prompt" = true
+
+[notice.model_migrations]
+"gpt-5.1-codex-max" = "gpt-5.2-codex"
+"gpt-5.2-codex" = "gpt-5.3-codex"
+"gpt-5.3-codex" = "gpt-5.4"
+"gpt-5.4" = "gpt-5.5"
+
+[tui]
+notifications = true
+notification_method = "osc9"
+notification_condition = "unfocused"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 3

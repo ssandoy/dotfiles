@@ -1,0 +1,65 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)"
+    ]
+  },
+  "model": "claude-fable-5[1m]",
+  "enabledPlugins": {
+    "tripletex-plugin@fyk-plugin-marketplace": true,
+    "regnskapsloven-plugin@fyk-plugin-marketplace": true,
+    "supabase-db-plugin@fyk-plugin-marketplace": true,
+    "superpowers@claude-plugins-official": true,
+    "browser-flow-plugin@fyk-plugin-marketplace": true,
+    "grafana-plugin@fyk-plugin-marketplace": true,
+    "nrs8-accounting-plugin@fyk-plugin-marketplace": true,
+    "notion-plugin@fyk-plugin-marketplace": true
+  },
+  "extraKnownMarketplaces": {
+    "fyk-plugin-marketplace": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:Fyk-Konsulenter/fyk-plugin-marketplace.git"
+      }
+    }
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
+          }
+        ]
+      }
+    ]
+  },
+  "effortLevel": "high",
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "voiceEnabled": true
+}

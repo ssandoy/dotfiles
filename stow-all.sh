@@ -27,6 +27,7 @@ packages=(
   vscode
   mise
   nvim
+  notifications
   ghostty
   brew
   lefthook

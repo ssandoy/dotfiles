@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -u
+
+title="${1:-Agent}"
+input="${2:-}"
+
+if [ -z "$input" ]; then
+  input="$(cat)"
+fi
+
+jq_cmd="$(command -v jq 2>/dev/null || true)"
+if [ -z "$jq_cmd" ] && [ -x /opt/homebrew/bin/jq ]; then
+  jq_cmd=/opt/homebrew/bin/jq
+fi
+
+message="Needs your attention"
+if [ -n "$jq_cmd" ] && [ -n "$input" ]; then
+  parsed_message="$(
+    printf '%s' "$input" |
+      "$jq_cmd" -r '
+        .message
+        // .last_assistant_message
+        // .["last-assistant-message"]
+        // .error_details
+        // .error
+        // "Needs your attention"
+        | gsub("[\r\n\t]+"; " ")
+        | .[0:180]
+      ' 2>/dev/null
+  )" || parsed_message=""
+
+  [ -n "$parsed_message" ] && message="$parsed_message"
+fi
+
+alerter_cmd="$(command -v alerter 2>/dev/null || true)"
+if [ -z "$alerter_cmd" ] && [ -x /opt/homebrew/bin/alerter ]; then
+  alerter_cmd=/opt/homebrew/bin/alerter
+fi
+
+if [ -n "$alerter_cmd" ]; then
+  "$alerter_cmd" \
+    --title "$title" \
+    --message "$message" \
+    --sound default \
+    --timeout 10 \
+    >/dev/null 2>&1 &
+  exit 0
+fi
+
+tty_path="${AGENT_NOTIFY_TTY:-/dev/tty}"
+if [ -w "$tty_path" ]; then
+  if [ -n "${TMUX:-}" ]; then
+    printf '\033Ptmux;\033\033]9;%s: %s\033\033\\\033\\' "$title" "$message" > "$tty_path"
+  else
+    printf '\033]9;%s: %s\033\\' "$title" "$message" > "$tty_path"
+  fi
+  exit 0
+fi
+
+printf '%s: no notification backend available\n' "$title" >&2
+exit 1
