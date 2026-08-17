@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# herdr equivalent of the old tmux-file-selector: pick a file with fzf and
+# open it in nvim. Runs self-contained inside the spawned pane (unlike the
+# tmux version, this doesn't send keys back into the pane that triggered it —
+# see the "Not migrated" note in config.toml for why).
+set -euo pipefail
+
+if command -v fd >/dev/null 2>&1; then
+    list_cmd=(fd --type f --hidden --follow --exclude .git)
+else
+    list_cmd=(find . -type f -not -path '*/.git/*')
+fi
+
+sel=$("${list_cmd[@]}" | fzf --prompt='files> ' --height=80% --reverse) || exit 0
+
+if [[ -z "${sel:-}" ]]; then
+    exit 0
+fi
+
+exec nvim -- "$sel"

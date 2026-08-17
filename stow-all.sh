@@ -21,6 +21,7 @@ packages=(
   codex
   copilot
   tmux
+  herdr
   zsh
   git
   vim

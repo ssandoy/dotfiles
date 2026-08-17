@@ -1,0 +1,101 @@
+# herdr configuration — migrated from config/tmux/.config/tmux/tmux.conf
+# See that file's history for the source of truth being replaced here.
+
+[theme]
+name = "catppuccin"
+# tmux used the "macchiato" flavour via mike-rambil/tmux-catppuccin; herdr's
+# built-in catppuccin theme doesn't expose separate flavour variants (just
+# "catppuccin" / "catppuccin-latte" for dark/light), so this is an approximation.
+
+[ui]
+# Matches the old pane-active-border-style 'fg=magenta'.
+accent = "magenta"
+
+agent_panel_sort = "priority"
+[advanced]
+# tmux had history-limit = 1,000,000 *lines*; herdr's limit is in *bytes*, so
+# there's no exact conversion. Bumped up from the 10MB default as a rough match.
+scrollback_limit_bytes = 50_000_000
+
+[keys]
+prefix = "ctrl+a"
+
+# Cycle workspaces with prefix+tab / prefix+shift+tab. This claims the keys
+# that default to cycle_pane_next/cycle_pane_previous (pane cycling within a
+# tab) — workspace cycling wins here since that's what was asked for.
+next_workspace = "prefix+tab"
+previous_workspace = "prefix+shift+tab"
+
+# --- Direct (no-prefix) bindings, matching the old `bind-key -n` set ---
+# tmux's -v/-h split flags name the *divider axis*; herdr's split_vertical/
+# split_horizontal name the *resulting pane arrangement* (the more common
+# vim/VS Code convention) — the opposite way round. Swapped to match the
+# actual old behavior: C-s -> stacked panes, C-t -> side-by-side panes.
+split_vertical = "ctrl+t"    # was: bind-key -n C-t split-window -h (side-by-side)
+split_horizontal = "ctrl+s"  # was: bind-key -n C-s split-window -v (stacked)
+close_pane = "ctrl+w"        # was: bind-key -n C-w kill-pane
+close_workspace = "ctrl+q"   # was: bind-key -n C-Q kill-session
+
+# Old config bound the same "session browser" popup to prefix+s, ctrl+tab, AND
+# a Windows-Terminal-only escape sequence (user-keys[0]). herdr's built-in
+# workspace_picker is the native equivalent, so it takes over ctrl+tab directly
+# (no raw escape-sequence workaround needed — herdr reads terminal input itself,
+# it doesn't rely on tmux's xterm-keys layer).
+#
+# Trade-off: this frees up the default `prefix+w` binding for workspace_picker.
+# It also means `prefix+s` no longer opens a session picker — it's still bound
+# to herdr's native `settings` panel (the default), which is a real behavior
+# change from muscle memory. Reassign settings elsewhere if you'd rather keep
+# prefix+s free, or bind workspace_picker back to "prefix+w" and drop ctrl+tab.
+workspace_picker = "ctrl+tab"
+
+# reload_config already defaults to "prefix+shift+r", equivalent to the old
+# `bind R source-file ... ; display-message "reloaded"` — no change needed.
+
+# --- Ported custom popups, moved off keys that collide with herdr defaults ---
+# (old key -> new key, and which herdr default it would've collided with)
+#   b -> shift+b   (default toggle_sidebar = prefix+b)
+#   o -> o         (default open_notification_target = prefix+o, overridden below —
+#                   muscle memory for the project picker won out over this default)
+#   g -> alt+g     (default goto = prefix+g)
+#   r -> alt+r     (default resize_mode = prefix+r)
+#   t -> t         (no default collision)
+open_notification_target = ""  # freed so prefix+o can drive the sessionizer instead
+
+[[keys.command]]
+key = "prefix+shift+b"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-file-selector"
+
+[[keys.command]]
+key = "prefix+t"
+type = "pane"
+command = "zsh -l"
+
+[[keys.command]]
+key = "prefix+alt+g"
+type = "pane"
+command = "zsh -lic ghprs"
+
+[[keys.command]]
+key = "prefix+o"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-sessionizer"
+
+[[keys.command]]
+key = "prefix+alt+r"
+type = "pane"
+command = "rg --color=always --line-number --no-heading --smart-case \"${*:-}\" | fzf --ansi --color --delimiter : --preview \"bat --style=numbers --color=always {1} --highlight-line {2}\" --bind \"enter:become(vim {1} +{2})\""
+
+# --- Not migrated ---
+# `bind n` (navi cheat-sheet popup that pasted the pick into the calling pane):
+# navi isn't even installed on this machine, and reimplementing the
+# "popup picks something, then injects it into the pane that spawned the
+# popup" behavior needs a way to address that original pane from within a
+# `[[keys.command]]` process. Herdr injects $HERDR_PANE_ID into managed panes,
+# but that identifies the pane the command is *running in* (the new popup/pane),
+# not the one that triggered it — there's no verified mechanism yet for the
+# reverse. Revisit if/when navi gets installed and this is worth solving.
+#
+# cpu/battery/kube-context status-bar modules (tmux-battery, tmux-cpu,
+# kube-tmux): herdr's sidebar has no equivalent system-stat module slot today.
