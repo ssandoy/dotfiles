@@ -37,6 +37,8 @@ defaults:
   # Shorter than the 30m default since this dashboard lives in an
   # always-open workspace rather than being launched on demand.
   refetchIntervalMinutes: 5
+  # Don't prefill "LGTM" on the a/v approve-with-comment prompt.
+  prApproveComment: ""
 
 # `d` (view PR diff) sets GH_PAGER to this and pipes `gh pr diff` through it.
 # hunk's `pager` subcommand is built for exactly this: a drop-in Git pager
