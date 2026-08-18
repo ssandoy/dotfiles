@@ -44,10 +44,16 @@ defaults:
 pager:
   diff: hunk pager
 
-# Port of the old ghprs script's alt-s "approve + squash merge" binding —
-# v/m already cover plain approve/merge, this combines them into one step.
 keybindings:
   prs:
+    # A overrides the built-in Unassign PR key to trigger approve instead
+    # (v still approves too, this is just an additional/preferred key).
+    - key: A
+      builtin: approve
+
+    # Port of the old ghprs script's alt-s "approve + squash merge" binding
+    # — v/m already cover plain approve/merge, this combines them into one
+    # step.
     - key: alt+s
       name: approve + squash merge
       command: gh pr review {{.PrNumber}} --repo {{.RepoName}} --approve && gh pr merge {{.PrNumber}} --repo {{.RepoName}} --squash
