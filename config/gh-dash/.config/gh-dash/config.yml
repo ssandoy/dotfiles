@@ -46,10 +46,13 @@ pager:
 
 keybindings:
   prs:
-    # A overrides the built-in Unassign PR key to trigger approve instead
-    # (v still approves too, this is just an additional/preferred key).
-    - key: A
+    # a overrides the built-in Assign PR key to trigger approve instead
+    # (v still approves too). A takes over what a used to do (assign),
+    # giving up the default dedicated Unassign key.
+    - key: a
       builtin: approve
+    - key: A
+      builtin: assign
 
     # Port of the old ghprs script's alt-s "approve + squash merge" binding
     # — v/m already cover plain approve/merge, this combines them into one
