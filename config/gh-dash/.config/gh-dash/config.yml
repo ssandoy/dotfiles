@@ -15,6 +15,7 @@ prSections:
       is:open
       review-requested:@me
       -repo:elhub/auth-vault-transit-secrets-engine-mock
+      -repo:elhub/service-platform
       -repo:elhub/test-suite
       -repo:elhub/test-suite-api
       -repo:elhub/test-suite-calculation
