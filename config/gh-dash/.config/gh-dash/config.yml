@@ -7,9 +7,25 @@ prSections:
     filters: is:open author:@me
 
   - title: Needs My Review
+    # GitHub search's repo: qualifier has no wildcard support, so
+    # "elhub/test-suite*" is enumerated explicitly. Repos as of 2026-08-18:
+    # `gh repo list elhub --limit 1000 --json name -q '.[].name' | grep
+    # "^test-suite"` — re-run and update this list if new ones appear.
     filters: >-
       is:open
       review-requested:@me
+      -repo:elhub/test-suite
+      -repo:elhub/test-suite-api
+      -repo:elhub/test-suite-calculation
+      -repo:elhub/test-suite-emif
+      -repo:elhub/test-suite-market-process
+      -repo:elhub/test-suite-market-process-mass
+      -repo:elhub/test-suite-metering-value
+      -repo:elhub/test-suite-mypage-e2e
+      -repo:elhub/test-suite-portal-security
+      -repo:elhub/test-suite-structure-data
+      -repo:elhub/test-suite-util
+      -repo:elhub/test-suite-virtual-calculations
 
   - title: Reviewed By Me
     filters: >-
