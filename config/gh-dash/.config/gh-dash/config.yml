@@ -14,6 +14,7 @@ prSections:
     filters: >-
       is:open
       review-requested:@me
+      -repo:elhub/auth-test-token-service
       -repo:elhub/auth-vault-transit-secrets-engine-mock
       -repo:elhub/service-platform
       -repo:elhub/test-suite
