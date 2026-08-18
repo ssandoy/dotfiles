@@ -8,18 +8,44 @@ prSections:
 
   - title: Needs My Review
     # GitHub search's repo: qualifier has no wildcard support, so
-    # "elhub/test-suite*" is enumerated explicitly. Repos as of 2026-08-18:
+    # "elhub/test-suite*" and "elhub/service-platform-*" (except -web-api
+    # and the bare service-platform repo, both kept) are enumerated
+    # explicitly. Repos as of 2026-08-18:
     # `gh repo list elhub --limit 1000 --json name -q '.[].name' | grep
-    # "^test-suite"` — re-run and update this list if new ones appear.
+    # "^test-suite"` / `| grep "^service-platform"` — re-run and update
+    # this list if new ones appear.
     filters: >-
       is:open
       review-requested:@me
       -repo:elhub/auth-test-token-service
       -repo:elhub/auth-vault-transit-secrets-engine-mock
-      -repo:elhub/service-platform
       -repo:elhub/service-platform-aag-policy
+      -repo:elhub/service-platform-ansible-collection-deploy
+      -repo:elhub/service-platform-bpm-ht-services
+      -repo:elhub/service-platform-bpm-services
+      -repo:elhub/service-platform-database
       -repo:elhub/service-platform-java-services
+      -repo:elhub/service-platform-jlib-calendar-utils
+      -repo:elhub/service-platform-jlib-config-utils
+      -repo:elhub/service-platform-jlib-crypto-utils
+      -repo:elhub/service-platform-jlib-env-utils
+      -repo:elhub/service-platform-jlib-error-handler
+      -repo:elhub/service-platform-jlib-lib-parent
+      -repo:elhub/service-platform-jlib-logging-utils
+      -repo:elhub/service-platform-jlib-meteringpoint-utils
+      -repo:elhub/service-platform-jlib-osb-util
+      -repo:elhub/service-platform-jlib-owsm
+      -repo:elhub/service-platform-jlib-traceid-utils
+      -repo:elhub/service-platform-jlib-wl-utils
+      -repo:elhub/service-platform-jlib-ws-consumers
+      -repo:elhub/service-platform-mds
       -repo:elhub/service-platform-oam-plugin
+      -repo:elhub/service-platform-osb-deployment-maven-plugin
+      -repo:elhub/service-platform-ovd-user-mapper-plugin
+      -repo:elhub/service-platform-service-bus
+      -repo:elhub/service-platform-services-interface-specifications
+      -repo:elhub/service-platform-soa-services
+      -repo:elhub/service-platform-sp-oud-user-mapper-plugin
       -repo:elhub/test-suite
       -repo:elhub/test-suite-api
       -repo:elhub/test-suite-calculation
