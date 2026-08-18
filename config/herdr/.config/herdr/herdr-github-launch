@@ -14,8 +14,27 @@ pane_id="${1:?pane_id required}"
 source="custom:github-badge"
 agent="needs-review"
 
+gh_dash_config="$HOME/.config/gh-dash/config.yml"
+
+# Reads the "Needs My Review" section's filters straight from gh-dash's own
+# config every poll, so the badge count always matches the tab count instead
+# of drifting from a second hardcoded copy of the same query (which is
+# exactly what happened before: this used to hardcode a plain
+# review-requested:@me query with none of the repo exclusions from
+# config.yml, so the badge and the tab silently disagreed).
 count_needs_review() {
-    gh api graphql -f query='{ search(type: ISSUE, query: "is:pr is:open archived:false review-requested:@me", first: 1) { issueCount } }' \
+    local filters query
+    filters=$(yq -r '.prSections[] | select(.title == "Needs My Review") | .filters' "$gh_dash_config" 2>/dev/null)
+    if [[ -z "$filters" || "$filters" == "null" ]]; then
+        echo 0
+        return
+    fi
+    # gh-dash always adds is:pr and archived:false to a section's filters —
+    # match that here so the query is equivalent, not just visually similar.
+    query="is:pr archived:false $filters"
+    gh api graphql \
+        -f query='query($q: String!) { search(type: ISSUE, query: $q, first: 1) { issueCount } }' \
+        -f q="$query" \
         -q '.data.search.issueCount' 2>/dev/null || echo 0
 }
 
