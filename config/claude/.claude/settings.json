@@ -4,8 +4,19 @@
       "Bash(git push:*)"
     ]
   },
-  "model": "claude-fable-5[1m]",
-  "preferredNotifChannel": "notifications_disabled",
+  "model": "claude-sonnet-5",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "tripletex-plugin@fyk-plugin-marketplace": true,
     "regnskapsloven-plugin@fyk-plugin-marketplace": true,
@@ -24,23 +35,13 @@
       }
     }
   },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME/.local/bin/agent-notify\" \"Claude Code\""
-          }
-        ]
-      }
-    ]
-  },
   "effortLevel": "high",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
+  "theme": "dark",
+  "preferredNotifChannel": "notifications_disabled",
   "voiceEnabled": true
 }
