@@ -1,12 +1,18 @@
-# Jira helpers for branch-based work.
+# Jira helpers for shell- and branch-based work.
 
 jira-key() {
   local branch key
+
+  if [[ -n "${JIRA_CURRENT_TICKET:-}" ]]; then
+    print -r -- "$JIRA_CURRENT_TICKET"
+    return
+  fi
+
   branch="$(git branch --show-current 2>/dev/null)" || return 1
   key="$(printf '%s\n' "$branch" | grep -Eo '[A-Z][A-Z0-9]+-[0-9]+' | head -n 1)"
 
   if [[ -z "$key" ]]; then
-    print -u2 "jira-key: no Jira key found in current branch"
+    print -u2 "jira-key: no current Jira ticket; run 'jira-use' or use a ticket branch"
     return 1
   fi
 
@@ -33,6 +39,94 @@ _jira_jq_cmd() {
     jq_cmd="$HOME/.local/share/mise/installs/jq/1.8.1/jq"
   [[ -z "$jq_cmd" ]] && jq_cmd="$(command -v jq 2>/dev/null)"
   [[ -n "$jq_cmd" ]] && print -r -- "$jq_cmd"
+}
+
+_jira_context_file() {
+  print -r -- "${XDG_STATE_HOME:-$HOME/.local/state}/jira/context.json"
+}
+
+_jira_save_context() {
+  local key="${1:?Usage: _jira_save_context <ISSUE-KEY> <items-json>}"
+  local items="${2:?Usage: _jira_save_context <ISSUE-KEY> <items-json>}"
+  local jq_cmd context_file context_dir temp_file
+
+  jq_cmd="$(_jira_jq_cmd)" || return 1
+  context_file="$(_jira_context_file)"
+  context_dir="${context_file:h}"
+  temp_file="$context_file.tmp.$$"
+
+  mkdir -p -m 700 "$context_dir" || return 1
+  chmod 700 "$context_dir" || return 1
+  (
+    umask 077
+    print -r -- "$items" |
+      "$jq_cmd" -e --arg current "$key" '
+        {
+          current: $current,
+          updated_at: (now | todateiso8601),
+          available: map({
+            key,
+            status: (.fields.status.name // ""),
+            summary: (.fields.summary // "")
+          })
+        }
+      ' >"$temp_file"
+  ) || {
+    rm -f "$temp_file"
+    print -u2 "jira-use: could not write Jira context"
+    return 1
+  }
+
+  mv "$temp_file" "$context_file" || {
+    rm -f "$temp_file"
+    return 1
+  }
+}
+
+_jira_load_context() {
+  local jq_cmd context_file key key_pattern='^[A-Z][A-Z0-9]*-[0-9]+$'
+  context_file="$(_jira_context_file)"
+  [[ -r "$context_file" ]] || return
+
+  jq_cmd="$(_jira_jq_cmd)"
+  if [[ -z "$jq_cmd" ]]; then
+    print -u2 "jira: jq is required to load $context_file"
+    return 1
+  fi
+
+  "$jq_cmd" -e . "$context_file" >/dev/null 2>&1 || {
+    print -u2 "jira: invalid context file: $context_file"
+    return 1
+  }
+  key="$("$jq_cmd" -r '.current // empty' "$context_file")" || return 1
+  [[ -z "$key" ]] && return
+  if [[ ! "$key" =~ $key_pattern ]]; then
+    print -u2 "jira: invalid current ticket in $context_file"
+    return 1
+  fi
+
+  typeset -gx JIRA_CURRENT_TICKET="$key"
+}
+
+_jira_clear_context() {
+  local jq_cmd context_file temp_file
+  context_file="$(_jira_context_file)"
+  [[ -e "$context_file" ]] || return
+
+  jq_cmd="$(_jira_jq_cmd)" || return 1
+  temp_file="$context_file.tmp.$$"
+  (
+    umask 077
+    "$jq_cmd" -e '.current = null' "$context_file" >"$temp_file"
+  ) || {
+    rm -f "$temp_file"
+    print -u2 "jira-clear: could not update Jira context"
+    return 1
+  }
+  mv "$temp_file" "$context_file" || {
+    rm -f "$temp_file"
+    return 1
+  }
 }
 
 _jira_curl_cmd() {
@@ -239,7 +333,7 @@ _jira_summary() {
     return 1
   fi
 
-  acli jira workitem view "$key" --fields summary --json 2>/dev/null |
+  _jira_acli jira workitem view "$key" --fields summary --json 2>/dev/null |
     "$jq_cmd" -r '.fields.summary // .summary // empty' 2>/dev/null
 }
 
@@ -258,7 +352,7 @@ _jira_status() {
     return 1
   }
 
-  acli jira workitem view "$key" --fields status --json 2>/dev/null |
+  _jira_acli jira workitem view "$key" --fields status --json 2>/dev/null |
     "$jq_cmd" -r '.fields.status.name // .fields.status // .status.name // .status // empty' 2>/dev/null
 }
 
@@ -401,6 +495,10 @@ jira-start() {
   key="$(_jira_issue_key "$key")"
   shift
 
+  # Preflight before creating a branch so a missing provisioned dependency
+  # cannot leave this workflow half-complete.
+  _jira_require_acli || return
+
   local description="$*"
   if [[ -z "$description" ]]; then
     description="$(_jira_summary "$key")"
@@ -414,10 +512,206 @@ jira-start() {
     jira-assign-me ${yes_flag:+"$yes_flag"} "$key"
 }
 
+jira-use() {
+  local key="${1:-}"
+  local key_pattern='^[A-Z][A-Z0-9]*-[0-9]+$'
+  local jq_cmd jql items
+
+  if [[ $# -gt 1 ]]; then
+    print -u2 "Usage: jira-use [ISSUE-KEY|WOW-NUMBER]"
+    return 1
+  fi
+
+  jq_cmd="$(_jira_jq_cmd)"
+  if [[ -z "$jq_cmd" ]]; then
+    print -u2 "jira-use: jq is required"
+    return 1
+  fi
+
+  jql='assignee = currentUser() AND resolution IS EMPTY ORDER BY updated DESC'
+  items="$(_jira_acli jira workitem search \
+    --jql "$jql" \
+    --limit 50 \
+    --fields key,status,summary \
+    --json)" || return
+
+  if [[ -z "$key" ]]; then
+    if ! command -v fzf >/dev/null 2>&1; then
+      print -u2 "jira-use: fzf is required to select a ticket"
+      return 1
+    fi
+
+    local selection
+    selection="$(print -r -- "$items" |
+      "$jq_cmd" -r --arg current "${JIRA_CURRENT_TICKET:-}" '
+        .[] |
+        [
+          .key,
+          (if .key == $current then "\u001b[1;33m●\u001b[0m" else " " end),
+          .key,
+          .fields.status.name,
+          .fields.summary
+        ] |
+        @tsv
+      ' |
+      fzf \
+        --ansi \
+        --delimiter=$'\t' \
+        --with-nth=2,3,4,5 \
+        --height=70% \
+        --layout=reverse \
+        --border=rounded \
+        --prompt="Jira > " \
+        --pointer="→" \
+        --header="● current ticket · ESC cancel · Enter select")" || return
+    key="${selection%%$'\t'*}"
+  fi
+
+  key="$(_jira_issue_key "$key")"
+  if [[ ! "$key" =~ $key_pattern ]]; then
+    print -u2 "jira-use: invalid Jira ticket key: $key"
+    return 1
+  fi
+
+  _jira_save_context "$key" "$items" || return
+  typeset -gx JIRA_CURRENT_TICKET="$key"
+  print -r -- "Current Jira ticket: $JIRA_CURRENT_TICKET"
+}
+
+jira-pickup() {
+  local key yes_flag selection
+  local args=()
+  local key_pattern='^[A-Z][A-Z0-9]*-[0-9]+$'
+  local jq_cmd jql items item_count
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --yes|-y) yes_flag="--yes" ;;
+      *) args+=("$1") ;;
+    esac
+    shift
+  done
+  set -- "${args[@]}"
+
+  if [[ $# -gt 1 ]]; then
+    print -u2 "Usage: jira-pickup [--yes] [ISSUE-KEY|WOW-NUMBER]"
+    return 1
+  fi
+
+  key="${1:-}"
+  if [[ -n "$key" ]]; then
+    key="$(_jira_issue_key "$key")"
+    if [[ ! "$key" =~ $key_pattern ]]; then
+      print -u2 "jira-pickup: invalid Jira ticket key: $key"
+      return 1
+    fi
+    jql="key = $key AND assignee IS EMPTY AND resolution IS EMPTY"
+  else
+    jql='project = WOW AND assignee IS EMPTY AND sprint in openSprints() AND resolution IS EMPTY ORDER BY priority DESC, updated DESC'
+  fi
+
+  jq_cmd="$(_jira_jq_cmd)"
+  if [[ -z "$jq_cmd" ]]; then
+    print -u2 "jira-pickup: jq is required"
+    return 1
+  fi
+
+  items="$(_jira_acli jira workitem search \
+    --jql "$jql" \
+    --limit 50 \
+    --fields key,status,priority,summary,description \
+    --json)" || return
+
+  item_count="$("$jq_cmd" -r 'length' <<<"$items")" || return
+  if [[ "$item_count" -eq 0 ]]; then
+    if [[ -n "$key" ]]; then
+      print -u2 "jira-pickup: $key is not an unassigned unresolved ticket"
+    else
+      print -u2 "jira-pickup: no unassigned tickets in the active WOW sprint"
+    fi
+    return 1
+  fi
+
+  if [[ -z "$key" ]]; then
+    if ! command -v fzf >/dev/null 2>&1; then
+      print -u2 "jira-pickup: fzf is required to select a ticket"
+      return 1
+    fi
+
+    selection="$(print -r -- "$items" |
+      "$jq_cmd" -r '
+        def description_text:
+          if . == null then "No description"
+          elif type == "string" then .
+          elif type == "array" then map(description_text) | join("")
+          elif type == "object" then
+            if .type == "hardBreak" then " "
+            elif .text then .text
+            elif .content then
+              (.content | description_text) +
+              (if .type == "paragraph" or .type == "heading" or .type == "listItem"
+               then " "
+               else ""
+               end)
+            else ""
+            end
+          else tostring
+          end;
+        .[] |
+        [
+          .key,
+          .key,
+          .fields.status.name,
+          (.fields.priority.name // ""),
+          .fields.summary,
+          (.fields.description | description_text | gsub("[\t\r\n]+"; " "))
+        ] |
+        @tsv
+      ' |
+      fzf \
+        --ansi \
+        --delimiter=$'\t' \
+        --with-nth=2,3,4,5 \
+        --height=70% \
+        --layout=reverse \
+        --border=rounded \
+        --prompt="Jira pickup > " \
+        --pointer="→" \
+        --preview='printf "%s\n" {6}' \
+        --preview-window=down,50%,wrap,hidden \
+        --preview-label="Description" \
+        --bind="ctrl-d:toggle-preview" \
+        --header="Ctrl-D description · ESC cancel · Enter assign and select")" || return
+    key="${selection%%$'\t'*}"
+  fi
+
+  _jira_acli jira workitem assign \
+    --key "$key" \
+    --assignee "@me" \
+    ${yes_flag:+"$yes_flag"} &&
+    jira-use "$key"
+}
+
+jira-clear() {
+  _jira_clear_context || return
+  unset JIRA_CURRENT_TICKET
+  print -r -- "Current Jira ticket cleared"
+}
+
+_jira_prompt_current_ticket() {
+  [[ -n "${JIRA_CURRENT_TICKET:-}" ]] &&
+    PROMPT="%F{209}[$JIRA_CURRENT_TICKET]%f $PROMPT"
+}
+
+if (( $+functions[_omp_precmd] )); then
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd _jira_prompt_current_ticket
+fi
+
 jira-current() {
   local key
   key="$(jira-key)" || return 1
-  acli jira workitem view "$key"
+  _jira_acli jira workitem view "$key"
 }
 
 jira-open() {
@@ -426,33 +720,32 @@ jira-open() {
   [[ -n "$key" ]] && key="$(_jira_issue_key "$key")"
 
   local base_url="${ATLASSIAN_BASE_URL:-}"
-  if [[ -z "$base_url" && -n "${ATLASSIAN_SITE:-}" ]]; then
+  [[ -z "$base_url" && -n "${ATLASSIAN_SITE:-}" ]] &&
     base_url="https://$ATLASSIAN_SITE"
-  fi
-
   if [[ -z "$base_url" ]]; then
-    acli jira workitem view "$key" --web
+    _jira_acli jira workitem view "$key" --web
     return
   fi
 
   local url="${base_url%/}/browse/$key"
-  if command -v wslview >/dev/null 2>&1; then
-    wslview "$url" 2>/dev/null && return
+  if command -v wsl-browser >/dev/null 2>&1; then
+    wsl-browser "$url"
+  elif command -v open >/dev/null 2>&1; then
+    open "$url"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$url"
+  else
+    print -u2 "jira-open: no browser launcher found"
+    print -r -- "$url"
+    return 1
   fi
-  if command -v open >/dev/null 2>&1; then
-    open "$url" 2>/dev/null && return
-  fi
-  if command -v xdg-open >/dev/null 2>&1; then
-    xdg-open "$url" 2>/dev/null && return
-  fi
-  print -r -- "$url"
 }
 
 jira-view() {
   local key="${1:-}"
   [[ -z "$key" ]] && key="$(jira-key)"
   [[ -n "$key" ]] && key="$(_jira_issue_key "$key")"
-  acli jira workitem view "$key"
+  _jira_acli jira workitem view "$key"
 }
 
 jira-transition() {
@@ -503,7 +796,7 @@ jira-transition() {
     }
     [[ $rest_result -ne 127 ]] && return 1
 
-    acli_output="$(acli jira workitem transition --key "$key" --status "$path_status" ${yes_flag:+"$yes_flag"} 2>&1)"
+    acli_output="$(_jira_acli jira workitem transition --key "$key" --status "$path_status" ${yes_flag:+"$yes_flag"} 2>&1)"
     acli_result=$?
     [[ -n "$acli_output" ]] && print -r -- "$acli_output"
     [[ $acli_result -ne 0 || "$acli_output" == *"Failure:"* ]] && return 1
@@ -594,7 +887,7 @@ jira-assign() {
   [[ $rest_result -eq 0 ]] && return
   [[ $rest_result -ne 127 ]] && return 1
 
-  acli jira workitem assign --key "$key" --assignee "$assignee" ${yes_flag:+"$yes_flag"}
+  _jira_acli jira workitem assign --key "$key" --assignee "$assignee" ${yes_flag:+"$yes_flag"}
 }
 
 jira-assign-me() {
@@ -623,7 +916,7 @@ jira-unassign() {
     return 1
   fi
 
-  acli jira workitem assign --key "$key" --remove-assignee ${yes_flag:+"$yes_flag"}
+  _jira_acli jira workitem assign --key "$key" --remove-assignee ${yes_flag:+"$yes_flag"}
 }
 
 jira-uat-to() {
@@ -693,7 +986,7 @@ _jira_search_items_rest() {
 jira-mine() {
   local jql='assignee = currentUser() AND resolution IS EMPTY ORDER BY updated DESC'
   _jira_search_items_rest "$jql" 25 && return
-  acli jira workitem search --jql "$jql" --limit 25 --fields key,status,summary
+  _jira_acli jira workitem search --jql "$jql" --limit 25 --fields key,status,summary
 }
 
 jira-my-items() {
@@ -705,7 +998,7 @@ jira-my-items() {
 
   local jql='assignee = currentUser() AND resolution IS EMPTY ORDER BY status ASC, updated DESC'
   _jira_search_items_rest "$jql" "$limit" && return
-  acli jira workitem search --jql "$jql" --limit "$limit" --fields key,status,summary
+  _jira_acli jira workitem search --jql "$jql" --limit "$limit" --fields key,status,summary
 }
 
 jira-backlog-items() {
@@ -717,7 +1010,7 @@ jira-backlog-items() {
 
   local jql='assignee = currentUser() AND status = "Backlog" ORDER BY updated DESC'
   _jira_search_items_rest "$jql" "$limit" && return
-  acli jira workitem search --jql "$jql" --limit "$limit" --fields key,status,summary
+  _jira_acli jira workitem search --jql "$jql" --limit "$limit" --fields key,status,summary
 }
 
 _jira_print_items_table() {
@@ -875,5 +1168,7 @@ jira-pickup-items() {
     }
   fi
 
-  acli jira workitem search --jql "$jql" --limit "$limit" --fields key,status,priority,summary
+  _jira_acli jira workitem search --jql "$jql" --limit "$limit" --fields key,status,priority,summary
 }
+
+_jira_load_context
