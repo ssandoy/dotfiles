@@ -1,7 +1,7 @@
 # Core interactive tweaks loaded eagerly.
 
 # Allow Ctrl+S/Ctrl+Q bindings (needed for tmux shortcuts).
-if command -v stty >/dev/null 2>&1; then
+if [[ -t 0 ]] && command -v stty >/dev/null 2>&1; then
   stty -ixon
 fi
 
@@ -14,7 +14,7 @@ fi
 export EDITOR="nvim"
 
 # Ensure user tools are available even if .zshenv wasn't sourced.
-for _path in "$HOME/.local/bin" "$HOME/.local/share/mise/shims"; do
+for _path in "$HOME/.local/bin" "$HOME/bin" "$HOME/.local/share/mise/shims"; do
   if [[ -d "$_path" && ":$PATH:" != *":$_path:"* ]]; then
     PATH="$_path:$PATH"
   fi

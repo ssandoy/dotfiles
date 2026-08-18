@@ -4,4 +4,7 @@ if [[ -r "${ZSH_DEFER_DIR}/zsh-defer.plugin.zsh" ]]; then
   source "${ZSH_DEFER_DIR}/zsh-defer.plugin.zsh"
 else
   echo "zsh-defer plugin missing at ${ZSH_DEFER_DIR}" >&2
+  zsh-defer() {
+    return 0
+  }
 fi

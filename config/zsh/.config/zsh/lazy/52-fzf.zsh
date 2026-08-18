@@ -118,25 +118,34 @@ ffx() {
 # fzf is managed by mise, that can resolve global "latest" tools.
 _fzf_home="$HOME/.fzf"
 [[ -d "${_fzf_home}/bin" && ":$PATH:" != *":${_fzf_home}/bin:"* ]] && PATH="${_fzf_home}/bin:$PATH"
-if [[ -f "${_fzf_home}/shell/key-bindings.zsh" ]]; then
-  source "${_fzf_home}/shell/key-bindings.zsh"
-elif [[ -f /usr/local/opt/fzf/shell/key-bindings.zsh ]]; then
-  source /usr/local/opt/fzf/shell/key-bindings.zsh
-elif [[ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]]; then
-  source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
-fi
+_fzf_integration_dirs=(
+  "${_fzf_home}/shell"
+  /usr/share/doc/fzf/examples
+  /usr/share/fzf
+  /home/linuxbrew/.linuxbrew/opt/fzf/shell
+  /usr/local/opt/fzf/shell
+  /opt/homebrew/opt/fzf/shell
+)
+
+for _fzf_dir in "${_fzf_integration_dirs[@]}"; do
+  if [[ -r "${_fzf_dir}/key-bindings.zsh" ]]; then
+    source "${_fzf_dir}/key-bindings.zsh"
+    break
+  fi
+done
 
 # Source FZF completions separately if not already loaded by key-bindings
-if [[ -f "${_fzf_home}/shell/completion.zsh" ]]; then
-  source "${_fzf_home}/shell/completion.zsh"
-elif [[ -f /usr/local/opt/fzf/shell/completion.zsh ]]; then
-  source /usr/local/opt/fzf/shell/completion.zsh
-elif [[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]]; then
-  source /opt/homebrew/opt/fzf/shell/completion.zsh
+for _fzf_dir in "${_fzf_integration_dirs[@]}"; do
+  if [[ -r "${_fzf_dir}/completion.zsh" ]]; then
+    source "${_fzf_dir}/completion.zsh"
+    break
+  fi
+done
+
+# Package-provided bindings usually target only the active keymap. Apply the
+# widget to Emacs and Vi insert mode so EDITOR=nvim cannot disable Ctrl+R.
+if [[ "$+functions[fzf-history-widget]" == "1" ]]; then
+  bindkey_all_maps '^R' fzf-history-widget
 fi
 
-# Explicitly ensure Ctrl+R works properly by setting up the binding
-# This is a fallback in case the key-bindings.zsh file doesn't set it up
-if [[ "$+functions[fzf-history-widget]" == "1" ]]; then
-  bindkey '^R' fzf-history-widget
-fi
+unset _fzf_dir _fzf_home _fzf_integration_dirs
