@@ -38,20 +38,15 @@ close_pane = "ctrl+w"        # was: bind-key -n C-w kill-pane
 close_workspace = "ctrl+q"   # was: bind-key -n C-Q kill-session
 
 # Old config bound the same "session browser" popup to prefix+s, ctrl+tab, AND
-# a Windows-Terminal-only escape sequence (user-keys[0]). herdr's built-in
-# workspace_picker is the native equivalent, so it takes over ctrl+tab directly
-# (no raw escape-sequence workaround needed — herdr reads terminal input itself,
-# it doesn't rely on tmux's xterm-keys layer).
+# a Windows-Terminal-only escape sequence (user-keys[0]). herdr reads terminal
+# input directly, so none of that xterm-keys/escape-sequence plumbing is
+# needed — ctrl+tab now runs the ported browser itself (see keys.command
+# below) instead of herdr's built-in workspace_picker approximation.
 #
-# Trade-off: this frees up the default `prefix+w` binding for workspace_picker.
-# It also means `prefix+s` no longer opens a session picker — it's still bound
-# to herdr's native `settings` panel (the default), which is a real behavior
-# change from muscle memory. Reassign settings elsewhere if you'd rather keep
-# prefix+s free, or bind workspace_picker back to "prefix+w" and drop ctrl+tab.
-workspace_picker = "ctrl+tab"
+# workspace_picker stays reachable on its own default (prefix+w), now that
+# ctrl+tab is claimed by the real port.
 
-# reload_config already defaults to "prefix+shift+r", equivalent to the old
-# `bind R source-file ... ; display-message "reloaded"` — no change needed.
+reload_config = "prefix+shift+r"  # equivalent to the old `bind R source-file ... ; display-message "reloaded"`
 
 # --- Ported custom popups, moved off keys that collide with herdr defaults ---
 # (old key -> new key, and which herdr default it would've collided with)
@@ -81,6 +76,11 @@ command = "zsh -l"
 key = "prefix+alt+g"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-github"
+
+[[keys.command]]
+key = "ctrl+tab"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-session-browser"
 
 [[keys.command]]
 key = "prefix+o"

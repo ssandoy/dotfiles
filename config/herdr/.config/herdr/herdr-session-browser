@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# herdr port of tmux-session-browser: fzf-pick another workspace and focus it.
+# herdr's workspace API doesn't expose a last-focused timestamp (unlike tmux's
+# #{session_last_attached}), so this lists workspaces in whatever order
+# `herdr workspace list` returns them rather than most-recently-used first.
+set -euo pipefail
+
+workspaces_json=$(herdr workspace list)
+
+current_label=$(jq -r '.result.workspaces[] | select(.focused) | .label' <<<"$workspaces_json")
+
+border_label=" Workspace Browser"
+if [[ -n "$current_label" ]]; then
+    border_label="${border_label}: ${current_label}"
+fi
+border_label="${border_label} "
+
+rows=$(jq -r '.result.workspaces[] | select(.focused | not) | [.workspace_id, .label] | @tsv' <<<"$workspaces_json")
+
+if [[ -z "$rows" ]]; then
+    exit 0
+fi
+
+selected=$(
+    printf '%s\n' "$rows" | fzf \
+        --delimiter=$'\t' \
+        --with-nth=2 \
+        --prompt 'workspace > ' \
+        --layout=reverse \
+        --border=rounded \
+        --border-label "$border_label" \
+        --border-label-pos=2 \
+        --header 'tab/btab: move | enter: switch | esc: cancel' \
+        --header-first \
+        --info=inline-right \
+        --padding=1,2 \
+        --highlight-line \
+        --pointer='>' \
+        --no-scrollbar \
+        --ellipsis='...' \
+        --color='bg:-1,bg+:#313244,fg:#cdd6f4,fg+:#f5e0dc,hl:#f38ba8,hl+:#f38ba8,prompt:#cba6f7,pointer:#f5c2e7,marker:#a6e3a1,spinner:#f9e2af,info:#89b4fa,border:#45475a,label:#cba6f7,header:#7f849c' \
+        --no-sort \
+        --cycle \
+        --bind 'tab:down,btab:up' \
+        --exit-0
+) || exit 0
+
+if [[ -z "$selected" ]]; then
+    exit 0
+fi
+
+workspace_id=$(cut -f1 <<<"$selected")
+
+herdr workspace focus "$workspace_id"
