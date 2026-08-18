@@ -21,12 +21,8 @@ paths = [
 id = "generic-api-key"
 
 [[rules.allowlists]]
-description = "Ignore VS Code keyboard shortcut bindings that look like generic keys"
+description = "Ignore VS Code keyboard shortcuts that resemble generic API keys"
 condition = "AND"
 regexTarget = "line"
-paths = [
-  '''(^|/)\.vscode/keybindings\.json$''',
-]
-regexes = [
-  '''"key":\s*"[-+a-z0-9]*"''',
-]
+paths = ['''^config/vscode/\.config/Code/User/keybindings\.json$''']
+regexes = ['''^\s*"key"\s*:\s*"[a-z0-9]+(?:\+[a-z0-9]+)+(?:\s+[a-z0-9]+(?:\+[a-z0-9]+)*)?",?\s*$''']
