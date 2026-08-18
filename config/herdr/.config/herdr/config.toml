@@ -37,6 +37,16 @@ split_horizontal = "ctrl+s"  # was: bind-key -n C-s split-window -v (stacked)
 close_pane = "ctrl+w"        # was: bind-key -n C-w kill-pane
 close_workspace = "ctrl+q"   # was: bind-key -n C-Q kill-session
 
+# herdr's actual defaults for these are vim-style prefix+h/j/k/l, not arrow
+# keys — there was no old tmux binding for this either (tmux.conf had no
+# select-pane -L/-R/-U/-D bindings). Setting these explicitly replaces the
+# h/j/k/l defaults with arrows rather than adding a second binding, since
+# each of these actions takes exactly one key.
+focus_pane_left = "prefix+left"
+focus_pane_down = "prefix+down"
+focus_pane_up = "prefix+up"
+focus_pane_right = "prefix+right"
+
 # Old config bound the same "session browser" popup to prefix+s, ctrl+tab, AND
 # a Windows-Terminal-only escape sequence (user-keys[0]). herdr reads terminal
 # input directly, so none of that xterm-keys/escape-sequence plumbing is
