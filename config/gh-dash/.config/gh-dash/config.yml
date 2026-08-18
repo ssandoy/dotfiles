@@ -54,9 +54,15 @@ keybindings:
     - key: A
       builtin: assign
 
+    # Built-in merge has no way to fix the method, so it can prompt or fall
+    # back to the repo's default. Always squash + delete the branch instead.
+    - key: m
+      name: squash merge (delete branch)
+      command: gh pr merge {{.PrNumber}} --repo {{.RepoName}} --squash --delete-branch
+
     # Port of the old ghprs script's alt-s "approve + squash merge" binding
-    # — v/m already cover plain approve/merge, this combines them into one
-    # step.
+    # — a/m already cover plain approve/merge, this combines them into one
+    # step. Same squash + delete-branch as the m override above.
     - key: alt+s
       name: approve + squash merge
-      command: gh pr review {{.PrNumber}} --repo {{.RepoName}} --approve && gh pr merge {{.PrNumber}} --repo {{.RepoName}} --squash
+      command: gh pr review {{.PrNumber}} --repo {{.RepoName}} --approve && gh pr merge {{.PrNumber}} --repo {{.RepoName}} --squash --delete-branch
