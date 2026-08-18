@@ -1,5 +1,15 @@
 .idea
 /.codex
+*:Zone.Identifier
+/config/acli/.config/acli/*.yaml
+/config/codex/.codex/*
+!/config/codex/.codex/config.toml
+!/config/codex/.codex/skills/
+/config/codex/.codex/skills/*
+!/config/codex/.codex/skills/claude
+/config/claude/.claude/*
+!/config/claude/.claude/settings.json
+!/config/claude/.claude/skills/
 
 config/zsh/.config/zsh/.zsh_history
 config/zsh/.config/zsh/.zcompdump

@@ -1,0 +1,13 @@
+# ACLI writes authentication and runtime YAML beside its environment files.
+# Only the intentionally tracked environment templates belong in this package.
+^/\.config/acli/(?!env$|env\.example$).+
+
+# A package-local ignore file replaces Stow's default ignore list.
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+^/README.*
+^/LICENSE.*
+^/COPYING

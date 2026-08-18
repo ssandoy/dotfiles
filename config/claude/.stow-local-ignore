@@ -1,0 +1,15 @@
+# Claude Code stores credentials, caches, session history, and other runtime
+# state alongside its config. Only stow the files intentionally tracked by
+# this repository.
+^/\.claude/(?!settings\.json$|skills(?:/|$)).+
+
+# Retain the relevant parts of Stow's default ignore list. A package-local
+# ignore file replaces, rather than extends, the defaults.
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+^/README.*
+^/LICENSE.*
+^/COPYING
