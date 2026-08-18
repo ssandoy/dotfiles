@@ -4,6 +4,9 @@
       "Bash(git push:*)"
     ]
   },
+  "attribution": {
+    "commit": ""
+  },
   "model": "claude-sonnet-5",
   "hooks": {
     "Notification": [
