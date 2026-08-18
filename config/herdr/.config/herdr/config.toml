@@ -12,6 +12,7 @@ name = "catppuccin"
 accent = "magenta"
 
 agent_panel_sort = "priority"
+show_agent_labels_on_pane_borders = false
 [advanced]
 # tmux had history-limit = 1,000,000 *lines*; herdr's limit is in *bytes*, so
 # there's no exact conversion. Bumped up from the 10MB default as a rough match.
@@ -72,10 +73,14 @@ key = "prefix+t"
 type = "pane"
 command = "zsh -l"
 
+# Was `zsh -lic ghprs` (fzf popup over review-requested/reviewed-by PRs).
+# Replaced with a jump to the dedicated "github" workspace running gh-dash,
+# which also covers PRs authored by @me — ghprs itself lives on unchanged
+# for ad-hoc use outside herdr.
 [[keys.command]]
 key = "prefix+alt+g"
 type = "pane"
-command = "zsh -lic ghprs"
+command = "$HOME/.config/herdr/herdr-github"
 
 [[keys.command]]
 key = "prefix+o"
@@ -99,3 +104,6 @@ command = "rg --color=always --line-number --no-heading --smart-case \"${*:-}\" 
 #
 # cpu/battery/kube-context status-bar modules (tmux-battery, tmux-cpu,
 # kube-tmux): herdr's sidebar has no equivalent system-stat module slot today.
+
+[ui.toast]
+delivery = "herdr"

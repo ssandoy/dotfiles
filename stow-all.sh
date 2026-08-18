@@ -66,6 +66,7 @@ packages=(
   copilot
   tmux
   herdr
+  gh-dash
   zsh
   git
   vim

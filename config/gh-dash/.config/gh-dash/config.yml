@@ -1,0 +1,39 @@
+# gh-dash configuration — cross-repo PR dashboard, launched inside the
+# dedicated "github" herdr workspace (see config/herdr/herdr-github).
+# Schema: https://dlvhdr.github.io/gh-dash/configuration/schema
+
+prSections:
+  - title: My Pull Requests
+    filters: is:open author:@me
+
+  - title: Needs My Review
+    filters: >-
+      is:open
+      review-requested:@me
+
+  - title: Reviewed By Me
+    filters: >-
+      is:open
+      reviewed-by:@me
+      -author:@me
+
+  - title: Involved
+    filters: >-
+      is:open
+      involves:@me
+      -author:@me
+      -review-requested:@me
+      -reviewed-by:@me
+
+# Local clones live flat as ~/git/<repo>, regardless of owner — matches
+# herdr-sessionizer's `find ~/git -mindepth 1 -maxdepth 1`.
+repoPaths:
+  elhub/*: ~/git/*
+  ssandoy/*: ~/git/*
+  fyk-konsulenter/*: ~/git/*
+
+defaults:
+  view: prs
+  # Shorter than the 30m default since this dashboard lives in an
+  # always-open workspace rather than being launched on demand.
+  refetchIntervalMinutes: 5
