@@ -17,6 +17,8 @@ prSections:
       -repo:elhub/auth-test-token-service
       -repo:elhub/auth-vault-transit-secrets-engine-mock
       -repo:elhub/service-platform
+      -repo:elhub/service-platform-java-services
+      -repo:elhub/service-platform-oam-plugin
       -repo:elhub/test-suite
       -repo:elhub/test-suite-api
       -repo:elhub/test-suite-calculation
