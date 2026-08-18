@@ -4,7 +4,17 @@ alias ghprm='gh pr merge -s -d --auto'
 
 # GitHub CLI's Linux browser discovery does not cross into Windows reliably.
 # wsl-browser hands the URL to the Windows default browser.
-if [[ -n "${WSL_DISTRO_NAME:-}" && -z "${GH_BROWSER:-}" ]] && command -v wsl-browser >/dev/null 2>&1; then
+#
+# Repairs a stale wsl-browser GH_BROWSER too, not just an unset one:
+# long-lived shells (herdr panes/server in particular) keep whatever path
+# was resolved at spawn time, so if wsl-browser later moved (e.g.
+# .config/zsh/bin -> .local/bin) that value goes silently invalid until the
+# process tree restarts, since a plain -z check never re-checks an
+# already-set var. Only touches values that look like a wsl-browser path,
+# so an intentionally-configured different GH_BROWSER is left alone.
+if [[ -n "${WSL_DISTRO_NAME:-}" ]] \
+  && { [[ -z "${GH_BROWSER:-}" ]] || [[ "${GH_BROWSER:-}" == */wsl-browser && ! -x "${GH_BROWSER:-}" ]]; } \
+  && command -v wsl-browser >/dev/null 2>&1; then
   export GH_BROWSER=wsl-browser
 fi
 

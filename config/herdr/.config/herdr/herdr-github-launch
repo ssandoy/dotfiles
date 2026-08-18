@@ -37,4 +37,14 @@ poll &
 poll_pid=$!
 trap 'kill "$poll_pid" 2>/dev/null' EXIT
 
+# gh-dash's "open in GitHub" uses GH_BROWSER (same lookup gh itself uses).
+# herdr's own server process is long-lived and may have inherited a stale
+# wsl-browser path from before it moved (see 22-gh.zsh) — re-derive it here
+# so this pane isn't stuck with whatever the server had at its own startup.
+if [[ -n "${WSL_DISTRO_NAME:-}" ]] \
+    && { [[ -z "${GH_BROWSER:-}" ]] || [[ "${GH_BROWSER:-}" == */wsl-browser && ! -x "${GH_BROWSER:-}" ]]; } \
+    && command -v wsl-browser >/dev/null 2>&1; then
+    export GH_BROWSER=wsl-browser
+fi
+
 gh-dash
