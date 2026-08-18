@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Runs gh-dash for the "github" workspace pane, alongside a background poller
+# that reports a live "N to review" badge via herdr's agent-status API — the
+# same mechanism herdr uses to show coding-agent working/blocked state in its
+# sidebar, reused here so the review count is visible without opening the tab.
+#
+# Deliberately not `exec gh-dash`: exec'ing would replace this shell, and the
+# EXIT trap below (which kills the poller) would then never fire since the
+# shell it's attached to no longer exists. Running gh-dash as a normal
+# foreground command keeps this script alive to clean up after it exits.
+set -euo pipefail
+
+pane_id="${1:?pane_id required}"
+source="custom:github-badge"
+agent="needs-review"
+
+count_needs_review() {
+    gh api graphql -f query='{ search(type: ISSUE, query: "is:pr is:open archived:false review-requested:@me", first: 1) { issueCount } }' \
+        -q '.data.search.issueCount' 2>/dev/null || echo 0
+}
+
+poll() {
+    while true; do
+        count=$(count_needs_review)
+        if [[ "$count" -gt 0 ]]; then
+            herdr pane report-agent "$pane_id" --source "$source" --agent "$agent" --state blocked
+        else
+            herdr pane report-agent "$pane_id" --source "$source" --agent "$agent" --state idle
+        fi
+        herdr pane report-metadata "$pane_id" --source "$source" --agent "$agent" \
+            --display-agent "${count} to review"
+        sleep 60
+    done
+}
+
+poll &
+poll_pid=$!
+trap 'kill "$poll_pid" 2>/dev/null' EXIT
+
+gh-dash

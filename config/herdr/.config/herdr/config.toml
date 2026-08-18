@@ -11,7 +11,7 @@ name = "catppuccin"
 # Matches the old pane-active-border-style 'fg=magenta'.
 accent = "magenta"
 
-agent_panel_sort = "priority"
+agent_panel_sort = "spaces"
 show_agent_labels_on_pane_borders = false
 [advanced]
 # tmux had history-limit = 1,000,000 *lines*; herdr's limit is in *bytes*, so
@@ -68,14 +68,20 @@ key = "prefix+t"
 type = "pane"
 command = "zsh -l"
 
-# Was `zsh -lic ghprs` (fzf popup over review-requested/reviewed-by PRs).
-# Replaced with a jump to the dedicated "github" workspace running gh-dash,
-# which also covers PRs authored by @me — ghprs itself lives on unchanged
-# for ad-hoc use outside herdr.
+# Jumps to the dedicated "github" workspace running gh-dash (tabbed overview
+# + one-key actions across repos).
 [[keys.command]]
 key = "prefix+alt+g"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-github"
+
+# gh-dash has no local/incremental filter over already-fetched PRs (its `/`
+# always re-queries GitHub). ghprs fetches once and hands rows to fzf for
+# real type-ahead filtering, so it's kept as gh-dash's search companion.
+[[keys.command]]
+key = "prefix+alt+f"
+type = "pane"
+command = "zsh -lic ghprs"
 
 [[keys.command]]
 key = "ctrl+tab"

@@ -37,3 +37,17 @@ defaults:
   # Shorter than the 30m default since this dashboard lives in an
   # always-open workspace rather than being launched on demand.
   refetchIntervalMinutes: 5
+
+# `d` (view PR diff) sets GH_PAGER to this and pipes `gh pr diff` through it.
+# hunk's `pager` subcommand is built for exactly this: a drop-in Git pager
+# with diff detection, instead of plain `less`.
+pager:
+  diff: hunk pager
+
+# Port of the old ghprs script's alt-s "approve + squash merge" binding —
+# v/m already cover plain approve/merge, this combines them into one step.
+keybindings:
+  prs:
+    - key: alt+s
+      name: approve + squash merge
+      command: gh pr review {{.PrNumber}} --repo {{.RepoName}} --approve && gh pr merge {{.PrNumber}} --repo {{.RepoName}} --squash

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # The one persistent "GitHub" herdr workspace: create-or-focus a workspace
-# labeled "github" and, the first time it's created, launch gh-dash in it —
-# a single always-available space for reviewing/managing PRs across repos,
-# separate from the per-project workspaces herdr-sessionizer manages.
+# labeled "github" and, the first time it's created, launch gh-dash (plus a
+# review-count badge poller — see herdr-github-launch) in it — a single
+# always-available space for reviewing/managing PRs across repos, separate
+# from the per-project workspaces herdr-sessionizer manages.
 set -euo pipefail
 
 label="github"
@@ -22,4 +23,4 @@ fi
 created=$(herdr workspace create --cwd "$HOME" --label "$label" --focus)
 pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
 
-herdr pane run "$pane_id" gh-dash
+herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
