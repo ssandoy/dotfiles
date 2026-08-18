@@ -2,15 +2,15 @@ alias ghpr='gh pr view'
 alias ghprms='gh pr merge --squash'
 alias ghprm='gh pr merge -s -d --auto'
 
+# GitHub CLI's Linux browser discovery does not cross into Windows reliably.
+# wsl-browser hands the URL to the Windows default browser.
+if [[ -n "${WSL_DISTRO_NAME:-}" && -z "${GH_BROWSER:-}" ]] && command -v wsl-browser >/dev/null 2>&1; then
+  export GH_BROWSER=wsl-browser
+fi
+
 ghprc() {
-  gh pr create "$@"
-  local rc=$?
-
-  if (( rc != 0 )); then
-    return "$rc"
-  fi
-
-  gh pr view --web >/dev/null 2>&1 || true
+  gh pr create "$@" || return
+  gh pr view --web
 }
 
 ghprs() {
