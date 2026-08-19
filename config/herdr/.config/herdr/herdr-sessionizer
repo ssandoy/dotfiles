@@ -60,7 +60,7 @@ else
     # workspace.
     diff_created=$(herdr tab create --workspace "$workspace_id" --cwd "$selected" --label "Diff" --no-focus)
     diff_pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$diff_created")
-    herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha
+    herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha --watch
     # hunk's file sidebar defaults closed with no flag to change that, so
     # toggle it on with its own "s" keybinding once it's had a moment to
     # render.
