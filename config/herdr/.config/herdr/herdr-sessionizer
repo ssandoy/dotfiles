@@ -50,6 +50,20 @@ if [[ -n "$existing_id" ]]; then
     herdr workspace focus "$existing_id"
 else
     created=$(herdr workspace create --cwd "$selected" --label "$label" --focus)
-    tab_id=$(jq -r '.result.tab.tab_id' <<<"$created")
-    herdr tab rename "$tab_id" "Agents"
+    workspace_id=$(jq -r '.result.workspace.workspace_id' <<<"$created")
+    agents_tab_id=$(jq -r '.result.tab.tab_id' <<<"$created")
+    herdr tab rename "$agents_tab_id" "Agents"
+
+    # Pair it with a Diff tab (see herdr-diff-tab) up front rather than
+    # waiting for prefix+alt+d on first use — --no-focus keeps you landed
+    # on Agents, which is what you actually want right after creating a
+    # workspace.
+    diff_created=$(herdr tab create --workspace "$workspace_id" --cwd "$selected" --label "Diff" --no-focus)
+    diff_pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$diff_created")
+    herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha
+    # hunk's file sidebar defaults closed with no flag to change that, so
+    # toggle it on with its own "s" keybinding once it's had a moment to
+    # render.
+    sleep 0.5
+    herdr pane send-keys "$diff_pane_id" s
 fi
