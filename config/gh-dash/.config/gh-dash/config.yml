@@ -92,7 +92,7 @@ defaults:
 # hunk's `pager` subcommand is built for exactly this: a drop-in Git pager
 # with diff detection, instead of plain `less`.
 pager:
-  diff: hunk pager
+  diff: hunk pager --theme catppuccin-mocha
 
 keybindings:
   prs:

@@ -49,5 +49,7 @@ existing_id=$(
 if [[ -n "$existing_id" ]]; then
     herdr workspace focus "$existing_id"
 else
-    herdr workspace create --cwd "$selected" --label "$label" --focus
+    created=$(herdr workspace create --cwd "$selected" --label "$label" --focus)
+    tab_id=$(jq -r '.result.tab.tab_id' <<<"$created")
+    herdr tab rename "$tab_id" "Agents"
 fi

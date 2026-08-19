@@ -35,11 +35,11 @@ if [[ -n "$existing_tab_id" ]]; then
     herdr pane send-keys "$pane_id" q
     herdr pane send-keys "$pane_id" ctrl+c
     sleep 0.2
-    herdr pane run "$pane_id" hunk diff
+    herdr pane run "$pane_id" hunk diff --theme catppuccin-mocha
     exit 0
 fi
 
 created=$(herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus)
 pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
 
-herdr pane run "$pane_id" hunk diff
+herdr pane run "$pane_id" hunk diff --theme catppuccin-mocha
