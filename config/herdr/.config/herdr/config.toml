@@ -103,6 +103,14 @@ key = "prefix+o"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-sessionizer"
 
+# Opens (or refreshes) a "Diff" tab in the current workspace showing the
+# working-tree diff via hunk — same viewer as gh-dash's `d`, for local
+# project workspaces instead of PRs.
+[[keys.command]]
+key = "prefix+alt+d"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-diff-tab"
+
 [[keys.command]]
 key = "prefix+alt+r"
 type = "pane"

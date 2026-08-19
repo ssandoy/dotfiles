@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Open (or refresh) a "Diff" tab in the current workspace showing the
+# working-tree git diff via hunk — the same viewer gh-dash's `d` uses
+# (pager.diff: hunk pager in gh-dash's config.yml), reused here for local
+# project workspaces instead of PRs.
+set -euo pipefail
+
+current=$(herdr pane current --current)
+workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
+cwd=$(jq -r '.result.pane.cwd' <<<"$current")
+
+label="Diff"
+
+existing_tab_id=$(
+    herdr tab list --workspace "$workspace_id" |
+        jq -r --arg label "$label" \
+            '.result.tabs[] | select(.label == $label) | .tab_id' |
+        head -n1
+)
+
+if [[ -n "$existing_tab_id" ]]; then
+    herdr tab focus "$existing_tab_id"
+    pane_id=$(
+        herdr pane list --workspace "$workspace_id" |
+            jq -r --arg tab_id "$existing_tab_id" \
+                '.result.panes[] | select(.tab_id == $tab_id) | .pane_id' |
+            head -n1
+    )
+    # A previous hunk session may still be open in this tab — quit it back
+    # to the shell first, otherwise re-running would just land as literal
+    # keystrokes inside hunk's own UI instead of starting a fresh diff.
+    # ctrl+c afterward clears any stray input left on an already-idle
+    # prompt (e.g. that same "q" landing as plain text, not a quit) so the
+    # next typed command doesn't get appended onto it.
+    herdr pane send-keys "$pane_id" q
+    herdr pane send-keys "$pane_id" ctrl+c
+    sleep 0.2
+    herdr pane run "$pane_id" hunk diff
+    exit 0
+fi
+
+created=$(herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus)
+pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
+
+herdr pane run "$pane_id" hunk diff
