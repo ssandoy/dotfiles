@@ -88,12 +88,6 @@ defaults:
   # Don't prefill "LGTM" on the a/v approve-with-comment prompt.
   prApproveComment: ""
 
-# `d` (view PR diff) sets GH_PAGER to this and pipes `gh pr diff` through it.
-# hunk's `pager` subcommand is built for exactly this: a drop-in Git pager
-# with diff detection, instead of plain `less`.
-pager:
-  diff: hunk pager --theme catppuccin-mocha
-
 keybindings:
   prs:
     # a overrides the built-in Assign PR key to trigger approve instead
@@ -103,6 +97,15 @@ keybindings:
       builtin: approve
     - key: A
       builtin: assign
+
+    # Reimplements the diff view directly instead of using the builtin +
+    # pager.diff (GH_PAGER): gh-dash owns that subprocess entirely, so there
+    # was no hook to auto-open hunk's file sidebar the way herdr-diff-tab
+    # does for workspace diffs. This script pipes through hunk the same
+    # way, then opens the sidebar once hunk is confirmed running.
+    - key: d
+      name: diff (hunk, sidebar)
+      command: $HOME/.config/gh-dash/pr-diff-with-sidebar {{.RepoName}} {{.PrNumber}}
 
     # Built-in merge has no way to fix the method, so it can prompt or fall
     # back to the repo's default. Always squash + delete the branch instead.

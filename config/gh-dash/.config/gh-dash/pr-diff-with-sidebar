@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# gh-dash's custom `d` override: writes gh pr diff to a temp file and opens
+# it in hunk's full interactive review UI, with the file sidebar opened.
+# Piping the diff into hunk (`gh pr diff | hunk patch/pager`) renders a
+# leaner "pager chrome" with no menu bar and no sidebar support at all —
+# hunk only gives the full UI (the same one `hunk diff` gives
+# herdr-diff-tab for local repos) when reading an actual file argument,
+# not piped stdin.
+set -euo pipefail
+
+repo="$1"
+pr_number="$2"
+
+diff_file=$(mktemp --suffix=.diff)
+trap 'rm -f "$diff_file"' EXIT
+gh pr diff "$pr_number" --repo "$repo" >"$diff_file"
+
+# Polls for hunk to actually become this pane's foreground process before
+# sending the sidebar-toggle keystroke, rather than a blind fixed delay —
+# a delay risks the keystroke leaking into gh-dash's own UI (its own "s"
+# binding switches to the Issues view) if the user quits hunk fast or it's
+# slow to start. The process existing isn't enough on its own, though —
+# detection typically succeeds within ~0ms of hunk spawning, well before
+# its terminal/raw-mode input handler is actually attached, so the
+# keystroke gets silently dropped without a settle sleep after it's found.
+# 0.3s wasn't enough (tested: reliably dropped without `bash -x`'s tracing
+# overhead in the loop, reliably worked with it); 1s was reliable across
+# repeated runs.
+(
+    set +e
+    for _ in $(seq 1 20); do
+        has_hunk=$(
+            herdr pane process-info --pane "$HERDR_PANE_ID" 2>/dev/null |
+                jq -e '[.result.process_info.foreground_processes[].name] | index("hunk") != null' \
+                    2>/dev/null
+        )
+        if [[ "$has_hunk" == "true" ]]; then
+            sleep 1
+            herdr pane send-keys "$HERDR_PANE_ID" s
+            break
+        fi
+        sleep 0.05
+    done
+) &
+
+hunk patch "$diff_file" --theme catppuccin-mocha
