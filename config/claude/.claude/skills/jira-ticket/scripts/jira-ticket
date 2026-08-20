@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  printf 'Usage: %s current | read <ticket> | comments <ticket> | select <ticket> | branch <ticket> [description]\n' \
+    "${0##*/}" >&2
+  exit 2
+}
+
+[[ $# -ge 1 ]] || usage
+action=$1
+shift
+
+if [[ "$action" == current ]]; then
+  [[ $# -eq 0 ]] || usage
+  exec zsh -ic 'jira-key'
+fi
+
+[[ "$action" == read || "$action" == comments || "$action" == select || "$action" == branch ]] ||
+  usage
+if [[ "$action" == branch ]]; then
+  [[ $# -ge 1 ]] || usage
+else
+  [[ $# -eq 1 ]] || usage
+fi
+
+input=$1
+shift
+if [[ $input =~ (^|/browse/)([A-Za-z][A-Za-z0-9]+-[0-9]+)($|[/?#]) ]]; then
+  key=${BASH_REMATCH[2]^^}
+else
+  printf 'Invalid Jira URL or issue key: %s\n' "$input" >&2
+  exit 2
+fi
+
+if [[ "$action" == read ]]; then
+  exec zsh -ic 'jira-view "$1"' zsh "$key"
+fi
+
+if [[ "$action" == comments ]]; then
+  comments=$(zsh -ic '_jira_acli jira workitem view "$1" --fields comment --json' zsh "$key") ||
+    exit
+  jq -r '
+    def adf_text:
+      if . == null then ""
+      elif type == "string" then .
+      elif type == "array" then map(adf_text) | join("")
+      elif type == "object" then
+        if .type == "hardBreak" then "\n"
+        elif .text then .text
+        elif .content then
+          (.content | adf_text) +
+          (if .type == "paragraph" or .type == "heading" or .type == "listItem" then "\n" else "" end)
+        else ""
+        end
+      else tostring
+      end;
+    (.fields.comment.comments // []) as $comments |
+    if ($comments | length) == 0 then
+      "No comments."
+    else
+      $comments[] |
+      "\(.author.displayName // "Unknown") — \(.created // "Unknown date")\n\(.body | adf_text | sub("\n+$"; ""))\n"
+    end
+  ' <<<"$comments"
+  exit
+fi
+
+if [[ "$action" == select ]]; then
+  exec zsh -ic 'jira-use "$1"' zsh "$key"
+fi
+
+exec zsh -ic 'jira-branch "$@"' zsh "$key" "$@"
