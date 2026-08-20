@@ -37,7 +37,7 @@ if [[ -n "$existing_id" ]]; then
         herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
     fi
     herdr workspace focus "$existing_id"
-    mark_seen_now &
+    mark_seen_now >/dev/null 2>&1 &
     exit 0
 fi
 
@@ -45,4 +45,4 @@ created=$(herdr workspace create --cwd "$HOME" --label "$label" --focus)
 pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
 
 herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
-mark_seen_now &
+mark_seen_now >/dev/null 2>&1 &

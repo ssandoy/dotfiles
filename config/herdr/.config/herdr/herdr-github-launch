@@ -46,16 +46,36 @@ poll() {
             <(printf '%s\n' "$notified_ids" | grep -v '^$' | sort -u))
         if [[ -n "$new_unread" ]]; then
             new_count=$(wc -l <<<"$new_unread")
-            herdr notification show "New PR to review" \
-                --body "${new_count} new PR(s) awaiting your review" \
-                --sound request
+            # herdr's own "system" toast delivery shells out to notify-send,
+            # which needs a D-Bus org.freedesktop.Notifications daemon —
+            # WSLg's X11 compositor never maps such a daemon's popup windows
+            # (confirmed: dunst's window stays unmapped no matter how it's
+            # configured), so it silently renders nothing on WSL. wsl-toast
+            # goes straight through Windows' own toast API instead and
+            # actually works there; elsewhere herdr's own path is fine.
+            # Absolute path, not a PATH lookup: this pane's poll() runs
+            # under a bare bash (see herdr pane run above), which doesn't
+            # carry the interactive shell's PATH additions like ~/.local/bin.
+            wsl_toast="$HOME/.local/bin/wsl-toast"
+            if [[ -n "${WSL_DISTRO_NAME:-}" && -x "$wsl_toast" ]]; then
+                "$wsl_toast" "New PR to review" "${new_count} new PR(s) awaiting your review"
+            else
+                herdr notification show "New PR to review" \
+                    --body "${new_count} new PR(s) awaiting your review" \
+                    --sound request
+            fi
             notified_ids=$(printf '%s\n%s\n' "$notified_ids" "$new_unread" | grep -v '^$' | sort -u)
         fi
         sleep 60
     done
 }
 
-poll &
+# Redirected as a whole: poll() shares this pane's tty since it isn't run in
+# a separate pane, so any stray stdout/stderr from the commands it runs (a
+# JSON confirmation line from `notification show`, a mise/yq/gh warning,
+# anything) would otherwise print straight onto gh-dash's screen and corrupt
+# the TUI render — this actually happened during development.
+poll >/dev/null 2>&1 &
 poll_pid=$!
 trap 'kill "$poll_pid" 2>/dev/null' EXIT
 

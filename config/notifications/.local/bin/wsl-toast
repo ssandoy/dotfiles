@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Fires a native Windows toast (Action Center) notification from WSL via
+# PowerShell's BurntToast module.
+#
+# WSLg's own notification path is a dead end: notify-send needs a D-Bus
+# org.freedesktop.Notifications daemon (dunst), but WSLg's X11 compositor
+# never maps dunst's override-redirect popup windows (confirmed via
+# `xwininfo`: Map State stays IsUnMapped) — so nothing ever renders however
+# the daemon/config is tuned. Going through PowerShell instead bypasses
+# WSLg's X server entirely and talks straight to Windows' own toast API.
+#
+# Bare CreateToastNotifier() calls silently no-op without a registered
+# AUMID; BurntToast handles that registration, so use it rather than the
+# raw WinRT API.
+#
+# Requires (one-time, on the Windows side):
+#   Install-Module -Name BurntToast -Scope CurrentUser
+set -euo pipefail
+
+title="${1:?title required}"
+body="${2:-}"
+
+script_win_path=$(wslpath -w "$HOME/.local/bin/wsl-toast.ps1")
+# -ExecutionPolicy Bypass: a per-invocation override (not a system-wide
+# policy change) — PowerShell's default policy refuses to run an unsigned
+# .ps1 file from a \\wsl.localhost\... path at all.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$script_win_path" \
+    -Title "$title" -Body "$body" >/dev/null 2>&1
