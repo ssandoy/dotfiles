@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # The one persistent "GitHub" herdr workspace: create-or-focus a workspace
-# labeled "github" and, the first time it's created, launch gh-dash (plus a
-# review-count badge poller — see herdr-github-launch) in it — a single
-# always-available space for reviewing/managing PRs across repos, separate
-# from the per-project workspaces herdr-sessionizer manages.
+# labeled "github" and launch gh-dash (plus a review-count badge poller —
+# see herdr-github-launch) in it whenever it isn't already running there —
+# a single always-available space for reviewing/managing PRs across repos,
+# separate from the per-project workspaces herdr-sessionizer manages.
 set -euo pipefail
 
 label="github"
@@ -16,6 +16,17 @@ existing_id=$(
 )
 
 if [[ -n "$existing_id" ]]; then
+    # herdr's session persistence restores workspace/pane structure across a
+    # server restart (e.g. after a reboot) but not the command that had been
+    # running in a pane, so a restored "github" pane comes back as a bare
+    # shell. Detect that and relaunch gh-dash instead of assuming an
+    # existing workspace means gh-dash is already running in it.
+    pane_id=$(herdr pane list --workspace "$existing_id" | jq -r '.result.panes[0].pane_id')
+    foreground=$(herdr pane process-info --pane "$pane_id" |
+        jq -r '.result.process_info.foreground_processes[0].name // empty')
+    if [[ "$foreground" != "gh-dash" ]]; then
+        herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
+    fi
     herdr workspace focus "$existing_id"
     exit 0
 fi
