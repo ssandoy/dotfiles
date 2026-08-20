@@ -1,3 +1,4 @@
+onboarding = false
 # herdr configuration — migrated from config/tmux/.config/tmux/tmux.conf
 # See that file's history for the source of truth being replaced here.
 
@@ -130,4 +131,4 @@ command = "rg --color=always --line-number --no-heading --smart-case \"${*:-}\" 
 # kube-tmux): herdr's sidebar has no equivalent system-stat module slot today.
 
 [ui.toast]
-delivery = "herdr"
+delivery = "system"
