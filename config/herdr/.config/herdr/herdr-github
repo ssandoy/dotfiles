@@ -14,7 +14,10 @@ source "$HOME/.config/herdr/herdr-github-common"
 # the unread badge/dot — see herdr-github-launch). Backgrounded so focusing
 # isn't blocked on a GraphQL round-trip.
 mark_seen_now() {
-    mark_seen "$(jq -r '.ids[]' <<<"$(needs_review)")"
+    local json
+    json=$(needs_review)
+    [[ -n "$json" ]] || return
+    mark_seen "$(jq -r '.ids[]' <<<"$json")"
 }
 
 existing_id=$(

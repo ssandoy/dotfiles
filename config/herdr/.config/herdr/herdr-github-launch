@@ -23,6 +23,14 @@ poll() {
     local notified_ids=""
     while true; do
         json=$(needs_review)
+        if [[ -z "$json" ]]; then
+            # needs_review() failed (transient yq/gh hiccup, etc) — skip
+            # this cycle rather than let `jq` choke on empty input, which
+            # under `set -e` would silently kill this whole background loop
+            # on the very first failure instead of just this one poll.
+            sleep 60
+            continue
+        fi
         count=$(jq -r '.issueCount' <<<"$json")
         ids=$(jq -r '.ids[]' <<<"$json")
 

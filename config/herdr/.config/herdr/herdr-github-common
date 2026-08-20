@@ -8,6 +8,17 @@
 # what marks the currently pending PRs as read (see mark_seen calls in
 # herdr-github) — same idea as opening an inbox.
 
+# yq is mise-managed, reachable only via its shim — not on PATH in the bare
+# environment herdr runs pane/keybinding commands under (confirmed: `env -i
+# bash -c 'command -v yq'` finds nothing, while system-installed gh/jq still
+# resolve). Without this, yq silently fails, needs_review() falls through to
+# its "no filters" branch, and mark_seen below would happily write that
+# empty result over a real seen-list, wiping it.
+case ":$PATH:" in
+*":$HOME/.local/share/mise/shims:"*) ;;
+*) PATH="$HOME/.local/share/mise/shims:$PATH" ;;
+esac
+
 gh_dash_config="$HOME/.config/gh-dash/config.yml"
 seen_file="${XDG_CACHE_HOME:-$HOME/.cache}/herdr/github-seen-prs"
 
@@ -15,10 +26,20 @@ seen_file="${XDG_CACHE_HOME:-$HOME/.cache}/herdr/github-seen-prs"
 # section, reading its filters straight from gh-dash's own config every call
 # so this never drifts from what the tab itself shows (this used to be a
 # hardcoded duplicate query that silently disagreed with the tab).
+#
+# Prints nothing (not a fake zero-result) on failure — callers must treat an
+# empty result as "couldn't fetch, skip this cycle," never as "zero PRs,"
+# so a transient yq/gh hiccup can't be mistaken for everything having been
+# read and wipe the seen-list.
 needs_review() {
     local filters query
+    if [[ ! -r "$gh_dash_config" ]] || ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
     filters=$(yq -r '.prSections[] | select(.title == "Needs My Review") | .filters' "$gh_dash_config" 2>/dev/null)
     if [[ -z "$filters" || "$filters" == "null" ]]; then
+        # Genuinely no such section in gh-dash's config — not a fetch
+        # failure, so this really is zero.
         echo '{"issueCount":0,"ids":[]}'
         return
     fi
@@ -29,13 +50,17 @@ needs_review() {
         -f query='query($q: String!) { search(type: ISSUE, query: $q, first: 100) { issueCount nodes { ... on PullRequest { id } } } }' \
         -f q="$query" \
         --jq '{issueCount: .data.search.issueCount, ids: [.data.search.nodes[] | select(.id != null) | .id]}' \
-        2>/dev/null || echo '{"issueCount":0,"ids":[]}'
+        2>/dev/null
 }
 
 # Marks the given ids (one per line) as seen. Called by the poller on its
 # first run (seeds a baseline instead of flagging every already-pending PR
-# as unread) and by herdr-github whenever the workspace is focused.
+# as unread) and by herdr-github whenever the workspace is focused. No-ops
+# on empty input so a failed needs_review() (see above) can't wipe a real
+# seen-list — callers should still avoid calling this with a deliberately
+# empty result.
 mark_seen() {
+    [[ -n "$1" ]] || return
     mkdir -p "$(dirname "$seen_file")"
     printf '%s\n' "$1" | grep -v '^$' > "$seen_file"
 }
