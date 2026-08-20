@@ -8,6 +8,15 @@ set -euo pipefail
 
 label="github"
 
+source "$HOME/.config/herdr/herdr-github-common"
+
+# Opening this workspace is what marks currently-pending PRs "read" (clears
+# the unread badge/dot — see herdr-github-launch). Backgrounded so focusing
+# isn't blocked on a GraphQL round-trip.
+mark_seen_now() {
+    mark_seen "$(jq -r '.ids[]' <<<"$(needs_review)")"
+}
+
 existing_id=$(
     herdr workspace list |
         jq -r --arg label "$label" \
@@ -28,6 +37,7 @@ if [[ -n "$existing_id" ]]; then
         herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
     fi
     herdr workspace focus "$existing_id"
+    mark_seen_now &
     exit 0
 fi
 
@@ -35,3 +45,4 @@ created=$(herdr workspace create --cwd "$HOME" --label "$label" --focus)
 pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
 
 herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
+mark_seen_now &

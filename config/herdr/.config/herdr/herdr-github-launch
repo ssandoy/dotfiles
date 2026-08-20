@@ -14,51 +14,43 @@ pane_id="${1:?pane_id required}"
 source="custom:github-badge"
 agent="needs-review"
 
-gh_dash_config="$HOME/.config/gh-dash/config.yml"
-
-# Reads the "Needs My Review" section's filters straight from gh-dash's own
-# config every poll, so the badge count always matches the tab count instead
-# of drifting from a second hardcoded copy of the same query (which is
-# exactly what happened before: this used to hardcode a plain
-# review-requested:@me query with none of the repo exclusions from
-# config.yml, so the badge and the tab silently disagreed).
-count_needs_review() {
-    local filters query
-    filters=$(yq -r '.prSections[] | select(.title == "Needs My Review") | .filters' "$gh_dash_config" 2>/dev/null)
-    if [[ -z "$filters" || "$filters" == "null" ]]; then
-        echo 0
-        return
-    fi
-    # gh-dash always adds is:pr and archived:false to a section's filters —
-    # match that here so the query is equivalent, not just visually similar.
-    query="is:pr archived:false $filters"
-    gh api graphql \
-        -f query='query($q: String!) { search(type: ISSUE, query: $q, first: 1) { issueCount } }' \
-        -f q="$query" \
-        -q '.data.search.issueCount' 2>/dev/null || echo 0
-}
+source "$HOME/.config/herdr/herdr-github-common"
 
 poll() {
-    local prev_count=-1
+    # ids we've already fired a notification for this run — keeps a PR that
+    # stays unread from re-notifying every 60s until it's marked seen (see
+    # herdr-github, which marks-seen on focus).
+    local notified_ids=""
     while true; do
-        count=$(count_needs_review)
-        if [[ "$count" -gt 0 ]]; then
+        json=$(needs_review)
+        count=$(jq -r '.issueCount' <<<"$json")
+        ids=$(jq -r '.ids[]' <<<"$json")
+
+        unread=$(unread_ids "$ids")
+        unread_count=0
+        [[ -n "$unread" ]] && unread_count=$(wc -l <<<"$unread")
+
+        # The dot/blocked-state reflects *unread* PRs, not just pending ones
+        # — a PR you've already looked at (workspace was focused since it
+        # appeared) stays out of the badge state even while still pending.
+        if [[ "$unread_count" -gt 0 ]]; then
             herdr pane report-agent "$pane_id" --source "$source" --agent "$agent" --state blocked
         else
             herdr pane report-agent "$pane_id" --source "$source" --agent "$agent" --state idle
         fi
         herdr pane report-metadata "$pane_id" --source "$source" --agent "$agent" \
             --display-agent "${count} to review"
-        # Only notify when the count *rises* (new PR(s) showed up), not on
-        # every poll it stays nonzero — and not on the first poll (prev_count
-        # -1), so relaunching this script doesn't re-notify for PRs already
-        # sitting in the queue.
-        if [[ "$prev_count" -ge 0 && "$count" -gt "$prev_count" ]]; then
+
+        new_unread=$(comm -23 \
+            <(printf '%s\n' "$unread" | grep -v '^$' | sort -u) \
+            <(printf '%s\n' "$notified_ids" | grep -v '^$' | sort -u))
+        if [[ -n "$new_unread" ]]; then
+            new_count=$(wc -l <<<"$new_unread")
             herdr notification show "New PR to review" \
-                --body "${count} PR(s) awaiting your review" \
+                --body "${new_count} new PR(s) awaiting your review" \
                 --sound request
+            notified_ids=$(printf '%s\n%s\n' "$notified_ids" "$new_unread" | grep -v '^$' | sort -u)
         fi
-        prev_count="$count"
         sleep 60
     done
 }

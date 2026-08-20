@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Shared by herdr-github (focus/create) and herdr-github-launch (poller) so
+# both derive the "Needs My Review" PR set from one query instead of two
+# copies drifting apart, and both read/write the same "seen" PR list used to
+# decide what counts as unread.
+#
+# "Unread" means: not present in $seen_file. Opening the github workspace is
+# what marks the currently pending PRs as read (see mark_seen calls in
+# herdr-github) — same idea as opening an inbox.
+
+gh_dash_config="$HOME/.config/gh-dash/config.yml"
+seen_file="${XDG_CACHE_HOME:-$HOME/.cache}/herdr/github-seen-prs"
+
+# Prints '{"issueCount": N, "ids": ["...", ...]}' for the "Needs My Review"
+# section, reading its filters straight from gh-dash's own config every call
+# so this never drifts from what the tab itself shows (this used to be a
+# hardcoded duplicate query that silently disagreed with the tab).
+needs_review() {
+    local filters query
+    filters=$(yq -r '.prSections[] | select(.title == "Needs My Review") | .filters' "$gh_dash_config" 2>/dev/null)
+    if [[ -z "$filters" || "$filters" == "null" ]]; then
+        echo '{"issueCount":0,"ids":[]}'
+        return
+    fi
+    # gh-dash always adds is:pr and archived:false to a section's filters —
+    # match that here so the query is equivalent, not just visually similar.
+    query="is:pr archived:false $filters"
+    gh api graphql \
+        -f query='query($q: String!) { search(type: ISSUE, query: $q, first: 100) { issueCount nodes { ... on PullRequest { id } } } }' \
+        -f q="$query" \
+        --jq '{issueCount: .data.search.issueCount, ids: [.data.search.nodes[] | select(.id != null) | .id]}' \
+        2>/dev/null || echo '{"issueCount":0,"ids":[]}'
+}
+
+# Marks the given ids (one per line) as seen. Called by the poller on its
+# first run (seeds a baseline instead of flagging every already-pending PR
+# as unread) and by herdr-github whenever the workspace is focused.
+mark_seen() {
+    mkdir -p "$(dirname "$seen_file")"
+    printf '%s\n' "$1" | grep -v '^$' > "$seen_file"
+}
+
+# Prints ids (one per line) present in $1 but not in $seen_file.
+unread_ids() {
+    [[ -f "$seen_file" ]] || mark_seen "$1"
+    comm -23 \
+        <(printf '%s\n' "$1" | grep -v '^$' | sort -u) \
+        <(sort -u "$seen_file")
+}
