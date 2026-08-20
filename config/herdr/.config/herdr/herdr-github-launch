@@ -39,6 +39,7 @@ count_needs_review() {
 }
 
 poll() {
+    local prev_count=-1
     while true; do
         count=$(count_needs_review)
         if [[ "$count" -gt 0 ]]; then
@@ -48,6 +49,16 @@ poll() {
         fi
         herdr pane report-metadata "$pane_id" --source "$source" --agent "$agent" \
             --display-agent "${count} to review"
+        # Only notify when the count *rises* (new PR(s) showed up), not on
+        # every poll it stays nonzero — and not on the first poll (prev_count
+        # -1), so relaunching this script doesn't re-notify for PRs already
+        # sitting in the queue.
+        if [[ "$prev_count" -ge 0 && "$count" -gt "$prev_count" ]]; then
+            herdr notification show "New PR to review" \
+                --body "${count} PR(s) awaiting your review" \
+                --sound request
+        fi
+        prev_count="$count"
         sleep 60
     done
 }
