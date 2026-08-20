@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Open (or refresh) a "Diff" tab in the current workspace showing the
-# working-tree git diff via hunk — the same viewer gh-dash's `d` uses
-# (pager.diff: hunk pager in gh-dash's config.yml), reused here for local
-# project workspaces instead of PRs.
+# Open (or refresh) a "Diff" tab in the current workspace showing the diff
+# against HEAD (staged and unstaged together) via hunk — the same viewer
+# gh-dash's `d` uses (pager.diff: hunk pager in gh-dash's config.yml),
+# reused here for local project workspaces instead of PRs.
 set -euo pipefail
 
 current=$(herdr pane current --current)
@@ -35,11 +35,19 @@ if [[ -n "$existing_tab_id" ]]; then
     herdr pane send-keys "$pane_id" q
     herdr pane send-keys "$pane_id" ctrl+c
     sleep 0.2
-    herdr pane run "$pane_id" hunk diff --theme catppuccin-mocha --watch
+    # HEAD, not the default (working tree vs index): comparing against the
+    # index means a file you `git add` matches it exactly and stops showing
+    # as changed at all — comparing against HEAD keeps staged changes
+    # visible alongside unstaged ones instead of making them vanish.
+    herdr pane run "$pane_id" hunk diff HEAD --theme catppuccin-mocha --watch
 else
     created=$(herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus)
     pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
-    herdr pane run "$pane_id" hunk diff --theme catppuccin-mocha --watch
+    # HEAD, not the default (working tree vs index): comparing against the
+    # index means a file you `git add` matches it exactly and stops showing
+    # as changed at all — comparing against HEAD keeps staged changes
+    # visible alongside unstaged ones instead of making them vanish.
+    herdr pane run "$pane_id" hunk diff HEAD --theme catppuccin-mocha --watch
 fi
 
 # hunk's file sidebar defaults closed with no flag to change that, so
