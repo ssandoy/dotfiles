@@ -82,9 +82,11 @@ repoPaths:
 
 defaults:
   view: prs
-  # Shorter than the 30m default since this dashboard lives in an
-  # always-open workspace rather than being launched on demand.
-  refetchIntervalMinutes: 5
+  # Matches herdr-github-launch's poller cadence: new PRs get picked up
+  # by this native refresh instead of a synthetic keypress (see that
+  # script — injecting "R" raced this same refresh path and silently
+  # dropped updates).
+  refetchIntervalMinutes: 1
   # Don't prefill "LGTM" on the a/v approve-with-comment prompt.
   prApproveComment: ""
 

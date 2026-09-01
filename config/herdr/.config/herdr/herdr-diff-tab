@@ -8,6 +8,7 @@ set -euo pipefail
 current=$(herdr pane current --current)
 workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
 cwd=$(jq -r '.result.pane.cwd' <<<"$current")
+origin_pane_id=$(jq -r '.result.pane.pane_id' <<<"$current")
 
 label="Diff"
 
@@ -49,6 +50,12 @@ else
     # visible alongside unstaged ones instead of making them vanish.
     herdr pane run "$pane_id" hunk diff HEAD --theme catppuccin-mocha --watch
 fi
+
+# Record which pane opened/refreshed this Diff tab, so herdr-diff-send-comments
+# knows where "the current conversation" is when it's time to send review notes
+# back. Re-stamped on every run so refreshing the tab from a different agent
+# pane retargets it.
+herdr pane report-metadata "$pane_id" --source herdr-diff-tab --token "origin_pane=$origin_pane_id"
 
 # hunk's file sidebar defaults closed with no flag to change that, so
 # toggle it on with its own "s" keybinding once it's had a moment to render.

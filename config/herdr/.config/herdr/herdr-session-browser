@@ -5,6 +5,24 @@
 # `herdr workspace list` returns them rather than most-recently-used first.
 set -euo pipefail
 
+# Repeated presses of the keybinding used to spawn a fresh picker pane every
+# time instead of reusing the existing one (a new pane doesn't always grab
+# focus reliably), stacking up orphaned fzf processes that silently ate every
+# later keypress and made herdr look frozen. Track the last pane we opened in
+# a lock file and close it before opening a new one, so retries replace
+# instead of stacking.
+lock_file="${XDG_RUNTIME_DIR:-/tmp}/herdr-session-browser.pane"
+own_pane_id=$(herdr pane current | jq -r '.result.pane.pane_id')
+
+if [[ -f "$lock_file" ]]; then
+    stale_pane_id=$(<"$lock_file")
+    if [[ -n "$stale_pane_id" && "$stale_pane_id" != "$own_pane_id" ]]; then
+        herdr pane close "$stale_pane_id" >/dev/null 2>&1 || true
+    fi
+fi
+echo "$own_pane_id" >"$lock_file"
+trap 'rm -f "$lock_file"' EXIT
+
 workspaces_json=$(herdr workspace list)
 
 current_label=$(jq -r '.result.workspaces[] | select(.focused) | .label' <<<"$workspaces_json")

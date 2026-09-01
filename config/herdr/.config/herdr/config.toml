@@ -33,8 +33,13 @@ previous_workspace = "prefix+shift+tab"
 # split_horizontal name the *resulting pane arrangement* (the more common
 # vim/VS Code convention) — the opposite way round. Swapped to match the
 # actual old behavior: C-s -> stacked panes, C-t -> side-by-side panes.
-split_vertical = "ctrl+t"    # was: bind-key -n C-t split-window -h (side-by-side)
-split_horizontal = "ctrl+s"  # was: bind-key -n C-s split-window -v (stacked)
+split_vertical = "ctrl+t"      # was: bind-key -n C-t split-window -h (side-by-side)
+# Moved off the no-prefix ctrl+s (was: bind-key -n C-s split-window -v /
+# stacked) so bare Ctrl+S reaches apps like hunk, which hardcodes it as the
+# non-remappable "save note" key in its review-comment popup. This overrides
+# herdr's own default prefix+s binding (opens Settings) — reach Settings via
+# its menu instead.
+split_horizontal = "prefix+s"
 close_pane = "ctrl+w"        # was: bind-key -n C-w kill-pane
 close_workspace = "ctrl+q"   # was: bind-key -n C-Q kill-session
 
@@ -112,6 +117,13 @@ key = "prefix+alt+d"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-diff-tab"
 
+# Sends the human review notes left in the Diff tab (hunk's own "c" /
+# create-review-note key) back to whichever agent pane opened that tab.
+[[keys.command]]
+key = "prefix+alt+c"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-diff-send-comments"
+
 [[keys.command]]
 key = "prefix+alt+r"
 type = "pane"
@@ -130,5 +142,14 @@ command = "rg --color=always --line-number --no-heading --smart-case \"${*:-}\" 
 # cpu/battery/kube-context status-bar modules (tmux-battery, tmux-cpu,
 # kube-tmux): herdr's sidebar has no equivalent system-stat module slot today.
 
+# "system" delivery shells out to notify-send synchronously with no timeout
+# (herdr src/platform/linux.rs: run_notification_command -> Command::status).
+# On this machine dunst.service (WSLg's notification daemon) crash-loops
+# ("Cannot open X11 display"), so notify-send hangs indefinitely waiting for
+# a D-Bus reply nobody sends -- and since that blocking call runs on herdr's
+# main client loop thread, the whole client (input, rendering, everything)
+# freezes until notify-send eventually gives up. "herdr" renders the toast
+# in-app instead, so it can't be blocked by dunst being dead. Confirmed via
+# herdr issue #3213 and by locally reproducing notify-send hanging.
 [ui.toast]
-delivery = "system"
+delivery = "herdr"

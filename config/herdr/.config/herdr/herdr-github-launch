@@ -54,6 +54,21 @@ poll() {
             <(printf '%s\n' "$notified_ids" | grep -v '^$' | sort -u))
         if [[ -n "$new_unread" ]]; then
             new_count=$(wc -l <<<"$new_unread")
+
+            # Deliberately not sending a synthetic "R" (refresh all) into
+            # the pane here: gh-dash gates each section's fetched-data
+            # update on `LastFetchTaskId == msg.TaskId`, but the footer's
+            # "PRs for X have been fetched" message has no such guard. A
+            # synthetic R landing close to gh-dash's own refetchIntervalMinutes
+            # timer (same fetchAllViewSections code path) races it — the
+            # earlier fetch's response gets silently dropped as stale while
+            # its "fetched" footer message still shows, i.e. gh-dash *looks*
+            # refreshed but the PR list didn't actually update. Confirmed via
+            # https://github.com/dlvhdr/gh-dash internal/tui/components/prssection/prssection.go.
+            # Relying solely on gh-dash's own refetchIntervalMinutes (see
+            # config.yml, set to match this poller's cadence) avoids the race
+            # by keeping a single fetch trigger instead of two competing ones.
+
             # herdr's own "system" toast delivery shells out to notify-send,
             # which needs a D-Bus org.freedesktop.Notifications daemon —
             # WSLg's X11 compositor never maps such a daemon's popup windows

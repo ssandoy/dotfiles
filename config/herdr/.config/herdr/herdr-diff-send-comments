@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Collect the human review notes left in the workspace's "Diff" tab (via
+# hunk's own "c" / create-review-note key) and send them back to whichever
+# agent pane originally opened that tab (stamped there by herdr-diff-tab).
+set -euo pipefail
+
+log_file="$HOME/.cache/herdr/herdr-diff-send-comments.log"
+mkdir -p "$(dirname "$log_file")"
+exec 2>>"$log_file"
+
+# type=pane commands run detached with no visible terminal, so a silent
+# failure here (e.g. herdr agent prompt rejecting a busy/blocked target)
+# would otherwise vanish with no feedback at all. Surface it as a toast
+# and leave the real error in $log_file (stderr is appended there above).
+on_error() {
+    local line=$1
+    echo "$(date -Is) failed at line $line (exit $?)" >>"$log_file"
+    herdr notification show "Sending comments failed" --body "See ~/.cache/herdr/herdr-diff-send-comments.log"
+}
+trap 'on_error $LINENO' ERR
+
+current=$(herdr pane current --current)
+workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
+
+label="Diff"
+
+diff_tab_id=$(
+    herdr tab list --workspace "$workspace_id" |
+        jq -r --arg label "$label" \
+            '.result.tabs[] | select(.label == $label) | .tab_id' |
+        head -n1
+)
+
+if [[ -z "$diff_tab_id" ]]; then
+    herdr notification show "No Diff tab open" --body "Open one first with prefix+alt+d."
+    exit 0
+fi
+
+diff_pane_id=$(
+    herdr pane list --workspace "$workspace_id" |
+        jq -r --arg tab_id "$diff_tab_id" \
+            '.result.panes[] | select(.tab_id == $tab_id) | .pane_id' |
+        head -n1
+)
+
+diff_pane=$(herdr pane get "$diff_pane_id")
+cwd=$(jq -r '.result.pane.cwd' <<<"$diff_pane")
+origin_pane_id=$(jq -r '.result.pane.tokens.origin_pane // empty' <<<"$diff_pane")
+
+if [[ -z "$origin_pane_id" ]]; then
+    herdr notification show "No origin conversation recorded" --body "Reopen the Diff tab with prefix+alt+d, then try again."
+    exit 0
+fi
+
+comments_json=$(hunk session comment list --repo "$cwd" --type user --json)
+count=$(jq -r '.comments | length' <<<"$comments_json")
+
+if [[ "$count" -eq 0 ]]; then
+    herdr notification show "No comments to send" --body "Leave one with 'c' in the Diff tab first."
+    exit 0
+fi
+
+repo_name=$(basename "$cwd")
+
+# newRange/oldRange are two-element [start, end] arrays; a comment is always
+# anchored to one side or the other, never neither.
+body=$(
+    jq -r '.comments[] | "\(.filePath):\((.newRange // .oldRange)[0])\n\(.body)\n"' \
+        <<<"$comments_json"
+)
+message="Review notes from the Diff tab ($repo_name):"$'\n\n'"$body"
+
+herdr agent prompt "$origin_pane_id" "$message"
+
+noun="comment"
+[[ "$count" -ne 1 ]] && noun="comments"
+herdr notification show "Sent $count $noun" --body "to the conversation that opened this Diff tab."

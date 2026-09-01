@@ -46,6 +46,8 @@ fi
 
 created=$(herdr workspace create --cwd "$HOME" --label "$label" --focus)
 pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
+tab_id=$(jq -r '.result.workspace.active_tab_id' <<<"$created")
 
+herdr tab rename "$tab_id" "DASH"
 herdr pane run "$pane_id" "$HOME/.config/herdr/herdr-github-launch" "$pane_id"
 mark_seen_now >/dev/null 2>&1 &
