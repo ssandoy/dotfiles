@@ -56,7 +56,15 @@ Before implementation, debugging, or planning:
 
    The output must exactly match the resolved key. If selection or verification fails, stop and report it rather than continuing. Treat verified selection as a required precondition for continuing.
 
-3. Form a short, intuitive branch description from the ticket's content and comments, then prepare the ticket branch:
+3. Check whether the ticket is assigned to the current user, assign it if needed, and move it to In Progress:
+
+   ```bash
+   "$HOME/.claude/skills/jira-ticket/scripts/jira-ticket" start <Jira URL or issue key>
+   ```
+
+   The command is idempotent: it skips assignment when the current user already owns the ticket, and the transition helper skips work when the ticket is already In Progress. Stop and report the error if either operation fails.
+
+4. Form a short, intuitive branch description from the ticket's content and comments, then prepare the ticket branch:
 
    ```bash
    "$HOME/.claude/skills/jira-ticket/scripts/jira-ticket" branch <Jira URL or issue key> <short description>
@@ -64,15 +72,15 @@ Before implementation, debugging, or planning:
 
    The helper switches to an existing matching local branch, tracks an existing remote branch, or creates `<KEY>-<short-description>` from the updated default branch. If the worktree is dirty or multiple matching branches exist, stop and ask the user how to proceed.
 
-4. Inspect the current repository and perform the requested work using the ticket as requirements.
+5. Inspect the current repository and perform the requested work using the ticket as requirements.
 
 ## Safety
 
 - Use the local helper so authentication remains in the user's existing Atlassian configuration.
 - Never expose Atlassian credentials or environment-variable values.
-- Do not assign, edit, comment on, or transition a ticket unless the user explicitly requests that mutation.
+- Starting implementation, debugging, or planning explicitly authorizes assigning the ticket to the current user and moving it to In Progress through the `start` action. Do not perform other Jira mutations unless the user explicitly requests them.
 - `jira-use` only updates the local current-ticket context; it does not authorize any Jira-side mutation.
-- Branch preparation must not call `jira-start`, because that helper assigns the ticket.
+- Branch preparation must not call `jira-start`; assignment and transition belong to the separate `start` action.
 - If the URL or key is invalid, report the validation error rather than guessing.
 - If Jira access fails, report the command error and do not invent ticket contents.
 

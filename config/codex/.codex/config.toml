@@ -30,6 +30,9 @@ trust_level = "trusted"
 [projects."/home/sander.sandoy/git/fyk-monorepo"]
 trust_level = "trusted"
 
+[projects."/home/sander.sandoy/git/user-interface-web-portal"]
+trust_level = "trusted"
+
 [notice]
 hide_gpt5_1_migration_prompt = true
 "hide_gpt-5.1-codex-max_migration_prompt" = true
@@ -45,3 +48,11 @@ notifications = false
 
 [tui.model_availability_nux]
 "gpt-5.5" = 3
+
+[features]
+hooks = true
+
+[hooks.state]
+
+[hooks.state."/home/sander.sandoy/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:2175af27448890c319de6d5b0e78ca9a2fc1ffb2c69c3843a1b72a43a1ad1fd8"

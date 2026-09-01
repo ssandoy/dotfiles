@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  printf 'Usage: %s current | read <ticket> | comments <ticket> | select <ticket> | branch <ticket> [description]\n' \
+  printf 'Usage: %s current | read <ticket> | comments <ticket> | select <ticket> | start <ticket> | branch <ticket> [description]\n' \
     "${0##*/}" >&2
   exit 2
 }
@@ -16,7 +16,7 @@ if [[ "$action" == current ]]; then
   exec zsh -ic 'jira-key'
 fi
 
-[[ "$action" == read || "$action" == comments || "$action" == select || "$action" == branch ]] ||
+[[ "$action" == read || "$action" == comments || "$action" == select || "$action" == start || "$action" == branch ]] ||
   usage
 if [[ "$action" == branch ]]; then
   [[ $# -ge 1 ]] || usage
@@ -68,6 +68,18 @@ fi
 
 if [[ "$action" == select ]]; then
   exec zsh -ic 'jira-use "$1"' zsh "$key"
+fi
+
+if [[ "$action" == start ]]; then
+  assigned_to_me=$(zsh -ic \
+    '_jira_acli jira workitem search --jql "key = $1 AND assignee = currentUser()" --limit 1 --fields key --json' \
+    zsh "$key") || exit
+  if jq -e 'length > 0' >/dev/null <<<"$assigned_to_me"; then
+    printf '%s is already assigned to the current user.\n' "$key"
+  else
+    zsh -ic 'jira-assign-me --yes "$1"' zsh "$key"
+  fi
+  exec zsh -ic 'jira-progress --yes "$1"' zsh "$key"
 fi
 
 exec zsh -ic 'jira-branch "$@"' zsh "$key" "$@"

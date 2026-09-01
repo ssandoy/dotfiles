@@ -3,6 +3,7 @@
 jira-key() {
   local branch key
 
+  _jira_load_context || return 1
   if [[ -n "${JIRA_CURRENT_TICKET:-}" ]]; then
     print -r -- "$JIRA_CURRENT_TICKET"
     return
@@ -99,7 +100,10 @@ _jira_load_context() {
     return 1
   }
   key="$("$jq_cmd" -r '.current // empty' "$context_file")" || return 1
-  [[ -z "$key" ]] && return
+  if [[ -z "$key" ]]; then
+    unset JIRA_CURRENT_TICKET
+    return
+  fi
   if [[ ! "$key" =~ $key_pattern ]]; then
     print -u2 "jira: invalid current ticket in $context_file"
     return 1
@@ -361,8 +365,8 @@ _jira_next_status() {
     "Triage") print -r -- "Backlog" ;;
     "Backlog") print -r -- "In Progress" ;;
     "In Progress") print -r -- "In SIT" ;;
-    "In SIT") print -r -- "Ready for UAT" ;;
-    "Ready for UAT") print -r -- "In Test" ;;
+    "In SIT") print -r -- "Peer Review" ;;
+    "Peer Review") print -r -- "In Test" ;;
     "In Test") print -r -- "Ready for PROD" ;;
     "Ready for PROD") print -r -- "Done" ;;
     "Done") return 1 ;;
@@ -376,7 +380,7 @@ _jira_canonical_status() {
     [Bb]acklog) print -r -- "Backlog" ;;
     [Ii]n\ [Pp]rogress) print -r -- "In Progress" ;;
     [Ii]n\ SIT|[Ii]n\ Sit|[Ii]n\ sit) print -r -- "In SIT" ;;
-    [Rr]eady\ for\ UAT|[Rr]eady\ for\ Uat|[Rr]eady\ for\ uat) print -r -- "Ready for UAT" ;;
+    [Pp]eer\ [Rr]eview) print -r -- "Peer Review" ;;
     [Ii]n\ [Tt]est) print -r -- "In Test" ;;
     [Rr]eady\ for\ PROD|[Rr]eady\ for\ Prod|[Rr]eady\ for\ prod) print -r -- "Ready for PROD" ;;
     [Dd]one) print -r -- "Done" ;;
@@ -391,7 +395,7 @@ _jira_status_index() {
     "Backlog") print -r -- 2 ;;
     "In Progress") print -r -- 3 ;;
     "In SIT") print -r -- 4 ;;
-    "Ready for UAT") print -r -- 5 ;;
+    "Peer Review") print -r -- 5 ;;
     "In Test") print -r -- 6 ;;
     "Ready for PROD") print -r -- 7 ;;
     "Done") print -r -- 8 ;;
@@ -405,7 +409,7 @@ _jira_status_at() {
     2) print -r -- "Backlog" ;;
     3) print -r -- "In Progress" ;;
     4) print -r -- "In SIT" ;;
-    5) print -r -- "Ready for UAT" ;;
+    5) print -r -- "Peer Review" ;;
     6) print -r -- "In Test" ;;
     7) print -r -- "Ready for PROD" ;;
     8) print -r -- "Done" ;;
@@ -482,6 +486,99 @@ _jira_transition_path() {
   fi
 
   _jira_linear_transition_path "$current_index" "$target_index"
+}
+
+jira-branch() {
+  local key="${1:?Usage: jira-branch <ISSUE-KEY|WOW-NUMBER> [branch description]}"
+  shift
+
+  local key_pattern='^[A-Z][A-Z0-9]*-[0-9]+$'
+  key="$(_jira_issue_key "$key")"
+  if [[ ! "$key" =~ $key_pattern ]]; then
+    print -u2 "jira-branch: invalid Jira ticket key: $key"
+    return 1
+  fi
+
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
+    print -u2 "jira-branch: not inside a Git worktree"
+    return 1
+  }
+
+  if [[ -n "$(git status --porcelain)" ]]; then
+    print -u2 "jira-branch: worktree has uncommitted changes; handle them before switching branches"
+    return 1
+  fi
+
+  local description="$*"
+  if [[ -z "$description" ]]; then
+    description="$(_jira_summary "$key")" || return
+  fi
+
+  local slug branch
+  slug="$(_jira_slug "$description")"
+  branch="$key"
+  [[ -n "$slug" ]] && branch="$branch-$slug"
+
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git switch "$branch"
+    return
+  fi
+
+  local matches match_count
+  matches="$(git for-each-ref --format='%(refname:short)' refs/heads |
+    grep -E "^${key}(-|$)" || true)"
+  if [[ -n "$matches" ]]; then
+    match_count="$(printf '%s\n' "$matches" | wc -l)"
+    if [[ "$match_count" -eq 1 ]]; then
+      git switch "$matches"
+      return
+    fi
+    print -u2 "jira-branch: multiple local branches found for $key:"
+    print -u2 -r -- "$matches"
+    return 1
+  fi
+
+  git remote get-url origin >/dev/null 2>&1 || {
+    print -u2 "jira-branch: origin remote is required"
+    return 1
+  }
+  git fetch origin --prune || return
+
+  if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    git switch --track "origin/$branch"
+    return
+  fi
+
+  matches="$(git for-each-ref --format='%(refname:short)' refs/remotes/origin |
+    grep -Ev '^origin/HEAD$' |
+    grep -E "^origin/${key}(-|$)" || true)"
+  if [[ -n "$matches" ]]; then
+    match_count="$(printf '%s\n' "$matches" | wc -l)"
+    if [[ "$match_count" -eq 1 ]]; then
+      git switch --track "$matches"
+      return
+    fi
+    print -u2 "jira-branch: multiple remote branches found for $key:"
+    print -u2 -r -- "$matches"
+    return 1
+  fi
+
+  local default_ref default_branch
+  default_ref="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)"
+  if [[ -z "$default_ref" ]]; then
+    git remote set-head origin --auto >/dev/null || return
+    default_ref="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)"
+  fi
+  if [[ -z "$default_ref" ]]; then
+    print -u2 "jira-branch: could not determine origin's default branch"
+    return 1
+  fi
+
+  default_branch="${default_ref#origin/}"
+  git switch "$default_branch" 2>/dev/null ||
+    git switch --track "$default_ref" || return
+  git pull --ff-only origin "$default_branch" || return
+  git switch -c "$branch"
 }
 
 jira-start() {
@@ -699,6 +796,7 @@ jira-clear() {
 }
 
 _jira_prompt_current_ticket() {
+  _jira_load_context || return
   [[ -n "${JIRA_CURRENT_TICKET:-}" ]] &&
     PROMPT="%F{209}[$JIRA_CURRENT_TICKET]%f $PROMPT"
 }
@@ -746,6 +844,93 @@ jira-view() {
   [[ -z "$key" ]] && key="$(jira-key)"
   [[ -n "$key" ]] && key="$(_jira_issue_key "$key")"
   _jira_acli jira workitem view "$key"
+}
+
+jira-component() {
+  local yes_flag
+  if [[ "$1" == "--yes" || "$1" == "-y" ]]; then
+    yes_flag="--yes"
+    shift
+  fi
+
+  local key component
+  if [[ $# -eq 1 ]]; then
+    key="$(jira-key)" || return 1
+    component="$1"
+  elif [[ $# -eq 2 ]]; then
+    key="$(_jira_issue_key "$1")"
+    component="$2"
+  else
+    print -u2 "Usage: jira-component [--yes] [ISSUE-KEY] <component>"
+    return 1
+  fi
+
+  local key_pattern='^[A-Z][A-Z0-9]*-[0-9]+$'
+  if [[ ! "$key" =~ $key_pattern ]]; then
+    print -u2 "jira-component: invalid Jira ticket key: $key"
+    return 1
+  fi
+
+  local jq_cmd curl_cmd project components component_id reply payload response http_status error_message
+  jq_cmd="$(_jira_jq_cmd)" || return 1
+  curl_cmd="$(_jira_curl_cmd)" || return 1
+  if [[ -z "$jq_cmd" || -z "$curl_cmd" ||
+    -z "${ATLASSIAN_SITE:-}" || -z "${ATLASSIAN_EMAIL:-}" || -z "${ATLASSIAN_API_TOKEN:-}" ]]; then
+    print -u2 "jira-component: Jira REST credentials and jq are required"
+    return 1
+  fi
+
+  project="${key%%-*}"
+  components="$("$curl_cmd" -fsS -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_TOKEN" \
+    -H "Accept: application/json" \
+    "https://$ATLASSIAN_SITE/rest/api/3/project/$project/components")" || {
+    print -u2 "jira-component: could not load components for $project"
+    return 1
+  }
+  component_id="$(print -r -- "$components" |
+    "$jq_cmd" -r --arg name "$component" '
+      map(select((.name | ascii_downcase) == ($name | ascii_downcase)))
+      | if length == 1 then .[0].id else empty end
+    ')" || return 1
+  if [[ -z "$component_id" ]]; then
+    print -u2 "jira-component: component not found in $project: $component"
+    return 1
+  fi
+
+  if [[ "$yes_flag" != "--yes" ]]; then
+    printf 'Set %s component to %s? [Y/n] ' "$key" "$component"
+    read -r reply
+    [[ -z "$reply" || "$reply" == [Yy]* ]] || return 1
+  fi
+
+  payload="$("$jq_cmd" -nc --arg id "$component_id" '{fields: {components: [{id: $id}]}}')" ||
+    return 1
+  response="$("$curl_cmd" -sS -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_TOKEN" \
+    -X PUT \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/json" \
+    --data "$payload" \
+    -w $'\n%{http_code}' \
+    "https://$ATLASSIAN_SITE/rest/api/3/issue/$key")" || return 1
+
+  http_status="${response##*$'\n'}"
+  response="${response%$'\n'$http_status}"
+  if [[ "$http_status" == 2* ]]; then
+    print -r -- "$key component: $component"
+    return
+  fi
+
+  error_message="$(print -r -- "$response" |
+    "$jq_cmd" -r '
+      [
+        (.errorMessages // [])[],
+        ((.errors // {}) | to_entries[] | "\(.key): \(.value)")
+      ]
+      | join("; ")
+    ' 2>/dev/null)"
+  [[ -z "$error_message" ]] && error_message="HTTP $http_status"
+  print -u2 "jira-component: $key -> $component failed: $error_message"
+  return 1
 }
 
 jira-transition() {
@@ -802,6 +987,7 @@ jira-transition() {
     [[ $acli_result -ne 0 || "$acli_output" == *"Failure:"* ]] && return 1
     [[ -z "$acli_output" ]] && print -r -- "$key -> $path_status"
   done
+  return 0
 }
 
 jira-statuses() {
@@ -810,7 +996,7 @@ jira-statuses() {
     "Backlog" \
     "In Progress" \
     "In SIT" \
-    "Ready for UAT" \
+    "Peer Review" \
     "In Test" \
     "Ready for PROD" \
     "Done" \
@@ -842,7 +1028,7 @@ jira-sit() {
 }
 
 jira-uat() {
-  jira-transition "$@" "Ready for UAT"
+  jira-transition "$@" "Peer Review"
 }
 
 jira-test() {

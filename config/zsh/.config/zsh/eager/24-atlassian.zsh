@@ -1,5 +1,7 @@
 # Shared Atlassian/acli environment.
-for _atlassian_env in "$XDG_CONFIG_HOME/acli/env" "$XDG_CONFIG_HOME/acli/env.local"; do
+for _atlassian_env in \
+  "${XDG_CONFIG_HOME:-$HOME/.config}/acli/env" \
+  "${XDG_CONFIG_HOME:-$HOME/.config}/acli/env.local"; do
   [[ -r "$_atlassian_env" ]] && source "$_atlassian_env"
 done
 unset _atlassian_env
