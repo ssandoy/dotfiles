@@ -117,6 +117,18 @@ key = "prefix+alt+d"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-diff-tab"
 
+# Shorter aliases: prefix+a jumps to the workspace's Agents tab, prefix+d
+# opens/refreshes its Diff tab (same command as prefix+alt+d above).
+[[keys.command]]
+key = "prefix+a"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-agents-tab"
+
+[[keys.command]]
+key = "prefix+d"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-diff-tab"
+
 # Sends the human review notes left in the Diff tab (hunk's own "c" /
 # create-review-note key) back to whichever agent pane opened that tab.
 [[keys.command]]

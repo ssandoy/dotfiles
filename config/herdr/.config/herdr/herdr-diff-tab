@@ -19,6 +19,8 @@ existing_tab_id=$(
         head -n1
 )
 
+launched=false
+
 if [[ -n "$existing_tab_id" ]]; then
     herdr tab focus "$existing_tab_id"
     pane_id=$(
@@ -27,20 +29,29 @@ if [[ -n "$existing_tab_id" ]]; then
                 '.result.panes[] | select(.tab_id == $tab_id) | .pane_id' |
             head -n1
     )
-    # A previous hunk session may still be open in this tab — quit it back
-    # to the shell first, otherwise re-running would just land as literal
-    # keystrokes inside hunk's own UI instead of starting a fresh diff.
-    # ctrl+c afterward clears any stray input left on an already-idle
-    # prompt (e.g. that same "q" landing as plain text, not a quit) so the
-    # next typed command doesn't get appended onto it.
-    herdr pane send-keys "$pane_id" q
-    herdr pane send-keys "$pane_id" ctrl+c
-    sleep 0.2
-    # HEAD, not the default (working tree vs index): comparing against the
-    # index means a file you `git add` matches it exactly and stops showing
-    # as changed at all — comparing against HEAD keeps staged changes
-    # visible alongside unstaged ones instead of making them vanish.
-    herdr pane run "$pane_id" hunk diff HEAD --theme catppuccin-mocha --watch
+    # hunk already --watch's the repo for changes, so a live session for this
+    # cwd is already showing a current diff — quitting and relaunching it
+    # here would just be a visible flash with no actual benefit. Only do the
+    # quit/relaunch dance when there's no live session to reuse (e.g. the
+    # user quit hunk manually, leaving a bare shell in this pane).
+    if ! hunk session get --repo "$cwd" --json >/dev/null 2>&1; then
+        # A previous hunk session may still be open in this tab — quit it
+        # back to the shell first, otherwise re-running would just land as
+        # literal keystrokes inside hunk's own UI instead of starting a
+        # fresh diff. ctrl+c afterward clears any stray input left on an
+        # already-idle prompt (e.g. that same "q" landing as plain text, not
+        # a quit) so the next typed command doesn't get appended onto it.
+        herdr pane send-keys "$pane_id" q
+        herdr pane send-keys "$pane_id" ctrl+c
+        sleep 0.2
+        # HEAD, not the default (working tree vs index): comparing against
+        # the index means a file you `git add` matches it exactly and stops
+        # showing as changed at all — comparing against HEAD keeps staged
+        # changes visible alongside unstaged ones instead of making them
+        # vanish.
+        herdr pane run "$pane_id" hunk diff HEAD --theme catppuccin-mocha --watch
+        launched=true
+    fi
 else
     created=$(herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus)
     pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
@@ -49,6 +60,7 @@ else
     # as changed at all — comparing against HEAD keeps staged changes
     # visible alongside unstaged ones instead of making them vanish.
     herdr pane run "$pane_id" hunk diff HEAD --theme catppuccin-mocha --watch
+    launched=true
 fi
 
 # Record which pane opened/refreshed this Diff tab, so herdr-diff-send-comments
@@ -57,7 +69,11 @@ fi
 # pane retargets it.
 herdr pane report-metadata "$pane_id" --source herdr-diff-tab --token "origin_pane=$origin_pane_id"
 
-# hunk's file sidebar defaults closed with no flag to change that, so
-# toggle it on with its own "s" keybinding once it's had a moment to render.
-sleep 0.5
-herdr pane send-keys "$pane_id" s
+if [[ "$launched" == true ]]; then
+    # hunk's file sidebar defaults closed with no flag to change that, so
+    # toggle it on with its own "s" keybinding once it's had a moment to
+    # render. Only on a fresh launch — toggling again on an already-running,
+    # already-configured session would just flip it back off.
+    sleep 0.5
+    herdr pane send-keys "$pane_id" s
+fi

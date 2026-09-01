@@ -13,11 +13,11 @@ exec 2>>"$log_file"
 # would otherwise vanish with no feedback at all. Surface it as a toast
 # and leave the real error in $log_file (stderr is appended there above).
 on_error() {
-    local line=$1
-    echo "$(date -Is) failed at line $line (exit $?)" >>"$log_file"
+    local line=$1 rc=$2
+    echo "$(date -Is) failed at line $line (exit $rc)" >>"$log_file"
     herdr notification show "Sending comments failed" --body "See ~/.cache/herdr/herdr-diff-send-comments.log"
 }
-trap 'on_error $LINENO' ERR
+trap 'on_error $LINENO $?' ERR
 
 current=$(herdr pane current --current)
 workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
@@ -70,7 +70,26 @@ body=$(
 )
 message="Review notes from the Diff tab ($repo_name):"$'\n\n'"$body"
 
-herdr agent prompt "$origin_pane_id" "$message"
+if ! herdr agent prompt "$origin_pane_id" "$message" 2>>"$log_file"; then
+    # The recorded origin can go stale if the Diff tab was last opened/
+    # refreshed from a pane that has since closed (prefix+d stamps whichever
+    # pane triggered it, not necessarily "the" agent). Fall back to this
+    # workspace's one live agent, if there's exactly one to fall back to —
+    # ambiguous with zero or several, so only self-heal the unambiguous case.
+    mapfile -t candidates < <(
+        herdr agent list |
+            jq -r --arg ws "$workspace_id" \
+                '.result.agents[] | select(.workspace_id == $ws) | .pane_id'
+    )
+    if [[ ${#candidates[@]} -eq 1 && "${candidates[0]}" != "$origin_pane_id" ]]; then
+        origin_pane_id="${candidates[0]}"
+        herdr agent prompt "$origin_pane_id" "$message"
+        herdr pane report-metadata "$diff_pane_id" --source herdr-diff-tab --token "origin_pane=$origin_pane_id"
+    else
+        herdr notification show "Could not send comments" --body "Recorded conversation is gone; reopen the Diff tab with prefix+alt+d."
+        exit 1
+    fi
+fi
 
 noun="comment"
 [[ "$count" -ne 1 ]] && noun="comments"
