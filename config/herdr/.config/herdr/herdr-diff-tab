@@ -29,12 +29,16 @@ if [[ -n "$existing_tab_id" ]]; then
                 '.result.panes[] | select(.tab_id == $tab_id) | .pane_id' |
             head -n1
     )
-    # hunk already --watch's the repo for changes, so a live session for this
-    # cwd is already showing a current diff — quitting and relaunching it
-    # here would just be a visible flash with no actual benefit. Only do the
-    # quit/relaunch dance when there's no live session to reuse (e.g. the
-    # user quit hunk manually, leaving a bare shell in this pane).
-    if ! hunk session get --repo "$cwd" --json >/dev/null 2>&1; then
+    # hunk already --watch's the repo for changes, so a live session already
+    # comparing against HEAD is showing a current diff — quitting and
+    # relaunching it here would just be a visible flash with no actual
+    # benefit. But a live session comparing against the index instead (hunk's
+    # title says "working tree", not "HEAD" — e.g. one opened before this
+    # script existed, or started by hand without the HEAD arg) hides staged
+    # changes, so that case still needs a real relaunch to fix the comparison
+    # target, not just a focus.
+    session_title=$(hunk session get --repo "$cwd" --json 2>/dev/null | jq -r '.session.title // empty')
+    if [[ "$session_title" != *" HEAD" ]]; then
         # A previous hunk session may still be open in this tab — quit it
         # back to the shell first, otherwise re-running would just land as
         # literal keystrokes inside hunk's own UI instead of starting a

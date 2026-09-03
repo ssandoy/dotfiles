@@ -70,6 +70,11 @@ body=$(
 )
 message="Review notes from the Diff tab ($repo_name):"$'\n\n'"$body"
 
+# Captured now so the exact set of notes that went into $message is what gets
+# removed below — not "whatever hunk reports after sending" (a note added
+# mid-send would otherwise get silently swept up too).
+mapfile -t note_ids < <(jq -r '.comments[].noteId' <<<"$comments_json")
+
 if ! herdr agent prompt "$origin_pane_id" "$message" 2>>"$log_file"; then
     # The recorded origin can go stale if the Diff tab was last opened/
     # refreshed from a pane that has since closed (prefix+d stamps whichever
@@ -90,6 +95,16 @@ if ! herdr agent prompt "$origin_pane_id" "$message" 2>>"$log_file"; then
         exit 1
     fi
 fi
+
+# Sent successfully — clear these notes out of hunk so they don't get sent
+# again the next time prefix+alt+c runs. By noteId rather than a blanket
+# `comment clear`, so a note left after $comments_json was captured (while
+# the send was in flight) survives instead of vanishing unsent.
+for note_id in "${note_ids[@]}"; do
+    if ! hunk session comment rm --repo "$cwd" "$note_id" >/dev/null 2>>"$log_file"; then
+        echo "$(date -Is) failed to remove comment $note_id after sending" >>"$log_file"
+    fi
+done
 
 noun="comment"
 [[ "$count" -ne 1 ]] && noun="comments"
