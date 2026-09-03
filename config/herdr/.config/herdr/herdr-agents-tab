@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Focus the current workspace's "Agents" tab.
+set -euo pipefail
+
+current=$(herdr pane current --current)
+workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
+
+label="Agents"
+
+tab_id=$(
+    herdr tab list --workspace "$workspace_id" |
+        jq -r --arg label "$label" \
+            '.result.tabs[] | select(.label == $label) | .tab_id' |
+        head -n1
+)
+
+if [[ -z "$tab_id" ]]; then
+    herdr notification show "No Agents tab" --body "This workspace has no tab labeled Agents."
+    exit 0
+fi
+
+herdr tab focus "$tab_id"
