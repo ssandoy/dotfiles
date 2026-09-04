@@ -85,7 +85,7 @@ packages=(
 
 case "$(detect_platform)" in
   macos)
-    packages+=(aerospace sketchybar karabiner raycast)
+    packages+=(aerospace sketchybar karabiner raycast zed-macos)
     ;;
   linux)
     if ! is_wsl; then

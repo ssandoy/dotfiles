@@ -6,6 +6,7 @@ This package keeps Zed user settings and keybindings in the dotfiles repo.
 
 - `.config/zed/settings.json`: uses Zed's VS Code base keymap.
 - `.config/zed/keymap.json`: custom bindings translated from `.vscode/keybindings.json`.
+- `zed-macos` (separate stow package, macOS only): `.local/bin/zed` wraps `Zed.app`'s bundled CLI. Linux/WSL installs of Zed manage their own `~/.local/bin/zed` symlink via the official installer, so this package must not be stowed there.
 
 ## Applying on WSL vs Windows
 
