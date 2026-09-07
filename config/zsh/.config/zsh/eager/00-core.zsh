@@ -14,7 +14,7 @@ fi
 export EDITOR="nvim"
 
 # Ensure user tools are available even if .zshenv wasn't sourced.
-for _path in "$HOME/.local/bin" "$HOME/bin" "$HOME/.local/share/mise/shims"; do
+for _path in "$HOME/.local/bin" "$HOME/bin" "$HOME/.local/share/mise/shims" "$HOME/.cargo/bin"; do
   if [[ -d "$_path" && ":$PATH:" != *":$_path:"* ]]; then
     PATH="$_path:$PATH"
   fi
