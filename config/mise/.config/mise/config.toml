@@ -38,7 +38,7 @@ usage = "latest"
 rg = "latest"
 acli = "latest"
 "github:dloss/kelora" = "latest"
-"npm:@anthropic-ai/claude-code" = "2.0.27"
+"npm:@anthropic-ai/claude-code" = { version = "2.1.251", npm_args = "--ignore-scripts=false" }
 maven = "latest"
 java = "20"
 pnpm = "11.7.0"
