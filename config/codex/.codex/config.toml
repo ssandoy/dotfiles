@@ -1,5 +1,5 @@
-model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
+model = "gpt-6-astra"
+model_reasoning_effort = "medium"
 personality = "pragmatic"
 notify = ["/Users/ssandoy/.local/bin/agent-notify", "Codex"]
 
@@ -33,6 +33,9 @@ trust_level = "trusted"
 [projects."/home/sander.sandoy/git/user-interface-web-portal"]
 trust_level = "trusted"
 
+[projects."/Users/ssandoy/git/wine-rater"]
+trust_level = "trusted"
+
 [notice]
 hide_gpt5_1_migration_prompt = true
 "hide_gpt-5.1-codex-max_migration_prompt" = true
@@ -48,6 +51,8 @@ notifications = false
 
 [tui.model_availability_nux]
 "gpt-5.5" = 3
+"gpt-5.6-sol" = 1
+gpt-6-astra = 1
 
 [features]
 hooks = true
@@ -56,3 +61,6 @@ hooks = true
 
 [hooks.state."/home/sander.sandoy/.codex/hooks.json:session_start:0:0"]
 trusted_hash = "sha256:2175af27448890c319de6d5b0e78ca9a2fc1ffb2c69c3843a1b72a43a1ad1fd8"
+
+[hooks.state."/Users/ssandoy/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:87024e54cfd8f1b72d1c63864cd1d0ce7377eca1f9bbf099a414dd7a32c68a7a"
