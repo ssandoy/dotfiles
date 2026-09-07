@@ -4,10 +4,6 @@
       "Bash(git push:*)"
     ]
   },
-  "attribution": {
-    "commit": ""
-  },
-  "model": "claude-sonnet-5",
   "hooks": {
     "Notification": [
       {
@@ -50,7 +46,10 @@
       }
     }
   },
-  "effortLevel": "high",
+  "attribution": {
+    "commit": ""
+  },
+  "effortLevel": "xhigh",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
