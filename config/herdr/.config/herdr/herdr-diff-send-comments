@@ -112,6 +112,13 @@ for note_id in "${note_ids[@]}"; do
     fi
 done
 
+# Follow the comments to the exact tab containing the agent that received
+# them. This also handles the fallback above, where origin_pane_id is replaced
+# with the workspace's sole live agent.
+origin_pane=$(herdr pane get "$origin_pane_id")
+origin_tab_id=$(jq -r '.result.pane.tab_id' <<<"$origin_pane")
+herdr tab focus "$origin_tab_id"
+
 noun="comment"
 [[ "$count" -ne 1 ]] && noun="comments"
 herdr notification show "Sent $count $noun" --body "to the conversation that opened this Diff tab."
