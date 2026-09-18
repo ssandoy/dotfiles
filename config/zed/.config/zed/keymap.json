@@ -145,5 +145,17 @@
         }
       ]
     }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-alt-a": "git::Blame"
+    }
+  },
+  {
+    "context": "Editor",
+    "unbind": {
+      "alt-g b": "git::Blame"
+    }
   }
 ]

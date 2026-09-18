@@ -7,6 +7,16 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "format_on_save": "on",
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000
+    }
+  },
+  "edit_predictions": {
+    "allow_data_collection": "no",
+        "provider": "copilot"
+  },
   "project_panel": {
     "hide_hidden": false
   },
@@ -25,6 +35,9 @@
   "diff_view_style": "split",
   "icon_theme": "Catppuccin Macchiato",
   "agent_servers": {
+    "github-copilot-cli": {
+      "type": "registry"
+    },
     "codex-acp": {
       "type": "registry"
     },
@@ -35,8 +48,13 @@
   "base_keymap": "JetBrains",
   "ui_font_size": 16,
   "buffer_font_size": 15,
+  "languages": {
+    "Kotlin": {
+      "language_servers": ["kotlin-language-server"]
+    }
+  },
   "theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "One Light",
     "dark": "Catppuccin Macchiato",
   },
