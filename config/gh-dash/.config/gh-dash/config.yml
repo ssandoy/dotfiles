@@ -17,6 +17,7 @@ prSections:
     filters: >-
       is:open
       review-requested:@me
+      draft:false
       -repo:elhub/auth-test-token-service
       -repo:elhub/auth-vault-transit-secrets-engine-mock
       -repo:elhub/service-platform-aag-policy
