@@ -103,7 +103,7 @@ if ! herdr agent prompt "$origin_pane_id" "$message" 2>>"$log_file"; then
 fi
 
 # Sent successfully — clear these notes out of hunk so they don't get sent
-# again the next time prefix+alt+c runs. By noteId rather than a blanket
+# again the next time prefix+c runs. By noteId rather than a blanket
 # `comment clear`, so a note left after $comments_json was captured (while
 # the send was in flight) survives instead of vanishing unsent.
 for note_id in "${note_ids[@]}"; do
