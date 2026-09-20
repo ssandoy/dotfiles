@@ -2,6 +2,7 @@ model = "gpt-6-astra"
 model_reasoning_effort = "medium"
 personality = "pragmatic"
 notify = ["/Users/ssandoy/.local/bin/agent-notify", "Codex"]
+approvals_reviewer = "auto_review"
 
 [projects."/Users/ssandoy/git/fyk-web"]
 trust_level = "trusted"
