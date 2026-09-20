@@ -43,6 +43,12 @@ split_horizontal = "prefix+s"
 close_pane = "ctrl+w"        # was: bind-key -n C-w kill-pane
 close_workspace = "ctrl+q"   # was: bind-key -n C-Q kill-session
 
+# Cycle tabs within the current workspace without the prefix. Plain
+# ctrl+left/right is avoided since shells bind that to word-jump during
+# line editing, and alt+shift+left/right is already the resize binding.
+next_tab = "ctrl+shift+right"
+previous_tab = "ctrl+shift+left"
+
 # herdr's actual defaults for these are vim-style prefix+h/j/k/l, not arrow
 # keys — there was no old tmux binding for this either (tmux.conf had no
 # select-pane -L/-R/-U/-D bindings). Setting these explicitly replaces the
@@ -128,6 +134,18 @@ command = "$HOME/.config/herdr/herdr-agents-tab"
 key = "prefix+d"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-diff-tab"
+
+# Opens (or focuses) a "Run" tab in the current workspace: a plain login
+# shell for running local processes/apps, separate from Agents and Diff.
+[[keys.command]]
+key = "prefix+alt+u"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-run-tab"
+
+[[keys.command]]
+key = "prefix+u"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-run-tab"
 
 # Sends the human review notes left in the Diff tab (hunk's own "c" /
 # create-review-note key) back to whichever agent pane opened that tab.

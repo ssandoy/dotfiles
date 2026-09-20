@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Open (or focus) a "Run" tab in the current workspace: a plain login shell
+# for running local processes/apps for this workspace, separate from the
+# Agents and Diff tabs.
+set -euo pipefail
+
+current=$(herdr pane current --current)
+workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
+cwd=$(jq -r '.result.pane.cwd' <<<"$current")
+
+label="Run"
+
+existing_tab_id=$(
+    herdr tab list --workspace "$workspace_id" |
+        jq -r --arg label "$label" \
+            '.result.tabs[] | select(.label == $label) | .tab_id' |
+        head -n1
+)
+
+if [[ -n "$existing_tab_id" ]]; then
+    herdr tab focus "$existing_tab_id"
+    exit 0
+fi
+
+created=$(herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus)
+pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
+herdr pane run "$pane_id" zsh -l
