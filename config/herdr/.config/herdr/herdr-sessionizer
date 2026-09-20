@@ -71,14 +71,17 @@ else
     # workspace.
     diff_pane_id=$(create_tab "Diff")
     herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha --watch
+
+    # And a Run tab (see herdr-run-tab) for local processes/apps, same
+    # reasoning as Diff above — ready on first use instead of on first press.
+    # Created here, before the sleep below, so it doesn't sit waiting on
+    # hunk's unrelated render delay.
+    run_pane_id=$(create_tab "Run")
+    herdr pane run "$run_pane_id" zsh -l
+
     # hunk's file sidebar defaults closed with no flag to change that, so
     # toggle it on with its own "s" keybinding once it's had a moment to
     # render.
     sleep 0.5
     herdr pane send-keys "$diff_pane_id" s
-
-    # And a Run tab (see herdr-run-tab) for local processes/apps, same
-    # reasoning as Diff above — ready on first use instead of on first press.
-    run_pane_id=$(create_tab "Run")
-    herdr pane run "$run_pane_id" zsh -l
 fi
