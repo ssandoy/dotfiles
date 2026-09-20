@@ -64,6 +64,63 @@ alt-8 = 'workspace 8'
 alt-9 = 'workspace 9'
 alt-0 = 'workspace 10'
 
+# AeroSpace's built-in defaults bind alt-a..alt-z to 'workspace <LETTER>'
+# and alt-shift-a..alt-shift-z to 'move-node-to-workspace <LETTER>' — not
+# overridden by the digit bindings above, so they were still live and
+# creating lettered workspaces on demand (discovered via herdr's
+# prefix+alt+w: alt-w alone got claimed here before herdr ever saw it).
+# Disabled outright so only workspaces 1-10 are ever reachable. Letters
+# already used below for layout/resize (b, s, t, v) are left alone here —
+# defining them twice in this table is a TOML error.
+alt-a = []
+alt-b = []
+alt-c = []
+alt-d = []
+alt-e = []
+alt-f = []
+alt-g = []
+alt-h = []
+alt-i = []
+alt-j = []
+alt-k = []
+alt-l = []
+alt-m = []
+alt-n = []
+alt-o = []
+alt-p = []
+alt-q = []
+alt-r = []
+alt-s = []
+alt-t = []
+alt-u = []
+alt-v = []
+alt-w = []
+alt-x = []
+alt-y = []
+alt-z = []
+alt-shift-a = []
+alt-shift-c = []
+alt-shift-d = []
+alt-shift-e = []
+alt-shift-f = []
+alt-shift-g = []
+alt-shift-h = []
+alt-shift-i = []
+alt-shift-j = []
+alt-shift-k = []
+alt-shift-l = []
+alt-shift-m = []
+alt-shift-n = []
+alt-shift-o = []
+alt-shift-p = []
+alt-shift-q = []
+alt-shift-r = []
+alt-shift-u = []
+alt-shift-w = []
+alt-shift-x = []
+alt-shift-y = []
+alt-shift-z = []
+
 # Move windows to workspaces and follow them.
 alt-shift-1 = 'move-node-to-workspace --focus-follows-window 1'
 alt-shift-2 = 'move-node-to-workspace --focus-follows-window 2'
