@@ -20,10 +20,6 @@ gaps.outer.bottom = 6
 gaps.outer.top = 14
 gaps.outer.right = 6
 
-[[on-window-detected]]
-if = 'true'
-run = 'move-node-to-workspace 1'
-
 [mode.main.binding]
 # Focus windows.
 ctrl-shift-left = 'focus left'
