@@ -46,6 +46,17 @@ existing_id=$(
         head -n1
 )
 
+# Creates a --no-focus tab in $workspace_id and prints its root pane_id, so
+# each default tab below only has to say what makes it different (the
+# command it runs, any follow-up keys) instead of repeating tab-create-and-
+# extract-pane_id three times.
+create_tab() {
+    local label=$1
+    local created
+    created=$(herdr tab create --workspace "$workspace_id" --cwd "$selected" --label "$label" --no-focus)
+    jq -r '.result.root_pane.pane_id' <<<"$created"
+}
+
 if [[ -n "$existing_id" ]]; then
     herdr workspace focus "$existing_id"
 else
@@ -58,12 +69,16 @@ else
     # waiting for prefix+alt+d on first use — --no-focus keeps you landed
     # on Agents, which is what you actually want right after creating a
     # workspace.
-    diff_created=$(herdr tab create --workspace "$workspace_id" --cwd "$selected" --label "Diff" --no-focus)
-    diff_pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$diff_created")
+    diff_pane_id=$(create_tab "Diff")
     herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha --watch
     # hunk's file sidebar defaults closed with no flag to change that, so
     # toggle it on with its own "s" keybinding once it's had a moment to
     # render.
     sleep 0.5
     herdr pane send-keys "$diff_pane_id" s
+
+    # And a Run tab (see herdr-run-tab) for local processes/apps, same
+    # reasoning as Diff above — ready on first use instead of on first press.
+    run_pane_id=$(create_tab "Run")
+    herdr pane run "$run_pane_id" zsh -l
 fi
