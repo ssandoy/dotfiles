@@ -22,6 +22,7 @@ if [[ -n "$existing_tab_id" ]]; then
     exit 0
 fi
 
-created=$(herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus)
-pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
-herdr pane run "$pane_id" zsh -l
+herdr tab create --workspace "$workspace_id" --cwd "$cwd" --label "$label" --focus >/dev/null
+# No explicit shell launch: a freshly created tab's root pane already starts
+# with a live default shell, so running one would just be typed into it as
+# a redundant nested shell.

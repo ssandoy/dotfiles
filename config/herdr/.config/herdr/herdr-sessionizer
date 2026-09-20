@@ -75,9 +75,9 @@ else
     # And a Run tab (see herdr-run-tab) for local processes/apps, same
     # reasoning as Diff above — ready on first use instead of on first press.
     # Created here, before the sleep below, so it doesn't sit waiting on
-    # hunk's unrelated render delay.
-    run_pane_id=$(create_tab "Run")
-    herdr pane run "$run_pane_id" zsh -l
+    # hunk's unrelated render delay. No explicit shell launch: the tab's
+    # root pane already starts with a live default shell.
+    create_tab "Run" >/dev/null
 
     # hunk's file sidebar defaults closed with no flag to change that, so
     # toggle it on with its own "s" keybinding once it's had a moment to
