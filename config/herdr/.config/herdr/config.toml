@@ -14,6 +14,7 @@ accent = "magenta"
 
 agent_panel_sort = "spaces"
 show_agent_labels_on_pane_borders = false
+status_indicators = "symbols"
 [advanced]
 # tmux had history-limit = 1,000,000 *lines*; herdr's limit is in *bytes*, so
 # there's no exact conversion. Bumped up from the 10MB default as a rough match.
@@ -146,6 +147,13 @@ command = "$HOME/.config/herdr/herdr-run-tab"
 key = "prefix+u"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-run-tab"
+
+# Spawns a Git worktree workspace for the current repo (branch picker, or
+# pass a branch name directly for agents to self-serve one).
+[[keys.command]]
+key = "prefix+alt+w"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-worktree"
 
 # Sends the human review notes left in the Diff tab (hunk's own "c" /
 # create-review-note key) back to whichever agent pane opened that tab.

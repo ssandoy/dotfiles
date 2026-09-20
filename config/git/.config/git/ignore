@@ -1,0 +1,6 @@
+**/.claude/settings.local.json
+
+# herdr-worktree checks worktrees out inside the repo itself (see
+# config/herdr/.config/herdr/herdr-worktree), so every repo needs this
+# ignored rather than adding it per-repo.
+.worktrees/

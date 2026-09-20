@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Spawn a Git worktree workspace for the current repo: pick (or create) a
+# branch, check it out into <repo-root>/.worktrees/<branch-slug> (kept
+# inside the repo itself rather than herdr's default ~/.herdr/worktrees, so
+# it's "the same folder, further down" — see config/git/.config/git/ignore
+# for why that doesn't pollute git status), and open it as a new herdr
+# workspace grouped next to the current one, seeded with the same
+# Agents/Diff/Run tabs as herdr-sessionizer's regular workspaces.
+#
+# Takes an optional branch name as $1 to skip the picker, so an agent
+# running in a pane can spin up its own isolated worktree without a human
+# at the keyboard.
+set -euo pipefail
+
+current=$(herdr pane current --current)
+cwd=$(jq -r '.result.pane.cwd' <<<"$current")
+repo_root=$(git -C "$cwd" rev-parse --show-toplevel)
+
+if [[ $# -eq 1 ]]; then
+    branch=$1
+else
+    # --print-query prints the typed query first, then the selected match
+    # (if any) on a second line — picking an existing branch uses the
+    # match, typing a name with no match falls back to the query itself.
+    result=$(
+        git -C "$repo_root" branch --format='%(refname:short)' |
+            fzf \
+                --print-query \
+                --prompt='branch > ' \
+                --layout=reverse \
+                --border=rounded \
+                --border-label=' herdr worktree ' \
+                --header='enter: create/open worktree | esc: cancel' \
+                --header-first \
+                --no-scrollbar \
+                --color='bg:-1,bg+:#313244,fg:#cdd6f4,fg+:#f5e0dc,hl:#f38ba8,hl+:#f38ba8,prompt:#cba6f7,pointer:#f5c2e7,marker:#a6e3a1,spinner:#f9e2af,info:#89b4fa,border:#45475a,label:#cba6f7,header:#7f849c'
+    ) || true
+    query=$(head -n1 <<<"$result")
+    picked=$(tail -n +2 <<<"$result")
+    branch=${picked:-$query}
+fi
+
+if [[ -z "${branch:-}" ]]; then
+    exit 0
+fi
+
+branch_slug=$(tr '/' '-' <<<"$branch")
+worktree_path="$repo_root/.worktrees/$branch_slug"
+
+created=$(herdr worktree create --cwd "$repo_root" --branch "$branch" --path "$worktree_path" --focus)
+workspace_id=$(jq -r '.result.workspace.workspace_id' <<<"$created")
+agents_tab_id=$(jq -r '.result.tab.tab_id' <<<"$created")
+herdr tab rename "$agents_tab_id" "Agents"
+
+# Same default tabs as herdr-sessionizer's new workspaces (see that script
+# for the create_tab shape being duplicated here — a shared helper across
+# both scripts is a planned follow-up, not done yet).
+create_tab() {
+    local label=$1
+    local tab_created
+    tab_created=$(herdr tab create --workspace "$workspace_id" --cwd "$worktree_path" --label "$label" --no-focus)
+    jq -r '.result.root_pane.pane_id' <<<"$tab_created"
+}
+
+diff_pane_id=$(create_tab "Diff")
+herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha --watch
+
+create_tab "Run" >/dev/null
+
+# hunk's file sidebar defaults closed with no flag to change that, so
+# toggle it on with its own "s" keybinding once it's had a moment to render.
+sleep 0.5
+herdr pane send-keys "$diff_pane_id" s
