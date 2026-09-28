@@ -63,6 +63,7 @@ cd "$CONFIG_DIR" || exit 1
 
 packages=(
   codex
+  jevgrep
   copilot
   tmux
   herdr

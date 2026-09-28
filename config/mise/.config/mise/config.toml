@@ -41,6 +41,7 @@ acli = "latest"
 "npm:@anthropic-ai/claude-code" = { version = "2.1.251", allow_builds = ["@anthropic-ai/claude-code"] }
 "npm:@openai/codex" = "latest"
 "npm:@github/copilot" = "latest"
+"npm:@dzhng/jevgrep" = "latest"
 maven = "latest"
 java = "20"
 pnpm = "latest"
