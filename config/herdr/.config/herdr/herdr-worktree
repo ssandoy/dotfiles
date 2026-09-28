@@ -9,34 +9,125 @@
 #
 # Takes an optional branch name as $1 to skip the picker, so an agent
 # running in a pane can spin up its own isolated worktree without a human
-# at the keyboard.
+# at the keyboard. --handoff-agent starts the same agent kind in the new
+# workspace; Codex retains its native conversation while other agents receive
+# the supplied handoff context.
 set -euo pipefail
+
+handoff_agent=false
+handoff_required=false
+handoff_context=''
+agent_mode='continue'
+while [[ "${1:-}" == --* ]]; do
+    case "$1" in
+        --handoff-agent)
+            handoff_agent=true
+            handoff_required=true
+            shift
+            ;;
+        --fresh-agent)
+            handoff_agent=true
+            handoff_required=true
+            agent_mode=fresh
+            shift
+            ;;
+        --handoff-if-present)
+            handoff_agent=true
+            shift
+            ;;
+        --context)
+            if [[ $# -lt 2 ]]; then
+                printf '%s\n' 'herdr-worktree: --context requires a value' >&2
+                exit 2
+            fi
+            handoff_context=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            printf 'herdr-worktree: unknown option: %s\n' "$1" >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [[ $# -gt 1 ]]; then
+    printf 'usage: %s [--handoff-agent|--fresh-agent|--handoff-if-present] [--context text] [branch]\n' "$0" >&2
+    exit 2
+fi
 
 current=$(herdr pane current --current)
 cwd=$(jq -r '.result.pane.cwd' <<<"$current")
-repo_root=$(git -C "$cwd" rev-parse --show-toplevel)
+# A keybinding runs this picker in its own temporary pane. Herdr provides the
+# pane that opened it separately; capture its agent before changing focus.
+source_pane_id=${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}
+agent_kind=''
+agent_session_id=''
+if [[ "$handoff_agent" == true && -n "$source_pane_id" ]]; then
+    if source_agent=$(herdr agent get "$source_pane_id" 2>/dev/null); then
+        agent_kind=$(jq -r '.result.agent.agent // empty' <<<"$source_agent")
+        agent_session_id=$(jq -r '.result.agent.agent_session.value // empty' <<<"$source_agent")
+    fi
+fi
+if [[ "$handoff_required" == true && -z "$agent_kind" ]]; then
+    printf '%s\n' 'herdr-worktree: no agent found in the source pane' >&2
+    exit 1
+fi
+# Always anchor new worktrees at the primary checkout. In a linked worktree,
+# --show-toplevel points at that checkout and would otherwise produce nested
+# paths such as .worktrees/first/.worktrees/second.
+git_common_dir=$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir)
+repo_root=$(dirname "$git_common_dir")
 
 if [[ $# -eq 1 ]]; then
     branch=$1
 else
-    # --print-query prints the typed query first, then the selected match
-    # (if any) on a second line — picking an existing branch uses the
-    # match, typing a name with no match falls back to the query itself.
+    # --print-query prints the typed query, then --expect prints the completion
+    # key, followed by the selected match (if any). No match means the query
+    # is a new branch name. Ctrl-N starts a fresh agent instead of continuing.
+    picker_header='enter: open worktree | esc: cancel'
+    if [[ -n "$agent_kind" ]]; then
+        picker_header='enter: continue agent | ctrl-n: new agent | esc: cancel'
+    fi
+    fzf_status=0
     result=$(
         git -C "$repo_root" branch --format='%(refname:short)' |
             fzf \
+                --expect=ctrl-n \
                 --print-query \
                 --prompt='branch > ' \
                 --layout=reverse \
                 --border=rounded \
                 --border-label=' herdr worktree ' \
-                --header='enter: create/open worktree | esc: cancel' \
+                --header="$picker_header" \
                 --header-first \
                 --no-scrollbar \
                 --color='bg:-1,bg+:#313244,fg:#cdd6f4,fg+:#f5e0dc,hl:#f38ba8,hl+:#f38ba8,prompt:#cba6f7,pointer:#f5c2e7,marker:#a6e3a1,spinner:#f9e2af,info:#89b4fa,border:#45475a,label:#cba6f7,header:#7f849c'
-    ) || true
-    query=$(head -n1 <<<"$result")
-    picked=$(tail -n +2 <<<"$result")
+    ) || fzf_status=$?
+    if [[ "$fzf_status" -eq 130 || -z "$result" ]]; then
+        exit 0
+    fi
+    if [[ "$fzf_status" -gt 1 ]]; then
+        exit "$fzf_status"
+    fi
+    mapfile -t picker_lines <<<"$result"
+    if [[ "${picker_lines[1]:-}" == ctrl-n ]]; then
+        agent_mode=fresh
+    fi
+    query=${picker_lines[0]:-}
+    picked=${picker_lines[2]:-}
+    # A fast keypress can accept the previous highlighted row before fzf has
+    # applied the final query. Only trust a row that matches that query.
+    if [[ -n "$query" && -n "$picked" ]]; then
+        matches=$(git -C "$repo_root" branch --format='%(refname:short)' |
+            fzf --filter="$query" --no-sort) || true
+        if ! grep -Fxq -- "$picked" <<<"$matches"; then
+            picked=''
+        fi
+    fi
     branch=${picked:-$query}
 fi
 
@@ -47,10 +138,43 @@ fi
 branch_slug=$(tr '/' '-' <<<"$branch")
 worktree_path="$repo_root/.worktrees/$branch_slug"
 
-created=$(herdr worktree create --cwd "$repo_root" --branch "$branch" --path "$worktree_path" --focus)
+# Reopen a registered checkout instead of trying to create it again. Herdr
+# focuses an already-open workspace and opens a new workspace for a checkout
+# that exists only on disk.
+if git -C "$repo_root" worktree list --porcelain | grep -Fxq "worktree $worktree_path"; then
+    created=$(herdr worktree open --cwd "$repo_root" --path "$worktree_path" --focus)
+else
+    created=$(herdr worktree create --cwd "$repo_root" --branch "$branch" --path "$worktree_path" --focus)
+fi
+
 workspace_id=$(jq -r '.result.workspace.workspace_id' <<<"$created")
-agents_tab_id=$(jq -r '.result.tab.tab_id' <<<"$created")
-herdr tab rename "$agents_tab_id" "Agents"
+already_open=$(jq -r '.result.already_open // false' <<<"$created")
+if [[ "$already_open" == true ]]; then
+    if [[ "$handoff_agent" != true || -z "$agent_kind" ]]; then
+        exit 0
+    fi
+    agents_tab_id=$(herdr tab list --workspace "$workspace_id" |
+        jq -r '.result.tabs[] | select(.label == "Agents") | .tab_id' | head -n1)
+    if [[ -z "$agents_tab_id" ]]; then
+        printf '%s\n' 'herdr-worktree: existing workspace has no Agents tab' >&2
+        exit 1
+    fi
+    agents_pane_id=$(herdr pane list --workspace "$workspace_id" |
+        jq -r --arg tab "$agents_tab_id" '.result.panes[] | select(.tab_id == $tab) | .pane_id' | head -n1)
+    if [[ -z "$agents_pane_id" ]]; then
+        printf '%s\n' 'herdr-worktree: existing Agents tab has no pane' >&2
+        exit 1
+    fi
+    if herdr agent get "$agents_pane_id" >/dev/null 2>&1; then
+        herdr tab focus "$agents_tab_id" >/dev/null
+        exit 0
+    fi
+    herdr tab focus "$agents_tab_id" >/dev/null
+else
+    agents_tab_id=$(jq -r '.result.tab.tab_id' <<<"$created")
+    agents_pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
+    herdr tab rename "$agents_tab_id" "Agents"
+fi
 
 # Same default tabs as herdr-sessionizer's new workspaces (see that script
 # for the create_tab shape being duplicated here — a shared helper across
@@ -62,12 +186,53 @@ create_tab() {
     jq -r '.result.root_pane.pane_id' <<<"$tab_created"
 }
 
-diff_pane_id=$(create_tab "Diff")
-herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha --watch
+if [[ "$already_open" != true ]]; then
+    diff_pane_id=$(create_tab "Diff")
+    herdr pane run "$diff_pane_id" hunk diff --theme catppuccin-mocha --watch
+    create_tab "Run" >/dev/null
+fi
 
-create_tab "Run" >/dev/null
+if [[ "$handoff_agent" == true && -n "$agent_kind" ]]; then
+    agent_name=$(printf '%s-%s' "$agent_kind" "$workspace_id" | tr '[:upper:]' '[:lower:]')
+    handoff_failed() {
+        herdr notification show 'Worktree handoff failed' \
+            --body "$agent_kind $1 in $branch; the worktree workspace is still open" \
+            >/dev/null 2>&1 || true
+    }
+
+    if [[ "$agent_mode" == continue && "$agent_kind" == codex && -n "$agent_session_id" ]]; then
+        herdr agent start "$agent_name" \
+            --kind codex \
+            --pane "$agents_pane_id" \
+            -- fork "$agent_session_id" -C "$worktree_path" || {
+                handoff_failed 'could not start'
+                exit 1
+            }
+    else
+        herdr agent start "$agent_name" \
+            --kind "$agent_kind" \
+            --pane "$agents_pane_id" || {
+                handoff_failed 'could not start'
+                exit 1
+            }
+    fi
+
+    if [[ "$agent_mode" == continue ]]; then
+        continuation="Continue this task in the new worktree. The handoff is complete; use this directory for all further work."
+        if [[ -n "$handoff_context" ]]; then
+            continuation+=$'\n\nHandoff context:\n'
+            continuation+="$handoff_context"
+        fi
+        herdr agent prompt "$agent_name" "$continuation" || {
+            handoff_failed 'could not receive the handoff prompt'
+            exit 1
+        }
+    fi
+fi
 
 # hunk's file sidebar defaults closed with no flag to change that, so
 # toggle it on with its own "s" keybinding once it's had a moment to render.
-sleep 0.5
-herdr pane send-keys "$diff_pane_id" s
+if [[ "$already_open" != true ]]; then
+    sleep 0.5
+    herdr pane send-keys "$diff_pane_id" s
+fi
