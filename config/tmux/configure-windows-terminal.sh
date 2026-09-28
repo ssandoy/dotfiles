@@ -46,7 +46,9 @@ readonly TMUX_KEYBINDINGS_JSON='[
   {"id": "unbound", "keys": "ctrl+shift+t"},
   {"id": "unbound", "keys": "ctrl+shift+w"},
   {"id": "unbound", "keys": "ctrl+shift+q"},
-  {"id": "unbound", "keys": "ctrl+shift+tab"}
+  {"id": "unbound", "keys": "ctrl+shift+tab"},
+  {"id": "unbound", "keys": "ctrl+shift+up"},
+  {"id": "unbound", "keys": "ctrl+shift+down"}
 ]'
 readonly TMUX_CTRL_TAB_ACTION_JSON='{
   "command": {
@@ -232,7 +234,7 @@ fi
 
 if "$simulate"; then
   log "Would select $SCHEME_NAME for '$profile_name' and the tab row"
-  log "Would reserve Ctrl+Tab and Ctrl+Shift+S/T/W/Q/Tab for tmux"
+  log "Would reserve Ctrl+Tab and Ctrl+Shift+S/T/W/Q/Tab/Up/Down for tmux/herdr"
   exit 0
 fi
 
@@ -254,6 +256,6 @@ trap - EXIT
 rm -f "$temp_file"
 
 log "Selected $SCHEME_NAME for '$profile_name' and the tab row"
-log "Reserved Ctrl+Tab and Ctrl+Shift+S/T/W/Q/Tab for tmux"
+log "Reserved Ctrl+Tab and Ctrl+Shift+S/T/W/Q/Tab/Up/Down for tmux/herdr"
 log "Background: $BACKGROUND"
 log "Backup: $backup_path"
