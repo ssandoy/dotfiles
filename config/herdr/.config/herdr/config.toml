@@ -42,14 +42,16 @@ split_horizontal = "prefix+s"
 close_pane = "ctrl+w"        # was: bind-key -n C-w kill-pane
 close_workspace = "ctrl+q"   # was: bind-key -n C-Q kill-session
 
-# Cycle tabs within the current workspace without the prefix. AeroSpace
-# already claims every ctrl/alt combination of arrow keys for its own
-# window focus/move/swap/resize bindings (ctrl-shift, ctrl-alt,
-# ctrl-alt-shift, alt-shift respectively — see aerospace.toml), and plain
-# ctrl+left/right is shell word-jump, so cmd+shift is the first modifier
-# combo actually free at every layer.
-next_tab = "cmd+shift+right"
-previous_tab = "cmd+shift+left"
+# Cycle tabs within the current workspace without the prefix. Was
+# cmd+shift+right/left for the old macOS + AeroSpace setup (AeroSpace
+# claimed every ctrl/alt arrow combo there); this machine is WSL2 +
+# Windows Terminal now, which has no Cmd key at all, so that chord could
+# never reach herdr. Windows Terminal's own config already reserves the
+# ctrl+shift family for herdr/tmux (see configure-windows-terminal.sh),
+# and plain ctrl+left/right is shell word-jump, so ctrl+shift+right/left
+# is the free replacement here.
+next_tab = "ctrl+shift+right"
+previous_tab = "ctrl+shift+left"
 
 # herdr's actual defaults for these are vim-style prefix+h/j/k/l, not arrow
 # keys — there was no old tmux binding for this either (tmux.conf had no
