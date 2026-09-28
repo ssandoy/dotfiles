@@ -1,7 +1,7 @@
 # Codex stores credentials, caches, sessions, and databases alongside its
 # config. Only stow the files intentionally tracked by this repository.
 ^/\.codex/(?!config\.toml$|skills(?:/|$)).+
-^/\.codex/skills/(?!claude$).+
+^/\.codex/skills/(?!claude$|herdr-worktree(?:/|$)).+
 
 # Retain the relevant parts of Stow's default ignore list. A package-local
 # ignore file replaces, rather than extends, the defaults.

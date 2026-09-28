@@ -1,0 +1,4 @@
+interface:
+  display_name: "Herdr Worktree"
+  short_description: "Create a worktree and carry agent context over"
+  default_prompt: "Use $herdr-worktree to continue this task in a new Git worktree."

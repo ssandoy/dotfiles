@@ -7,6 +7,7 @@
 !/config/codex/.codex/skills/
 /config/codex/.codex/skills/*
 !/config/codex/.codex/skills/claude
+!/config/codex/.codex/skills/herdr-worktree/
 /config/claude/.claude/*
 !/config/claude/.claude/settings.json
 !/config/claude/.claude/skills/
