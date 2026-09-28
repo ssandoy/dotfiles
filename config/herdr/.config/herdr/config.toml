@@ -23,11 +23,9 @@ scrollback_limit_bytes = 50_000_000
 [keys]
 prefix = "ctrl+a"
 
-# Cycle workspaces with prefix+tab / prefix+shift+tab. This claims the keys
-# that default to cycle_pane_next/cycle_pane_previous (pane cycling within a
-# tab) — workspace cycling wins here since that's what was asked for.
-next_workspace = "prefix+tab"
-previous_workspace = "prefix+shift+tab"
+# Cycle workspaces with ctrl+shift+down / ctrl+shift+up.
+next_workspace = "ctrl+shift+down"
+previous_workspace = "ctrl+shift+up"
 
 # --- Direct (no-prefix) bindings, matching the old `bind-key -n` set ---
 # tmux's -v/-h split flags name the *divider axis*; herdr's split_vertical/
