@@ -17,3 +17,4 @@ config/zsh/.config/zsh/.zcompdump.zwc
 config/zsh/.config/zsh/.zcompcache/
 config/zsh/.config/zsh/eager/61-elhub.zsh
 config/acli/.config/acli/env.local
+/config/tripletex/.config/tripletex/env.local
