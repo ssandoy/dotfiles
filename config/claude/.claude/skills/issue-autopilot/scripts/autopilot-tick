@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Usage: autopilot-tick <config>
+# Spawns an agent for every open issue that isn't ignored, seen, or already
+# has a worktree. Prints one line per spawned issue.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+
+gh issue list -R "$REPO" --state open --limit 200 --json number,title |
+    jq -r --arg re "$IGNORE_TITLE_REGEX" '.[] | select(.title | test($re) | not) | .number' |
+    while read -r n; do
+        grep -qxF "$n" "$seen_file" && continue
+        compgen -G "$ROOT/.worktrees/issue-$n-*" >/dev/null && { echo "$n" >>"$seen_file"; continue; }
+        "$scripts_dir/autopilot-spawn" "$1" "$n" || echo "failed to spawn #$n"
+    done

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Shared setup for issue-autopilot scripts. Sourced with the config path as $1.
+# Config is a plain env file (see SKILL.md for the keys).
+
+# herdr runs pane commands in a bare env; mise-managed tools (gh, jq, claude)
+# are only reachable via shims.
+case ":$PATH:" in
+*":$HOME/.local/share/mise/shims:"*) ;;
+*) PATH="$HOME/.local/share/mise/shims:$PATH" ;;
+esac
+
+config=${1:?config path required}
+# shellcheck disable=SC1090
+source "$config"
+: "${REPO:?REPO missing in config}" "${ROOT:?ROOT missing in config}"
+IGNORE_TITLE_REGEX=${IGNORE_TITLE_REGEX:-^Dependency Dashboard$}
+AUTONOMY=${AUTONOMY:-draft-pr}            # draft-pr | implement | plan
+PERMISSION_MODE=${PERMISSION_MODE:-auto}
+BASE=${BASE:-main}
+COMMIT_WRAPPER=${COMMIT_WRAPPER:-}
+EXTRA_RULES=${EXTRA_RULES:-}
+ISSUE_INTERVAL=${ISSUE_INTERVAL:-1800}
+FEEDBACK_INTERVAL=${FEEDBACK_INTERVAL:-300}
+
+state_dir="${XDG_CACHE_HOME:-$HOME/.cache}/issue-autopilot/$(tr '/' '-' <<<"$REPO")"
+seen_file="$state_dir/seen-issues"
+forwarded_file="$state_dir/forwarded-comments"
+mkdir -p "$state_dir"
+touch "$seen_file" "$forwarded_file"
+scripts_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

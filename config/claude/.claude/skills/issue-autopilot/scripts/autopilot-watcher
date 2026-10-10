@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Usage: autopilot-watcher <config> [pane-id]
+# Long-running loop (meant for a herdr pane): checks issues every
+# ISSUE_INTERVAL and PR feedback every FEEDBACK_INTERVAL seconds. Reports a
+# status badge on the pane and a herdr notification when it acts.
+set -uo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+pane=${2:-${HERDR_PANE_ID:-}}
+
+notify() { herdr notification show "issue-autopilot" --body "$1" --sound request >/dev/null 2>&1 || true; }
+badge() {
+    [[ -n "$pane" ]] || return 0
+    herdr pane report-metadata "$pane" --source custom:issue-autopilot --agent autopilot \
+        --display-agent "$1" >/dev/null 2>&1 || true
+}
+
+last_issue=0
+echo "issue-autopilot watching $REPO (issues every ${ISSUE_INTERVAL}s, feedback every ${FEEDBACK_INTERVAL}s)"
+while true; do
+    now=$(date +%s)
+    if ((now - last_issue >= ISSUE_INTERVAL)); then
+        out=$("$scripts_dir/autopilot-tick" "$1" 2>&1)
+        [[ -n "$out" ]] && { echo "[$(date +%H:%M)] $out"; notify "$out"; }
+        last_issue=$now
+    fi
+    out=$("$scripts_dir/autopilot-feedback" "$1" 2>&1)
+    [[ -n "$out" ]] && { echo "[$(date +%H:%M)] $out"; notify "$out"; }
+    badge "$(compgen -G "$ROOT/.worktrees/issue-*" | wc -l | tr -d ' ') issue agents"
+    sleep "$FEEDBACK_INTERVAL"
+done

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Usage: autopilot-start <config>
+# Runs the watcher in an "Autopilot" tab of the repo's own herdr workspace
+# (the one checked out at ROOT), so it sits next to the issue worktrees it
+# spawns instead of cluttering the sidebar. Falls back to creating a
+# workspace for ROOT if none is open.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+
+ws=$(herdr workspace list | jq -r --arg r "$ROOT" \
+    '.result.workspaces[] | select(.worktree.checkout_path==$r) | .workspace_id' | head -1)
+if [[ -z "$ws" ]]; then
+    ws=$(herdr workspace create --cwd "$ROOT" --no-focus | jq -r '.result.workspace.workspace_id')
+fi
+
+if herdr tab list --workspace "$ws" | jq -e '.result.tabs[] | select(.label=="Autopilot")' >/dev/null; then
+    echo "already running in workspace $ws (Autopilot tab)"
+    exit 0
+fi
+pane=$(herdr tab create --workspace "$ws" --cwd "$ROOT" --label Autopilot --no-focus | jq -r '.result.root_pane.pane_id')
+herdr pane run "$pane" "$scripts_dir/autopilot-watcher" "$(realpath "$1")" "$pane" >/dev/null
+echo "watcher started in workspace $ws, Autopilot tab (pane $pane)"

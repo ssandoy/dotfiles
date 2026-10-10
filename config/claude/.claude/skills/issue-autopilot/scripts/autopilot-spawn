@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Usage: autopilot-spawn <config> <issue-number>
+# Creates <ROOT>/.worktrees/issue-<n>-<slug> as a herdr workspace (no focus
+# steal, Agents/Diff/Run tabs) and starts claude in it with the issue as task.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+n=${2:?issue number required}
+
+title=$(gh issue view "$n" -R "$REPO" --json title -q .title)
+# iconv exits non-zero on some chars (å) even when transliterating — don't let pipefail kill us
+slug=$(printf '%s' "$title" | { iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null || true; } |
+    tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//' | cut -c1-40 | sed 's/-$//')
+short=$(awk '{for(i=1;i<=NF&&i<=4;i++) printf "%s%s", (i>1?" ":""), $i}' <<<"$title" | cut -c1-28)
+branch="issue-$n-$slug"
+path="$ROOT/.worktrees/$branch"
+
+git -C "$ROOT" fetch -q origin "$BASE" || true
+created=$(herdr worktree create --cwd "$ROOT" --branch "$branch" --base "origin/$BASE" \
+    --path "$path" --label "#$n $short" --no-focus)
+ws=$(jq -r '.result.workspace.workspace_id' <<<"$created")
+tab=$(jq -r '.result.tab.tab_id' <<<"$created")
+pane=$(jq -r '.result.root_pane.pane_id // empty' <<<"$created")
+[[ -n "$pane" ]] || pane=$(herdr pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')
+herdr tab rename "$tab" "Agents" >/dev/null
+
+diff_pane=$(herdr tab create --workspace "$ws" --cwd "$path" --label Diff --no-focus | jq -r '.result.root_pane.pane_id')
+command -v hunk >/dev/null && herdr pane run "$diff_pane" hunk diff --theme catppuccin-mocha --watch >/dev/null
+herdr tab create --workspace "$ws" --cwd "$path" --label Run --no-focus >/dev/null
+
+wrap=""
+[[ -n "$COMMIT_WRAPPER" ]] && wrap=" Wrap git commit/push in \`$COMMIT_WRAPPER\`."
+case "$AUTONOMY" in
+plan) finish="4. Write the plan here and STOP. Wait for the user's go-ahead before implementing." ;;
+implement) finish="4. STOP after verifying. Summarise the change; the user reviews in the Diff tab and decides on commit/PR." ;;
+*) finish="4. Commit with a short Conventional Commit message referencing the issue, e.g. \"fix(scope): summary (#$n)\". Brief or no body. No Co-Authored-By trailer.$wrap
+5. Push and open a DRAFT PR (\`gh pr create --draft\`). Keep title and body concise (a few bullets at most). Body must include \"Closes #$n\" and end with:
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+6. Stay in this session after the PR is open: PR review feedback is forwarded here automatically. Address it, verify, commit + push to the same branch. If you reply on GitHub, start the reply with 🤖." ;;
+esac
+
+prompt="$path/.issue-prompt.md"
+cat > "$prompt" <<P
+You are working in a dedicated git worktree ($path) on branch $branch.
+Resolve GitHub issue #$n in $REPO. Read it first: \`gh issue view $n -R $REPO --comments\`.
+
+1. Explore the relevant code, make a short plan, then implement following the repo's conventions.
+2. Verify: run relevant lint/typecheck/tests for the affected projects and fix failures.
+3. If the issue is too ambiguous to implement sensibly, ask the user here instead of guessing.
+$finish
+${EXTRA_RULES:+
+Repo-specific rules:
+$EXTRA_RULES}
+P
+echo ".issue-prompt.md" >>"$(git -C "$path" rev-parse --path-format=absolute --git-path info/exclude)" 2>/dev/null || true
+
+herdr pane run "$pane" "claude --permission-mode $PERMISSION_MODE \"\$(cat $prompt)\"" >/dev/null
+echo "$n" >>"$seen_file"
+echo "spawned #$n -> $branch (workspace $ws, pane $pane)"

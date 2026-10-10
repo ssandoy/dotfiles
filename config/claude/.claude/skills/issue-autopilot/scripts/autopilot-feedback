@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Usage: autopilot-feedback <config>
+# For each issue-* worktree with an open PR, forwards PR comments, inline review
+# comments and review bodies not yet forwarded to the claude pane in that
+# worktree. Bot accounts (CI previews etc.) and comments starting with 🤖
+# (agent replies) are skipped.
+set -uo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+panes=$(herdr pane list)
+
+for path in "$ROOT"/.worktrees/issue-*; do
+    [[ -d "$path" ]] || continue
+    branch=$(git -C "$path" branch --show-current)
+    pr=$(gh pr list -R "$REPO" --head "$branch" --state open --json number -q '.[0].number' 2>/dev/null)
+    [[ -n "$pr" ]] || continue
+    pane=$(jq -r --arg p "$path" '[.result.panes[] | select(.cwd==$p or .foreground_cwd==$p) | select(.agent=="claude")][0].pane_id // empty' <<<"$panes")
+    [[ -n "$pane" ]] || { echo "PR #$pr ($branch): no claude pane found"; continue; }
+
+    items=$({
+        gh api "repos/$REPO/issues/$pr/comments" --paginate --jq '.[] | {k:"c\(.id)", who:.user.login, bot:(.user.type=="Bot"), body, where:"conversation"}'
+        gh api "repos/$REPO/pulls/$pr/comments" --paginate --jq '.[] | {k:"r\(.id)", who:.user.login, bot:(.user.type=="Bot"), body, where:"\(.path):\(.line // .original_line)"}'
+        gh api "repos/$REPO/pulls/$pr/reviews" --paginate --jq '.[] | select(.body != "") | {k:"v\(.id)", who:.user.login, bot:(.user.type=="Bot"), body, where:"review (\(.state))"}'
+    } 2>/dev/null | jq -c 'select(.bot | not) | select(.body | startswith("🤖") | not)')
+
+    new=""
+    while IFS= read -r it; do
+        [[ -n "$it" ]] || continue
+        k="$pr:$(jq -r .k <<<"$it")"
+        grep -qxF "$k" "$forwarded_file" && continue
+        new+=$(jq -r '"- [\(.where)] @\(.who): \(.body | gsub("\r?\n"; " "))"' <<<"$it")$'\n'
+        echo "$k" >>"$forwarded_file"
+    done <<<"$items"
+
+    if [[ -n "$new" ]]; then
+        msg="New feedback on PR #$pr (gh pr view $pr --comments for context). Address it, verify, commit + push. If you reply on GitHub, start the reply with 🤖. Feedback: ${new//$'\n'/ }"
+        herdr pane send-text "$pane" "$msg" >/dev/null && herdr pane send-keys "$pane" Enter >/dev/null
+        echo "PR #$pr: forwarded $(grep -c '^- ' <<<"$new") comment(s)"
+    fi
+done
