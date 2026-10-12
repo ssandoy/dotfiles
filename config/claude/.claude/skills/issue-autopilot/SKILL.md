@@ -7,7 +7,7 @@ description: Sets up an autopilot that watches a GitHub repo's open issues, spaw
 
 Runs entirely in shell inside herdr (no Claude cron, no token cost while idle):
 
-- `autopilot-watcher` loops in an `Autopilot` tab of the repo's own herdr workspace: every `ISSUE_INTERVAL` it runs `autopilot-tick`, every `FEEDBACK_INTERVAL` it runs `autopilot-feedback`.
+- `autopilot-watcher` loops in an `Autopilot` tab of the current herdr workspace (the one autopilot-start is run from; falls back to the repo's workspace only outside herdr): every `ISSUE_INTERVAL` it runs `autopilot-tick`, every `FEEDBACK_INTERVAL` it runs `autopilot-feedback`.
 - `autopilot-spawn` creates `<ROOT>/.worktrees/issue-<n>-<slug>` via `herdr worktree create --no-focus`, labelled `#<n> <first words of title>`, with Agents/Diff/Run tabs, and starts `claude --permission-mode $PERMISSION_MODE` with the issue as task.
 - `autopilot-feedback` forwards new PR comments/inline/review comments to the claude pane in that worktree. Bot accounts and comments starting with 🤖 (agent replies — agents post as the user) are skipped.
 
@@ -37,14 +37,14 @@ Must be run from inside herdr (`HERDR_ENV=1`).
    FEEDBACK_INTERVAL=300
    ```
 4. Seed `seen-issues` with issue numbers the user did NOT pick, then spawn picked ones: `scripts/autopilot-spawn <config> <n>`.
-5. Start the watcher: `scripts/autopilot-start <config>`.
+5. Start the watcher from the current herdr pane: `scripts/autopilot-start <config>` — it always goes in an `Autopilot` tab of the current workspace.
 6. Report: workspaces spawned, watcher workspace, how to start/skip issues manually.
 
 ## Operations
 
 - Start an issue now: `scripts/autopilot-spawn <config> <n>`
 - Skip an issue: append its number to `seen-issues`. Re-enable: remove it.
-- Stop: close the `Autopilot` tab in the repo workspace. Restart: `scripts/autopilot-start <config>`.
+- Stop: close the `Autopilot` tab in the workspace it was started from. Restart: `scripts/autopilot-start <config>`.
 - Change behaviour: edit the config, then restart the watcher. Already-running agents keep their original prompt; send them a note with `herdr pane send-text <pane> "..."` + `herdr pane send-keys <pane> Enter`.
 
 ## Agent conventions (baked into the spawn prompt)

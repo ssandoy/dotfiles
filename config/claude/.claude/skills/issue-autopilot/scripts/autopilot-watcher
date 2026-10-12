@@ -14,6 +14,10 @@ badge() {
         --display-agent "$1" >/dev/null 2>&1 || true
 }
 
+# Keep the Mac from idle-sleeping for as long as this watcher lives
+# (lid-close still sleeps). caffeinate exits by itself when we do.
+command -v caffeinate >/dev/null && caffeinate -i -w $$ &
+
 last_issue=0
 echo "issue-autopilot watching $REPO (issues every ${ISSUE_INTERVAL}s, feedback every ${FEEDBACK_INTERVAL}s)"
 while true; do

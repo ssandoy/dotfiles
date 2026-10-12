@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 # Usage: autopilot-start <config>
-# Runs the watcher in an "Autopilot" tab of the repo's own herdr workspace
-# (the one checked out at ROOT), so it sits next to the issue worktrees it
-# spawns instead of cluttering the sidebar. Falls back to creating a
-# workspace for ROOT if none is open.
+# Runs the watcher in an "Autopilot" tab of the current herdr workspace
+# (HERDR_WORKSPACE_ID) so it always lives where autopilot was started. Only
+# when run outside herdr does it fall back to the repo's workspace (matched by
+# checkout path, then label), creating one for ROOT if none match.
 set -euo pipefail
 source "$(dirname "$0")/autopilot-lib" "$1"
 
-ws=$(herdr workspace list | jq -r --arg r "$ROOT" \
-    '.result.workspaces[] | select(.worktree.checkout_path==$r) | .workspace_id' | head -1)
+ws=${HERDR_WORKSPACE_ID:-}
+if [[ -z "$ws" ]]; then
+    ws=$(herdr workspace list | jq -r --arg r "$ROOT" --arg l "$(basename "$ROOT")" '
+        [.result.workspaces[] | select(.worktree.checkout_path==$r)] +
+        [.result.workspaces[] | select(.worktree==null and .label==$l)]
+        | .[0].workspace_id // empty')
+fi
 if [[ -z "$ws" ]]; then
     ws=$(herdr workspace create --cwd "$ROOT" --no-focus | jq -r '.result.workspace.workspace_id')
 fi
