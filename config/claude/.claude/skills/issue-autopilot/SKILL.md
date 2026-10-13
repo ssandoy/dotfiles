@@ -7,9 +7,10 @@ description: Sets up an autopilot that watches a GitHub repo's open issues, spaw
 
 Runs entirely in shell inside herdr (no Claude cron, no token cost while idle):
 
-- `autopilot-watcher` loops in an `Autopilot` tab of the current herdr workspace (the one autopilot-start is run from; falls back to the repo's workspace only outside herdr): every `ISSUE_INTERVAL` it runs `autopilot-tick`, every `FEEDBACK_INTERVAL` it runs `autopilot-feedback`.
+- `autopilot-watcher` loops in an `Autopilot` tab of the current herdr workspace (the one autopilot-start is run from; falls back to the repo's workspace only outside herdr): every `ISSUE_INTERVAL` it runs `autopilot-tick`, every `FEEDBACK_INTERVAL` it runs `autopilot-feedback` and `autopilot-cleanup`.
 - `autopilot-spawn` creates `<ROOT>/.worktrees/issue-<n>-<slug>` via `herdr worktree create --no-focus`, labelled `#<n> <first words of title>`, with Agents/Diff/Run tabs, and starts `claude --permission-mode $PERMISSION_MODE` with the issue as task.
 - `autopilot-feedback` forwards new PR comments/inline/review comments to the claude pane in that worktree. Bot accounts and comments starting with 🤖 (agent replies — agents post as the user) are skipped.
+- `autopilot-cleanup` removes the worktree, closes its workspace (stopping the agent) and deletes the local branch once its PR is merged or closed. Never forces: a worktree with uncommitted/untracked files or commits beyond the PR head is kept and reported once (state in `cleanup-kept`).
 
 Scripts live in `scripts/` next to this file (call them by absolute path). State: `~/.cache/issue-autopilot/<owner>-<repo>/{seen-issues,forwarded-comments}`.
 

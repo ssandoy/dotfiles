@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Usage: autopilot-cleanup <config>
+# For each issue-* worktree whose PR is merged or closed, removes the
+# worktree, closes its herdr workspace (which stops the agent) and deletes the
+# local branch. Never forces: worktrees with uncommitted/untracked files or commits newer than the
+# PR head are left alone and reported once.
+set -uo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+kept_file="$state_dir/cleanup-kept"
+touch "$kept_file"
+
+keep() { # report a skipped worktree once, not every tick
+    grep -qxF "$branch" "$kept_file" && return 0
+    echo "$branch" >>"$kept_file"
+    echo "PR #$pr $state, kept $branch: $1"
+}
+
+worktrees=""
+for path in "$ROOT"/.worktrees/issue-*; do
+    [[ -d "$path" ]] || continue
+    branch=$(git -C "$path" branch --show-current)
+    [[ -n "$branch" ]] || continue
+    # latest PR for the branch; an open one (e.g. reopened) keeps the worktree
+    done_pr=$(gh pr list -R "$REPO" --head "$branch" --state all --json number,state,headRefOid \
+        -q '.[0] | select(.state == "MERGED" or .state == "CLOSED")' 2>/dev/null)
+    [[ -n "$done_pr" ]] || continue
+    pr=$(jq -r .number <<<"$done_pr")
+    state=$(jq -r '.state | ascii_downcase' <<<"$done_pr")
+
+    [[ "$(git -C "$path" rev-parse HEAD)" == "$(jq -r .headRefOid <<<"$done_pr")" ]] ||
+        { keep "local HEAD differs from the PR head"; continue; }
+    [[ -z "$(git -C "$path" status --porcelain)" ]] ||
+        { keep "uncommitted or untracked files"; continue; }
+
+    [[ -n "$worktrees" ]] || worktrees=$(herdr worktree list --cwd "$ROOT" 2>/dev/null)
+    ws=$(jq -r --arg p "$path" '[.result.worktrees[]? | select(.path==$p)][0].open_workspace_id // empty' <<<"$worktrees")
+    if [[ -n "$ws" ]]; then
+        herdr worktree remove --workspace "$ws" >/dev/null 2>&1 || { keep "herdr worktree remove failed"; continue; }
+    else
+        git -C "$ROOT" worktree remove "$path" 2>/dev/null || { keep "git worktree remove failed"; continue; }
+    fi
+    git -C "$ROOT" branch -D -q "$branch" 2>/dev/null || true
+    echo "PR #$pr $state: removed $branch${ws:+ and closed its workspace}"
+done
