@@ -14,6 +14,7 @@ config=${1:?config path required}
 source "$config"
 : "${REPO:?REPO missing in config}" "${ROOT:?ROOT missing in config}"
 IGNORE_TITLE_REGEX=${IGNORE_TITLE_REGEX:-^Dependency Dashboard$}
+ISSUE_LABEL=${ISSUE_LABEL-autopilot}       # only spawn for issues with this label; empty = all
 AUTONOMY=${AUTONOMY:-draft-pr}            # draft-pr | implement | plan
 PERMISSION_MODE=${PERMISSION_MODE:-auto}
 BASE=${BASE:-main}

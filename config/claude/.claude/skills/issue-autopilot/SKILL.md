@@ -32,6 +32,7 @@ Must be run from inside herdr (`HERDR_ENV=1`).
    PERMISSION_MODE=auto
    BASE=main
    IGNORE_TITLE_REGEX='^Dependency Dashboard$'
+   ISSUE_LABEL=autopilot      # only issues with this label get an agent; empty = all
    COMMIT_WRAPPER=''          # e.g. 'mise exec pnpm@12.6.0 --'
    EXTRA_RULES=''             # extra bullet lines appended to every agent prompt
    ISSUE_INTERVAL=600
