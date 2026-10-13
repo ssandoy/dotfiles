@@ -34,7 +34,7 @@ Must be run from inside herdr (`HERDR_ENV=1`).
    IGNORE_TITLE_REGEX='^Dependency Dashboard$'
    COMMIT_WRAPPER=''          # e.g. 'mise exec pnpm@12.6.0 --'
    EXTRA_RULES=''             # extra bullet lines appended to every agent prompt
-   ISSUE_INTERVAL=1800
+   ISSUE_INTERVAL=600
    FEEDBACK_INTERVAL=300
    ```
 4. Seed `seen-issues` with issue numbers the user did NOT pick, then spawn picked ones: `scripts/autopilot-spawn <config> <n>`.
