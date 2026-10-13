@@ -1,5 +1,7 @@
 # issue-autopilot helpers (see ~/.claude/skills/issue-autopilot).
 # Resolves the config for the current repo, also from inside an issue worktree.
+# start/spawn create a minimal config on first use (REPO, ROOT, BASE detected;
+# everything else uses the skill defaults, e.g. only issues labelled autopilot).
 # Everything but status needs a running herdr server.
 #
 #   autopilot [start]     start the watcher in the current herdr workspace
@@ -11,8 +13,11 @@ autopilot() {
   local scripts=~/.claude/skills/issue-autopilot/scripts
   local config pane tab
 
-  config="$(_autopilot_config)" || return 1
   [[ "${1:-start}" == status ]] || _autopilot_herdr || return 1
+  case "${1:-start}" in
+    start|spawn) config="$(_autopilot_config --create)" || return 1 ;;
+    *) config="$(_autopilot_config)" || return 1 ;;
+  esac
 
   case "${1:-start}" in
     start)
@@ -71,6 +76,7 @@ _autopilot_root() {
   print -r -- "${common:h}"
 }
 
+# Config whose ROOT is the current repo; with --create, writes one if missing.
 _autopilot_config() {
   local root config
   root="$(_autopilot_root)" || return 1
@@ -80,8 +86,31 @@ _autopilot_config() {
       return
     fi
   done
-  print -u2 "autopilot: no config for $root in ~/.config/issue-autopilot (set it up with the issue-autopilot skill)"
-  return 1
+  if [[ "${1:-}" != --create ]]; then
+    print -u2 "autopilot: no config for $root yet; run 'autopilot' there to create one"
+    return 1
+  fi
+  _autopilot_init "$root"
+}
+
+_autopilot_init() {
+  local root=$1 info repo base config
+  info="$(cd "$root" && gh repo view --json nameWithOwner,defaultBranchRef \
+    -q '.nameWithOwner + " " + .defaultBranchRef.name' 2>/dev/null)" || {
+    print -u2 "autopilot: can't find the GitHub repo for $root (gh repo view failed)"
+    return 1
+  }
+  repo=${info% *} base=${info#* }
+  config=~/.config/issue-autopilot/${repo//\//-}.env
+  mkdir -p "${config:h}"
+  print -r -- "REPO=$repo
+ROOT=$root
+BASE=$base" >"$config"
+  print -u2 "autopilot: created $config ($repo, base $base); edit it for repo-specific rules"
+  if [[ -z "$(gh label list -R "$repo" --search autopilot --json name -q '.[] | select(.name == "autopilot") | .name' 2>/dev/null)" ]]; then
+    print -u2 "autopilot: $repo has no 'autopilot' label yet: gh label create autopilot -R $repo"
+  fi
+  print -r -- "$config"
 }
 
 # Pane id of the running watcher for a config (its last argument), if any.
