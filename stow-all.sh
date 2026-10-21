@@ -82,6 +82,7 @@ packages=(
   claude
   direnv
   acli
+  typesafe
   zed
 )
 

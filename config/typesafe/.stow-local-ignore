@@ -1,0 +1,12 @@
+# Only the tracked template belongs in this package; env.local stays local-only.
+^/\.config/typesafe/(?!env\.example$).+
+
+# A package-local ignore file replaces Stow's default ignore list.
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+^/README.*
+^/LICENSE.*
+^/COPYING
