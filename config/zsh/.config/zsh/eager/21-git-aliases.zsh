@@ -66,7 +66,7 @@ alias glog='git log --oneline --decorate --graph --all'
 # Reset/Clean
 alias grs='git reset'
 alias grsh='git reset --hard'
-alias grhh='git reset HEAD --hard'
+alias grh='git reset HEAD --hard'
 alias gclean='git clean -fd'
 
 # Tag
