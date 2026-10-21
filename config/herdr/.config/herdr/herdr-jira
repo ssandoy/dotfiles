@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# The one persistent "Jira" herdr workspace: create-or-focus a workspace
+# labeled "Jira" whose pane runs the issue-autopilot Jira watcher (tickets
+# assigned to me -> Jev picks the repo -> agent in its own workspace). The
+# agents get their own repo workspaces; this one only hosts the watcher.
+set -euo pipefail
+
+label="Jira"
+config="$HOME/.config/issue-autopilot/jira.env"
+watcher="$HOME/.claude/skills/issue-autopilot/scripts/autopilot-watcher"
+
+if [[ ! -f "$config" ]]; then
+    mkdir -p "$(dirname "$config")"
+    printf 'SOURCE=jira\nGITHUB_ORG=\n' >"$config"
+fi
+if ! grep -Eq '^GITHUB_ORG=.+' "$config"; then
+    herdr notification show "issue-autopilot" --body "Set GITHUB_ORG in $config before starting the Jira watcher" >/dev/null
+    exit 1
+fi
+config=$(realpath "$config")
+
+# `herdr-jira poll` (prefix+shift+j): wake the running watcher so it polls Jira
+# now instead of at the end of its interval.
+if [[ "${1:-}" == poll ]]; then
+    pkill -USR1 -f "autopilot-watcher $config" ||
+        herdr notification show "issue-autopilot" --body "Jira watcher isn't running; prefix+alt+j starts it" >/dev/null
+    exit 0
+fi
+
+workspace_id=$(
+    herdr workspace list |
+        jq -r --arg label "$label" \
+            '.result.workspaces[] | select(.label == $label) | .workspace_id' |
+        head -n1
+)
+
+if [[ -n "$workspace_id" ]]; then
+    pane_id=$(herdr pane list --workspace "$workspace_id" | jq -r '.result.panes[0].pane_id')
+    herdr workspace focus "$workspace_id"
+else
+    created=$(herdr workspace create --cwd "$HOME" --label "$label" --focus)
+    pane_id=$(jq -r '.result.root_pane.pane_id' <<<"$created")
+    herdr tab rename "$(jq -r '.result.workspace.active_tab_id' <<<"$created")" "Autopilot"
+fi
+
+# herdr restores a workspace after a restart as bare shells, so check for the
+# watcher process itself rather than trusting that the workspace exists.
+if ! pgrep -f "autopilot-watcher $config" >/dev/null; then
+    herdr pane run "$pane_id" "$watcher" "$config" "$pane_id"
+fi

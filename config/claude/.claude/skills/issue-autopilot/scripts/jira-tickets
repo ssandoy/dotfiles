@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Usage: jira-tickets <config> [KEY]
+# Prints Jira tickets one per line as {"key","summary","description","labels",
+# "components"}, with the rich-text description flattened to plain text.
+# Components come from one `workitem view` per ticket (search can't return them). Without KEY: the
+# tickets matching JQL; with KEY: that ticket, whatever its status.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+jql=$JQL
+[[ -z "${2:-}" ]] || jql="key = $2"
+
+acli jira workitem search --jql "$jql" --limit 100 --fields key,summary,description,labels --json |
+    jq -c "$jq_adf"'
+        .[] | {
+            key,
+            summary: .fields.summary,
+            description: (.fields.description | adf_text | sub("\\s+$"; "")),
+            labels: (.fields.labels // [])
+        }' |
+    while IFS= read -r t; do
+        components=$(acli jira workitem view "$(jq -r .key <<<"$t")" --fields components --json |
+            jq -c '[.fields.components[]?.name]')
+        jq -c --argjson c "$components" '. + {components: $c}' <<<"$t"
+    done

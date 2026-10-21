@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Usage: repo-summarize <config> [repo...]
+# Writes a short functional summary of each local repo (the clones
+# repo-index finds) to repo-summaries/<repo>.md, by running GitHub
+# Copilot headless and read-only (no shell, no writes) in the clone.
+# repo-index then gives Jev the summary instead of the README. Without
+# repos: only repos that have no summary yet; named repos are redone.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+"$scripts_dir/repo-index" "$1"
+index="$state_dir/repos-local.json"
+shift
+named=$#
+if ((named)); then repos=("$@"); else read -r -a repos <<<"$(jq -r 'keys | join(" ")' "$index")"; fi
+mkdir -p "$summaries_dir"
+
+prompt='Summarize this repository so Jira tickets can be routed to the right codebase. Read the code, not just the README: entry points, pages and routes, API endpoints, main modules, UI texts.
+Write at most 150 words of plain text, no headings or lists: what the application does and for whom; its main user-facing pages, features or endpoints; the domain terms it handles, in every language they appear in code or UI texts'"${DOMAIN_TERMS:+ (for example $DOMAIN_TERMS)}"'; and what kind of change belongs here rather than in a neighbouring frontend, backend-for-frontend or deployment repository. Output only the summary.'
+
+failed=0
+for repo in ${repos[@]+"${repos[@]}"}; do
+    path=$(jq -r --arg r "$repo" '.[$r].path // empty' "$index")
+    [[ -n "$path" ]] || { echo "$repo: not a local $GITHUB_ORG clone" >&2; failed=1; continue; }
+    out="$summaries_dir/$repo.md"
+    ((named)) || [[ ! -s "$out" ]] || continue
+    if summary=$(cd "$path" && copilot -p "$prompt" -s --deny-tool shell --deny-tool write </dev/null) && [[ -n "$summary" ]]; then
+        printf '%s\n' "$summary" >"$out"
+        echo "summarized $repo"
+    else
+        echo "$repo: copilot failed" >&2
+        failed=1
+    fi
+done
+exit "$failed"

@@ -14,19 +14,6 @@ short=$(awk '{for(i=1;i<=NF&&i<=4;i++) printf "%s%s", (i>1?" ":""), $i}' <<<"$ti
 branch="issue-$n-$slug"
 path="$ROOT/.worktrees/$branch"
 
-git -C "$ROOT" fetch -q origin "$BASE" || true
-created=$(herdr worktree create --cwd "$ROOT" --branch "$branch" --base "origin/$BASE" \
-    --path "$path" --label "#$n $short" --no-focus)
-ws=$(jq -r '.result.workspace.workspace_id' <<<"$created")
-tab=$(jq -r '.result.tab.tab_id' <<<"$created")
-pane=$(jq -r '.result.root_pane.pane_id // empty' <<<"$created")
-[[ -n "$pane" ]] || pane=$(herdr pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')
-herdr tab rename "$tab" "Agents" >/dev/null
-
-diff_pane=$(herdr tab create --workspace "$ws" --cwd "$path" --label Diff --no-focus | jq -r '.result.root_pane.pane_id')
-command -v hunk >/dev/null && herdr pane run "$diff_pane" hunk diff --theme catppuccin-mocha --watch >/dev/null
-herdr tab create --workspace "$ws" --cwd "$path" --label Run --no-focus >/dev/null
-
 wrap=""
 [[ -n "$COMMIT_WRAPPER" ]] && wrap=" Wrap git commit/push in \`$COMMIT_WRAPPER\`."
 case "$AUTONOMY" in
@@ -38,8 +25,9 @@ implement) finish="4. STOP after verifying. Summarise the change; the user revie
 6. Stay in this session after the PR is open: PR review feedback is forwarded here automatically. Address it, verify, commit + push to the same branch. If you reply on GitHub, start the reply with 🤖." ;;
 esac
 
-prompt="$path/.issue-prompt.md"
-cat > "$prompt" <<P
+prompt=$(mktemp)
+trap 'rm -f "$prompt"' EXIT
+cat >"$prompt" <<P
 You are working in a dedicated git worktree ($path) on branch $branch.
 Resolve GitHub issue #$n in $REPO. Read it first: \`gh issue view $n -R $REPO --comments\`.
 
@@ -51,8 +39,8 @@ ${EXTRA_RULES:+
 Repo-specific rules:
 $EXTRA_RULES}
 P
-echo ".issue-prompt.md" >>"$(git -C "$path" rev-parse --path-format=absolute --git-path info/exclude)" 2>/dev/null || true
 
-herdr pane run "$pane" "claude --permission-mode $PERMISSION_MODE \"\$(cat $prompt)\"" >/dev/null
+out=$(PERMISSION_MODE=$PERMISSION_MODE "$scripts_dir/autopilot-worktree" "$ROOT" "$BASE" "$branch" "#$n $short" "$prompt")
+read -r ws pane _ <<<"$out"
 echo "$n" >>"$seen_file"
 echo "spawned #$n -> $branch (workspace $ws, pane $pane)"

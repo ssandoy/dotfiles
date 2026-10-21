@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # Usage: autopilot-start <config>
-# Runs the watcher in an "Autopilot" tab of the current herdr workspace
-# (HERDR_WORKSPACE_ID) so it always lives where autopilot was started. Only
-# when run outside herdr does it fall back to the repo's workspace (matched by
-# checkout path, then label), creating one for ROOT if none match.
+# Runs the watcher in an "Autopilot" tab ("Autopilot: Jira" for SOURCE=jira)
+# of the current herdr workspace (HERDR_WORKSPACE_ID) so it always lives where
+# autopilot was started. Only a GitHub watcher run outside herdr falls back to
+# the repo's workspace (matched by checkout path, then label), creating one
+# for ROOT if none match.
 set -euo pipefail
 source "$(dirname "$0")/autopilot-lib" "$1"
+
+label=Autopilot cwd=${ROOT:-}
+if [[ "$SOURCE" == jira ]]; then
+    label="Autopilot: Jira" cwd=$HOME
+    [[ -n "${HERDR_WORKSPACE_ID:-}" ]] || { echo "run 'autopilot jira start' from inside herdr" >&2; exit 1; }
+fi
 
 ws=${HERDR_WORKSPACE_ID:-}
 if [[ -z "$ws" ]]; then
@@ -18,10 +25,10 @@ if [[ -z "$ws" ]]; then
     ws=$(herdr workspace create --cwd "$ROOT" --no-focus | jq -r '.result.workspace.workspace_id')
 fi
 
-if herdr tab list --workspace "$ws" | jq -e '.result.tabs[] | select(.label=="Autopilot")' >/dev/null; then
-    echo "already running in workspace $ws (Autopilot tab)"
+if herdr tab list --workspace "$ws" | jq -e --arg l "$label" '.result.tabs[] | select(.label==$l)' >/dev/null; then
+    echo "already running in workspace $ws ($label tab)"
     exit 0
 fi
-pane=$(herdr tab create --workspace "$ws" --cwd "$ROOT" --label Autopilot --no-focus | jq -r '.result.root_pane.pane_id')
+pane=$(herdr tab create --workspace "$ws" --cwd "$cwd" --label "$label" --no-focus | jq -r '.result.root_pane.pane_id')
 herdr pane run "$pane" "$scripts_dir/autopilot-watcher" "$(realpath "$1")" "$pane" >/dev/null
-echo "watcher started in workspace $ws, Autopilot tab (pane $pane)"
+echo "watcher started in workspace $ws, $label tab (pane $pane)"

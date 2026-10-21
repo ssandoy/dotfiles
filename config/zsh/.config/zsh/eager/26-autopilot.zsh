@@ -8,10 +8,14 @@
 #   autopilot spawn <n>   start an agent for issue <n> now
 #   autopilot stop        close the Autopilot tab running this repo's watcher
 #   autopilot status      watcher pane and issue worktrees for this repo
+#   autopilot jira [start]           Jira watcher for tickets assigned to me (repos of GITHUB_ORG)
+#   autopilot jira spawn <KEY> [repo]  start agents for a ticket now; routes with Jev without repo
+#   autopilot jira stop|status
 
 autopilot() {
   local scripts=~/.claude/skills/issue-autopilot/scripts
   local config pane tab
+  [[ "${1:-}" == jira ]] && { shift; _autopilot_jira "$@"; return; }
 
   [[ "${1:-start}" == status ]] || _autopilot_herdr || return 1
   case "${1:-start}" in
@@ -116,4 +120,66 @@ BASE=$base" >"$config"
 # Pane id of the running watcher for a config (its last argument), if any.
 _autopilot_pane() {
   ps -eo args | awk -v c="$1" '$2 ~ /autopilot-watcher$/ && $3 == c { print $4; exit }'
+}
+
+# `autopilot jira …`: one watcher for Jira tickets across all repos; config
+# ~/.config/issue-autopilot/jira.env (created with defaults on first use).
+_autopilot_jira() {
+  local scripts=~/.claude/skills/issue-autopilot/scripts
+  local config=~/.config/issue-autopilot/jira.env
+  local state=${XDG_CACHE_HOME:-$HOME/.cache}/issue-autopilot/jira
+  local pane tab ticket rc
+
+  [[ "${1:-start}" == status ]] || _autopilot_herdr || return 1
+  if [[ ! -f "$config" ]]; then
+    mkdir -p "${config:h}"
+    print -r -- $'SOURCE=jira\nGITHUB_ORG=' >"$config"
+    print -u2 "autopilot: created $config; set GITHUB_ORG (the GitHub org of your candidate clones) before starting"
+  fi
+  if ! grep -Eq '^GITHUB_ORG=.+' "$config"; then
+    print -u2 "autopilot: set GITHUB_ORG in $config (e.g. GITHUB_ORG=my-org)"
+    [[ "${1:-start}" == status ]] || return 1
+  fi
+
+  case "${1:-start}" in
+    start)
+      pane="$(_autopilot_pane "$config")"
+      if [[ -n "$pane" ]]; then
+        print -u2 "autopilot: Jira watcher already running (pane $pane)"
+        return 1
+      fi
+      "$scripts/autopilot-start" "$config"
+      ;;
+    spawn)
+      [[ -n "${2:-}" ]] || { print -u2 "usage: autopilot jira spawn <KEY> [repo]"; return 1; }
+      ticket="$(mktemp)"
+      if ! "$scripts/jira-tickets" "$config" "$2" >"$ticket" || [[ ! -s "$ticket" ]]; then
+        print -u2 "autopilot: can't read $2 from Jira"
+        rm -f "$ticket"
+        return 1
+      fi
+      "$scripts/jira-start-ticket" "$config" "$ticket" ${3:+"$3"}
+      rc=$?
+      rm -f "$ticket"
+      return $rc
+      ;;
+    stop)
+      pane="$(_autopilot_pane "$config")"
+      [[ -n "$pane" ]] || { print -u2 "autopilot: no Jira watcher running"; return 1; }
+      tab="$(herdr pane get "$pane" | jq -r '.result.pane.tab_id')" || return 1
+      herdr tab close "$tab" >/dev/null && print -r -- "stopped Jira watcher (tab $tab)"
+      ;;
+    status)
+      pane="$(_autopilot_pane "$config")"
+      print -r -- "config:  $config"
+      print -r -- "watcher: ${pane:-not running}"
+      print -r -- "agents:"
+      [[ -s "$state/worktrees.tsv" ]] && column -t -s $'\t' "$state/worktrees.tsv" | sed 's/^/  /'
+      return 0
+      ;;
+    *)
+      print -u2 "usage: autopilot jira [start|spawn <KEY> [repo]|stop|status]"
+      return 1
+      ;;
+  esac
 }

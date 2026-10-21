@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Usage: jira-start-ticket <config> <ticket-json-file> [repo]
+# Routes a ticket with Jev (or uses repo), starts an agent in each chosen repo
+# (naming the others in its prompt) and moves the ticket to In Progress once
+# one started. Prints one line per outcome. Exit 0 = handled, ticket added to
+# seen-tickets (also for "no repo" and "not cloned"); 2 = routing failed, retry.
+set -uo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+ticket=${2:?ticket json file required}
+key=$(jq -r .key "$ticket")
+
+if [[ -n "${3:-}" ]]; then
+    repos=("$3")
+else
+    route=$("$scripts_dir/repo-picker" "$1" "$ticket") || { echo "$key: routing failed; will retry"; exit 2; }
+    read -r -a repos <<<"$(jq -r '[.spawn[].repo] | join(" ")' <<<"$route")"
+    if ((${#repos[@]} == 0)); then
+        jq -r .notify <<<"$route"
+        echo "$key" >>"$seen_file"
+        exit 0
+    fi
+fi
+
+started=0
+for r in "${repos[@]}"; do
+    others=()
+    for o in "${repos[@]}"; do [[ "$o" == "$r" ]] || others+=("$o"); done
+    if "$scripts_dir/jira-spawn" "$1" "$key" "$r" ${others[@]+"${others[@]}"} 2>&1; then
+        started=1
+    else
+        echo "$key: failed to start in $r"
+    fi
+done
+echo "$key" >>"$seen_file"
+
+# Reuse the zsh Jira helpers rather than copying their transition logic.
+if ((started)); then
+    jira_zsh="${ZDOTDIR:-$HOME/.config/zsh}/eager"
+    if ! out=$(zsh -c 'source "$1/24-atlassian.zsh" && source "$1/25-jira-workflow.zsh" && jira-in-progress --yes "$2"' \
+        _ "$jira_zsh" "$key" 2>&1); then
+        echo "$key: started, but couldn't move it to In Progress: $(tail -n 1 <<<"$out")"
+    fi
+fi
+exit 0

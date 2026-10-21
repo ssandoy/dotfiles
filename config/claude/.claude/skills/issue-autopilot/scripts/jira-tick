@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Usage: jira-tick <config>
+# Starts agents for Jira tickets matching JQL that aren't in seen-tickets
+# (jira-start-ticket marks them seen once handled; routing failures are retried
+# on the next tick). The first run only records the current matches as seen.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+tickets=$("$scripts_dir/jira-tickets" "$1")
+
+if [[ ! -e "$state_dir/seeded" ]]; then
+    keys=$(jq -r .key <<<"$tickets")
+    [[ -z "$keys" ]] || printf '%s\n' "$keys" >>"$seen_file"
+    touch "$state_dir/seeded"
+    echo "jira autopilot: marked $(grep -c . <<<"$keys") current ticket(s) as seen: $(paste -sd' ' - <<<"$keys")"
+    exit 0
+fi
+
+ticket_file="$state_dir/ticket.json"
+while IFS= read -r t; do
+    [[ -n "$t" ]] || continue
+    key=$(jq -r .key <<<"$t")
+    grep -qxF "$key" "$seen_file" && continue
+    printf '%s\n' "$t" >"$ticket_file"
+    "$scripts_dir/jira-start-ticket" "$1" "$ticket_file" || true
+done <<<"$tickets"

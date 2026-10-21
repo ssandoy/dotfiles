@@ -12,14 +12,64 @@ esac
 config=${1:?config path required}
 # shellcheck disable=SC1090
 source "$config"
+SOURCE=${SOURCE:-github}                  # github | jira
+AUTONOMY=${AUTONOMY:-draft-pr}            # draft-pr | implement | plan
+PERMISSION_MODE=${PERMISSION_MODE:-auto}
+AGENT=${AGENT:-claude}                    # claude | copilot: what runs in the agent pane
+AGENT_ARGS=${AGENT_ARGS:-}                # extra agent flags (Jira, copilot: e.g. --allow-all-tools; --autopilot wants all permissions)
+COMMIT_WRAPPER=${COMMIT_WRAPPER:-}
+EXTRA_RULES=${EXTRA_RULES:-}
+scripts_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+if [[ "$SOURCE" == jira ]]; then
+    default_jql='assignee = currentUser() AND status in (New, Backlog, "To Do") AND resolution IS EMPTY'
+    JQL=${JQL:-$default_jql}
+    JIRA_INTERVAL=${JIRA_INTERVAL:-600}
+    REPO_THRESHOLD=${REPO_THRESHOLD:-0.6}  # min Jev probability to spawn in a repo
+    MAX_REPOS=${MAX_REPOS:-3}
+    CLONES_DIR=${CLONES_DIR:-$HOME/git}    # candidate repos: clones here with origin on GITHUB_ORG
+    : "${GITHUB_ORG:?GITHUB_ORG missing in $config (the GitHub org whose clones are candidates, e.g. GITHUB_ORG=my-org)}"
+    DOMAIN_TERMS=${DOMAIN_TERMS:-}         # optional examples for repo summaries, e.g. "invoice, faktura"
+    TYPESAFE_MODEL=${TYPESAFE_MODEL:-jev-latest}
+    # Bare herdr env: load the Jira site and TypeSafe key the shell would have.
+    for env_file in "${XDG_CONFIG_HOME:-$HOME/.config}"/acli/env \
+        "${XDG_CONFIG_HOME:-$HOME/.config}"/acli/env.local \
+        "${XDG_CONFIG_HOME:-$HOME/.config}"/typesafe/env.local; do
+        # shellcheck disable=SC1090
+        [[ -r "$env_file" ]] && source "$env_file"
+    done
+    state_dir="${XDG_CACHE_HOME:-$HOME/.cache}/issue-autopilot/jira"
+    seen_file="$state_dir/seen-tickets"
+    worktrees_file="$state_dir/worktrees.tsv"
+    overrides_file="${XDG_CONFIG_HOME:-$HOME/.config}/issue-autopilot/jira-repos.tsv"
+    summaries_dir="${XDG_CONFIG_HOME:-$HOME/.config}/issue-autopilot/repo-summaries"  # repo-summarize
+    mkdir -p "$state_dir"
+    touch "$seen_file" "$worktrees_file"
+
+    # jq definition turning Jira rich text (ADF) into plain text: `.fields.description | adf_text`.
+    jq_adf='def adf_text:
+        if . == null then ""
+        elif type == "string" then .
+        elif type == "array" then map(adf_text) | join("")
+        elif type == "object" then
+            if .type == "hardBreak" then "\n"
+            elif .text then .text
+            elif .content then (.content | adf_text) +
+                (if .type == "paragraph" or .type == "heading" then "\n" else "" end)
+            else "" end
+        else tostring end;'
+
+    # readme_text <file> <max-chars>: README without badges, images or HTML.
+    readme_text() {
+        sed -E '/^[[:space:]]*\[?!\[/d; s/<[^>]*>//g; s/\[\]\([^)]*\)//g; /^[[:space:]]*$/d' "$1" | head -c "$2"
+    }
+    return 0
+fi
+
 : "${REPO:?REPO missing in config}" "${ROOT:?ROOT missing in config}"
 IGNORE_TITLE_REGEX=${IGNORE_TITLE_REGEX:-^Dependency Dashboard$}
 ISSUE_LABEL=${ISSUE_LABEL-autopilot}       # only spawn for issues with this label; empty = all
-AUTONOMY=${AUTONOMY:-draft-pr}            # draft-pr | implement | plan
-PERMISSION_MODE=${PERMISSION_MODE:-auto}
 BASE=${BASE:-main}
-COMMIT_WRAPPER=${COMMIT_WRAPPER:-}
-EXTRA_RULES=${EXTRA_RULES:-}
 ISSUE_INTERVAL=${ISSUE_INTERVAL:-600}
 FEEDBACK_INTERVAL=${FEEDBACK_INTERVAL:-300}
 
@@ -28,4 +78,3 @@ seen_file="$state_dir/seen-issues"
 forwarded_file="$state_dir/forwarded-comments"
 mkdir -p "$state_dir"
 touch "$seen_file" "$forwarded_file"
-scripts_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

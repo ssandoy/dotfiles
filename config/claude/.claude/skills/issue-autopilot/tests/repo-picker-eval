@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Usage: tests/repo-picker-eval <config> <cases.tsv>
+# Manual check of Jev routing against tickets whose repos you already know.
+# cases.tsv: "<KEY><TAB><repo>[,<repo>...]" per line (# comments allowed).
+# Calls Jira and Jev for real (well under $0.01 per ticket). Prints expected vs
+# chosen repos, the notify text when nothing was chosen, and every repo Jev
+# gave at least 10%.
+set -euo pipefail
+scripts=$(cd "$(dirname "$0")/../scripts" && pwd)
+config=${1:?config required} cases=${2:?cases file required}
+routes_log="${XDG_CACHE_HOME:-$HOME/.cache}/issue-autopilot/jira/routes.log"
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+hits=0 total=0
+while IFS=$'\t' read -r key expected; do
+    [[ -n "$key" && "$key" != \#* ]] || continue
+    "$scripts/jira-tickets" "$config" "$key" >"$tmp"
+    route=$("$scripts/repo-picker" "$config" "$tmp")
+    chosen=$(jq -r '[.spawn[].repo] | sort | join(",")' <<<"$route")
+    want=$(tr ',' '\n' <<<"$expected" | sort | paste -sd, -)
+    total=$((total + 1))
+    if [[ "$chosen" == "$want" ]]; then hits=$((hits + 1)) mark=ok; else mark=MISS; fi
+    printf '%-4s %-10s want=%s got=%s %s\n' "$mark" "$key" "$want" "${chosen:-none}" "$(jq -r '.notify // ""' <<<"$route")"
+    grep -F $'\t'"$key"$'\tlocal\t' "$routes_log" | tail -1 | cut -f4 |
+        jq -r '.[] | select(.p >= 0.1) | "       \(.repo) \(.p * 100 | round)%"'
+done <"$cases"
+echo "$hits/$total exact matches"

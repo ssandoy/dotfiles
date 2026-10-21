@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Usage: jira-spawn <config> <KEY> <repo> [other-repo...]
+# Starts an agent for Jira ticket KEY in CLONES_DIR/<repo>: worktree
+# .worktrees/<KEY>-<slug> on branch <KEY>-<slug> from origin's default branch.
+# other-repos are the ticket's other routed repos, named in the prompt.
+# Records "KEY<TAB>repo<TAB>worktree<TAB>branch" in worktrees.tsv.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+key=${2:?ticket key required} repo=${3:?repo required}
+shift 3
+# Clone folder of a repo: from the index (folder names can differ from the
+# GitHub name), else CLONES_DIR/<repo>.
+clone_dir() {
+    local dir
+    dir=$(jq -r --arg r "$1" '.[$r].path // empty' "$state_dir/repos-local.json" 2>/dev/null || true)
+    echo "${dir:-$CLONES_DIR/$1}"
+}
+root=$(clone_dir "$repo")
+[[ -d "$root/.git" ]] || { echo "$repo: no clone at $root" >&2; exit 1; }
+# One worktree per ticket and repo, even if the summary (and so the slug) changed.
+existing=$(compgen -G "$root/.worktrees/$key-*" || compgen -G "$root/.worktrees/$key" || true)
+[[ -z "$existing" ]] || { echo "$key already has a worktree in $repo: ${existing%%$'\n'*}" >&2; exit 1; }
+
+ticket=$(acli jira workitem view "$key" --fields summary,description,comment --json)
+summary=$(jq -r .fields.summary <<<"$ticket")
+# The ticket goes into the prompt, so the agent never needs Jira access.
+details=$(jq -r "$jq_adf"'
+    "Summary: \(.fields.summary)\n\nDescription:\n"
+    + (.fields.description | adf_text | sub("\\s+$"; "") | if . == "" then "(none)" else . end)
+    + ([.fields.comment.comments[]? | "- \(.author.displayName // "?") (\((.created // "")[:10])): \(.body | adf_text | sub("\\s+$"; "") | gsub("\n"; " "))"]
+        | if length > 0 then "\n\nComments:\n" + join("\n") else "" end)' <<<"$ticket")
+# iconv exits non-zero on some chars (å) even when transliterating — don't let pipefail kill us
+slug=$(printf '%s' "$summary" | { iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null || true; } |
+    tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' | cut -c1-40 | sed 's/-$//')
+branch="$key${slug:+-$slug}"
+short=$(awk '{for(i=1;i<=NF&&i<=4;i++) printf "%s%s", (i>1?" ":""), $i}' <<<"$summary" | cut -c1-28)
+path="$root/.worktrees/$branch"
+base=$(git -C "$root" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null ||
+    { git -C "$root" remote set-head origin --auto >/dev/null 2>&1 &&
+        git -C "$root" symbolic-ref --short refs/remotes/origin/HEAD; }) ||
+    { echo "$repo: can't tell origin's default branch" >&2; exit 1; }
+base=${base#origin/}
+
+others=""
+for o in "$@"; do others+="- $o: $(clone_dir "$o")/.worktrees/$branch"$'\n'; done
+link=${ATLASSIAN_SITE:+https://$ATLASSIAN_SITE/browse/$key}
+wrap=""
+[[ -n "$COMMIT_WRAPPER" ]] && wrap=" Wrap git commit/push in \`$COMMIT_WRAPPER\`."
+case "$AUTONOMY" in
+plan) finish="4. Write the plan here and STOP. Wait for the user's go-ahead before implementing." ;;
+implement) finish="4. STOP after verifying. Summarise the change; the user reviews in the Diff tab and decides on commit/PR." ;;
+*) finish="4. Commit with a short Conventional Commit message that mentions $key, e.g. \"fix(scope): summary ($key)\". Brief or no body. No Co-Authored-By trailer.$wrap
+5. Push and open a DRAFT PR (\`gh pr create --draft\`) titled \"$key: <summary>\". Keep the body concise (a few bullets at most). It must link the ticket${link:+ ($link)} and end with:
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+6. Stop once the draft PR is open. Colleagues review it; review feedback won't be forwarded to this session." ;;
+esac
+
+prompt=$(mktemp)
+trap 'rm -f "$prompt"' EXIT
+cat >"$prompt" <<P
+Jira ticket $key for $repo. Work in this worktree only: $path (branch $branch).
+
+$details
+
+The ticket and all its comments are above; don't fetch it from Jira. Setup is done: the ticket is assigned and In Progress, and this branch is yours. Don't use the jira-ticket skill, jira-* helpers or acli, don't switch branches, and edit files only under $path.
+${others:+
+Other repos got their own agent for this ticket:
+${others}Change only this repo, and state any cross-repo contract you rely on (API, event, schema) in your summary.
+}
+1. Find the relevant code, plan briefly, implement in the repo's style.
+2. Verify with the relevant lint, typecheck and tests.
+3. If this is the wrong repo or the ticket is too unclear, say so and stop.
+$finish
+${EXTRA_RULES:+
+Repo-specific rules:
+$EXTRA_RULES}
+P
+
+# The ticket is in the prompt and the autopilot owns the Jira side, so Jira is
+# off limits: its site, acli and the jira-ticket skill (matched by full path).
+# Config AGENT_ARGS (e.g. --autopilot --allow-all-tools) come after; denies win.
+agent_args="${ATLASSIAN_SITE:+--deny-url $ATLASSIAN_SITE }--deny-tool 'shell(acli)' --deny-tool 'shell($HOME/.claude/skills/jira-ticket/scripts/jira-ticket)'${AGENT_ARGS:+ $AGENT_ARGS}"
+out=$(AGENT=$AGENT AGENT_ARGS=$agent_args PERMISSION_MODE=$PERMISSION_MODE "$scripts_dir/autopilot-worktree" "$root" "$base" "$branch" "$key $short" "$prompt")
+read -r ws pane _ <<<"$out"
+printf '%s\t%s\t%s\t%s\n' "$key" "$repo" "$path" "$branch" >>"$worktrees_file"
+echo "spawned $key in $repo -> $branch (workspace $ws, pane $pane)"

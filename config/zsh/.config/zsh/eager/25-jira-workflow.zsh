@@ -378,6 +378,8 @@ _jira_canonical_status() {
   case "$1" in
     [Tt]riage) print -r -- "Triage" ;;
     [Bb]acklog) print -r -- "Backlog" ;;
+    [Nn]ew) print -r -- "Triage" ;;
+    [Tt]o\ [Dd]o) print -r -- "Backlog" ;;
     [Ii]n\ [Pp]rogress) print -r -- "In Progress" ;;
     [Ii]n\ SIT|[Ii]n\ Sit|[Ii]n\ sit) print -r -- "In SIT" ;;
     [Pp]eer\ [Rr]eview) print -r -- "Peer Review" ;;

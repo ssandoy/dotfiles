@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Usage: repo-index <config>
+# Refreshes what Jev knows about candidate repos:
+# - repos-org.json: {"<repo>": "<GitHub description>"} for every non-archived
+#   repo in GITHUB_ORG; refetched when older than 7 days.
+# - repos-local.json: {"<repo>": {path, description, readme, folders}} for each
+#   clone in CLONES_DIR whose origin is on GITHUB_ORG. README text and folders
+#   are cached in repos-local-raw.json and only re-read when the README is
+#   newer than that cache. Short READMEs (monorepos) get the READMEs one or two
+#   folders down appended. A summary from repo-summarize replaces the
+#   README text; a "<repo><TAB><text>" line in jira-repos.tsv replaces the
+#   description and blanks the README text.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+org_index="$state_dir/repos-org.json"
+raw="$state_dir/repos-local-raw.json"
+index="$state_dir/repos-local.json"
+
+if [[ ! -s "$org_index" || -n "$(find "$org_index" -mtime +6 2>/dev/null)" ]]; then
+    gh repo list "$GITHUB_ORG" --no-archived --limit 1000 --json name,description |
+        jq 'map({(.name): (.description // "")}) | add // {}' >"$org_index.tmp"
+    mv "$org_index.tmp" "$org_index"
+fi
+[[ -s "$raw" ]] || echo '{}' >"$raw"
+
+# entry <dir> <readme-file-or-empty>: {path, readme, folders}
+entry() {
+    local dir=$1 readme=$2 text="" f folders
+    [[ -z "$readme" ]] || text=$(readme_text "$readme" 2000)
+    if ((${#text} < 200)); then
+        while IFS= read -r f; do
+            [[ -n "$f" ]] || continue
+            text+=$'\n\n## '"${f#"$dir"/}"$'\n'"$(readme_text "$f" 300)"
+        done <<<"$(find "$dir" -mindepth 2 -maxdepth 3 -iname 'readme*' -not -path '*/node_modules/*' \
+            -not -path '*/.worktrees/*' -not -path '*/.git/*' | sort | head -8)"
+    fi
+    folders=$(find "$dir" -mindepth 1 -maxdepth 1 -type d -not -name '.*' \
+        -not -name node_modules -not -name dist -not -name build -not -name coverage -not -name target \
+        -exec basename {} \; | sort | paste -sd, -)
+    jq -n --arg path "$dir" --arg readme "$text" --arg folders "$folders" \
+        '{path: $path, readme: $readme, folders: $folders}'
+}
+
+shopt -s nocasematch
+new='{}'
+for dir in "$CLONES_DIR"/*/; do
+    dir=${dir%/}
+    [[ -d "$dir/.git" ]] || continue  # skip linked worktrees (.git is a file)
+    url=$(git -C "$dir" remote get-url origin 2>/dev/null) || continue
+    [[ "$url" =~ [:/]${GITHUB_ORG}/([^/]+)$ ]] || continue
+    name=${BASH_REMATCH[1]%.git}
+    readme=$(compgen -G "$dir/[Rr][Ee][Aa][Dd][Mm][Ee]*" | head -1 || true)
+    old=$(jq -c --arg n "$name" '.[$n] // empty' "$raw")
+    if [[ -n "$old" && ( -z "$readme" || ! "$readme" -nt "$raw" ) ]]; then
+        e=$old
+    else
+        e=$(entry "$dir" "$readme")
+    fi
+    new=$(jq -c --arg n "$name" --argjson e "$e" '. + {($n): $e}' <<<"$new")
+done
+shopt -u nocasematch
+printf '%s\n' "$new" >"$raw"
+
+overrides='{}'
+[[ ! -r "$overrides_file" ]] || overrides=$(jq -Rn '
+    [inputs | select(test("^[^#].*\t")) | split("\t") | {(.[0]): (.[1:] | join("\t"))}] | add // {}' "$overrides_file")
+summaries='{}'
+for f in "$summaries_dir"/*.md; do
+    [[ -f "$f" ]] || continue
+    summaries=$(jq -c --arg n "$(basename "$f" .md)" --rawfile t "$f" '. + {($n): ($t | sub("\\s+$"; ""))}' <<<"$summaries")
+done
+jq --slurpfile org "$org_index" --argjson ov "$overrides" --argjson sum "$summaries" '
+    with_entries(
+        .value.description = ($org[0][.key] // "")
+        | if $sum[.key] then .value.readme = $sum[.key] else . end
+        | if $ov[.key] then .value.description = $ov[.key] | .value.readme = "" else . end)' \
+    "$raw" >"$index.tmp"
+mv "$index.tmp" "$index"

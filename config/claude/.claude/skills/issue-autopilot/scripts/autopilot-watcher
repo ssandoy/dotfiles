@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Usage: autopilot-watcher <config> [pane-id]
-# Long-running loop (meant for a herdr pane): checks issues every
-# ISSUE_INTERVAL, and PR feedback plus merged/closed-PR cleanup every
-# FEEDBACK_INTERVAL seconds. Reports a status badge on the pane and a herdr
-# notification when it acts.
+# Long-running loop (meant for a herdr pane). GitHub configs: checks issues
+# every ISSUE_INTERVAL, and PR feedback plus merged/closed-PR cleanup every
+# FEEDBACK_INTERVAL seconds. Jira configs (SOURCE=jira): runs jira-tick every
+# JIRA_INTERVAL. Reports a status badge on the pane and a herdr notification
+# when it acts.
 set -uo pipefail
 source "$(dirname "$0")/autopilot-lib" "$1"
 pane=${2:-${HERDR_PANE_ID:-}}
@@ -18,6 +19,21 @@ badge() {
 # Keep the Mac from idle-sleeping for as long as this watcher lives
 # (lid-close still sleeps). caffeinate exits by itself when we do.
 command -v caffeinate >/dev/null && caffeinate -i -w $$ &
+
+if [[ "$SOURCE" == jira ]]; then
+    echo "issue-autopilot watching Jira every ${JIRA_INTERVAL}s: $JQL"
+    # USR1 (prefix+shift+j, herdr-jira poll) ends the nap so the next poll runs now.
+    nap=""
+    trap 'kill "$nap" 2>/dev/null' USR1
+    while true; do
+        out=$("$scripts_dir/jira-tick" "$1" 2>&1)
+        [[ -n "$out" ]] && { echo "[$(date +%H:%M)] $out"; notify "$out"; }
+        badge "$(grep -c . "$worktrees_file") jira agents"
+        sleep "$JIRA_INTERVAL" &
+        nap=$!
+        wait "$nap" || true
+    done
+fi
 
 last_issue=0
 echo "issue-autopilot watching $REPO (issues every ${ISSUE_INTERVAL}s, feedback every ${FEEDBACK_INTERVAL}s)"

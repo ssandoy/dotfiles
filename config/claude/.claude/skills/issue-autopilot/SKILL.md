@@ -52,3 +52,16 @@ Must be run from inside herdr (`HERDR_ENV=1`).
 ## Agent conventions (baked into the spawn prompt)
 
 Short Conventional Commits referencing the issue (`(#n)`), concise draft PR with `Closes #n`, no Co-Authored-By, ask instead of guessing on ambiguous issues, stay in session for forwarded feedback, prefix GitHub replies with 🤖.
+
+## Jira
+
+A second source for Jira tickets assigned to the user, across all their clones (in `CLONES_DIR`, default `~/git`) of the GitHub org `GITHUB_ORG` (required in the config). One watcher, started with `autopilot jira` (zsh) from inside herdr or with `prefix+alt+j` (herdr-jira: a dedicated "Jira" workspace, relaunched after herdr restarts; `prefix+shift+j` makes it poll now); config `~/.config/issue-autopilot/jira.env` (`SOURCE=jira`, `GITHUB_ORG=…`; created on first use with an empty `GITHUB_ORG` to fill in; optional `DOMAIN_TERMS` gives `repo-summarize` example terms).
+
+- `jira-tick` polls `JQL` (default: assigned to me, status New/Backlog/To Do) every `JIRA_INTERVAL`. The first run only marks current tickets as seen.
+- `repo-picker` asks TypeSafe Jev (`TYPESAFE_API_KEY` in `~/.config/typesafe/env.local`) one yes/no question per repo in `CLONES_DIR` with origin on `GITHUB_ORG`, described by README, GitHub description and folders (`repo-index`); the ticket side includes its Jira components (one `workitem view` per ticket, since search cannot return them). Every repo with probability ≥ `REPO_THRESHOLD` (max `MAX_REPOS`) gets an agent via `jira-spawn`. If none qualifies, uncloned org repos are ranked and the result is only a notification: nothing is cloned.
+- `AGENT=copilot` in the config starts interactive Copilot (`copilot -i`) instead of Claude; `AUTONOMY=implement` stops before any commit, push or PR.
+- After the first agent starts, the ticket is moved to In Progress with the zsh helper `jira-in-progress`.
+- No PR feedback forwarding or cleanup: colleagues review, and the agent stops once its draft PR is open.
+- Fix a badly described repo with a line `repo<TAB>description` in `~/.config/issue-autopilot/jira-repos.tsv`.
+- State: `~/.cache/issue-autopilot/jira/` (`seen-tickets`, `worktrees.tsv`, `routes.log` with every probability, repo caches). Retry a ticket by removing it from `seen-tickets`, or run `autopilot jira spawn <KEY> [repo]`.
+- Tests: `tests/run` (stubs only, no network). `tests/repo-picker-eval` checks routing against real tickets.

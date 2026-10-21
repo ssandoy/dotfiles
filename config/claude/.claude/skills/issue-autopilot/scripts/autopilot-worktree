@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Usage: autopilot-worktree <root> <base> <branch> <label> <prompt-file>
+# Creates <root>/.worktrees/<branch> from origin/<base> as a herdr workspace
+# (no focus steal, Agents/Diff/Run tabs), copies the prompt to .issue-prompt.md
+# there (git-excluded) and starts the agent with it: AGENT=claude (default,
+# with PERMISSION_MODE, default auto) or AGENT=copilot (interactive Copilot,
+# plus any AGENT_ARGS).
+# Prints "<workspace-id> <pane-id> <path>".
+set -euo pipefail
+root=${1:?root required} base=${2:?base branch required} branch=${3:?branch required}
+label=${4:?label required} prompt_src=${5:?prompt file required}
+path="$root/.worktrees/$branch"
+[[ ! -e "$path" ]] || { echo "worktree $path already exists" >&2; exit 1; }
+# Forget worktrees whose folder was deleted by hand, or git refuses the path.
+git -C "$root" worktree prune
+
+git -C "$root" fetch -q origin "$base" || true
+created=$(herdr worktree create --cwd "$root" --branch "$branch" --base "origin/$base" \
+    --path "$path" --label "$label" --no-focus)
+ws=$(jq -r '.result.workspace.workspace_id' <<<"$created")
+tab=$(jq -r '.result.tab.tab_id' <<<"$created")
+pane=$(jq -r '.result.root_pane.pane_id // empty' <<<"$created")
+[[ -n "$pane" ]] || pane=$(herdr pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')
+herdr tab rename "$tab" "Agents" >/dev/null
+
+diff_pane=$(herdr tab create --workspace "$ws" --cwd "$path" --label Diff --no-focus | jq -r '.result.root_pane.pane_id')
+command -v hunk >/dev/null && herdr pane run "$diff_pane" hunk diff --theme catppuccin-mocha --watch >/dev/null
+herdr tab create --workspace "$ws" --cwd "$path" --label Run --no-focus >/dev/null
+
+prompt="$path/.issue-prompt.md"
+cp "$prompt_src" "$prompt"
+echo ".issue-prompt.md" >>"$(git -C "$path" rev-parse --path-format=absolute --git-path info/exclude)" 2>/dev/null || true
+
+case "${AGENT:-claude}" in
+# The model sometimes rebuilds paths without .worktrees/<branch>, landing in the
+# main checkout; let it read there instead of prompting (edits still ask).
+copilot) agent_cmd="copilot --add-dir $root${AGENT_ARGS:+ $AGENT_ARGS} -i" ;;
+*) agent_cmd="claude --permission-mode ${PERMISSION_MODE:-auto}" ;;
+esac
+herdr pane run "$pane" "$agent_cmd \"\$(cat $prompt)\"" >/dev/null
+echo "$ws $pane $path"

@@ -111,6 +111,19 @@ key = "prefix+alt+g"
 type = "pane"
 command = "$HOME/.config/herdr/herdr-github"
 
+# Jumps to the dedicated "Jira" workspace running the issue-autopilot Jira
+# watcher (agents for tickets assigned to me, across repos).
+[[keys.command]]
+key = "prefix+alt+j"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-jira"
+
+# Makes the Jira watcher poll now (e.g. right after assigning myself a ticket).
+[[keys.command]]
+key = "prefix+shift+j"
+type = "pane"
+command = "$HOME/.config/herdr/herdr-jira poll"
+
 # gh-dash has no local/incremental filter over already-fetched PRs (its `/`
 # always re-queries GitHub). ghprs fetches once and hands rows to fzf for
 # real type-ahead filtering, so it's kept as gh-dash's search companion.

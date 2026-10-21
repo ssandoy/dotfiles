@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Usage: repo-picker <config> <ticket-json-file>
+# Asks Jev which repos a ticket needs changes in: one Noul per repo, all in one
+# request. Prints {"spawn": [{repo, p, path}...], "notify": null | "<message>"}.
+# spawn holds local clones with p >= REPO_THRESHOLD (at most MAX_REPOS, best
+# first). If none qualifies, the other GITHUB_ORG repos are ranked by name and
+# description, the top 5 re-ranked with their READMEs, and notify names the
+# best uncloned repo or the best guesses; nothing is cloned. Every ranking is
+# logged to routes.log. Exits non-zero without output if Jev or GitHub fails.
+set -euo pipefail
+source "$(dirname "$0")/autopilot-lib" "$1"
+ticket=${2:?ticket json file required}
+: "${TYPESAFE_API_KEY:?TYPESAFE_API_KEY missing; put it in ~/.config/typesafe/env.local}"
+"$scripts_dir/repo-index" "$1"
+key=$(jq -r .key "$ticket")
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+# jev <repos-json-file>: [{repo, p}] best first, p = Jev's probability that the
+# ticket needs changes in that repo.
+jev() {
+    if [[ "$(jq length "$1")" == 0 ]]; then
+        echo '[]'
+        return
+    fi
+    jq -n --slurpfile t "$ticket" --slurpfile r "$1" --arg model "$TYPESAFE_MODEL" '{
+        model: $model,
+        state: {ticket: $t[0], repos: $r[0]},
+        questions: ($r[0] | keys | map({(.): {
+            type: "noul",
+            instructions: "Does implementing the Jira ticket in `ticket` require code changes in the repository named \"\(.)\", described in `repos` under that name?",
+            criteria: {
+                "true": "The ticket needs changes in this repository.",
+                "false": "The ticket needs no changes in this repository."
+            }
+        }}) | add)
+    }' >"$tmp/request.json"
+    if ! curl -sS --fail-with-body --max-time 120 "https://api.typesafe.ai/v1/systemone" \
+        -H "Authorization: Bearer $TYPESAFE_API_KEY" -H 'Content-Type: application/json' \
+        --data-binary @"$tmp/request.json" -o "$tmp/response.json"; then
+        echo "Jev rejected the request: $(head -c 500 "$tmp/response.json" 2>/dev/null)" >&2
+        return 1
+    fi
+    jq -c '[.answers | to_entries[] | {repo: .key, p: .value.noul}] | sort_by(-.p)' "$tmp/response.json"
+}
+log() { printf '%s\t%s\t%s\t%s\n' "$(date -u +%FT%TZ)" "$key" "$1" "$2" >>"$state_dir/routes.log"; }
+
+local_index="$state_dir/repos-local.json"
+jq 'map_values(del(.path))' "$local_index" >"$tmp/local.json"
+local_ranked=$(jev "$tmp/local.json")
+log local "$local_ranked"
+spawn=$(jq -c --argjson th "$REPO_THRESHOLD" --argjson max "$MAX_REPOS" --slurpfile idx "$local_index" \
+    '[.[] | select(.p >= $th)][:$max] | map(. + {path: $idx[0][.repo].path})' <<<"$local_ranked")
+if [[ "$spawn" != "[]" ]]; then
+    jq -n --argjson s "$spawn" '{spawn: $s, notify: null}'
+    exit 0
+fi
+
+# Stage 2: uncloned org repos. Names + descriptions first, READMEs for the top 5.
+# The first request carries one question per org repo (~340), so it is near
+# Jev's request size limit: longer question or criteria texts get it rejected.
+jq --slurpfile l "$tmp/local.json" 'with_entries(select(.key as $k | $l[0] | has($k) | not))' \
+    "$state_dir/repos-org.json" >"$tmp/org.json"
+jq 'map_values({description: .})' "$tmp/org.json" >"$tmp/org-short.json"
+org_ranked=$(jev "$tmp/org-short.json")
+mkdir -p "$state_dir/readmes"
+detail='{}'
+for r in $(jq -r '.[:5][].repo' <<<"$org_ranked"); do
+    f="$state_dir/readmes/$r.md"
+    if [[ ! -s "$f" || -n "$(find "$f" -mtime +6)" ]]; then
+        gh api "repos/$GITHUB_ORG/$r/readme" -H 'Accept: application/vnd.github.raw' >"$f.tmp" 2>/dev/null || : >"$f.tmp"
+        mv "$f.tmp" "$f"
+    fi
+    detail=$(jq -c --arg r "$r" --arg d "$(jq -r --arg r "$r" '.[$r]' "$tmp/org.json")" \
+        --arg t "$(readme_text "$f" 2000)" '. + {($r): {description: $d, readme: $t}}' <<<"$detail")
+done
+printf '%s\n' "$detail" >"$tmp/detail.json"
+detail_ranked=$(jev "$tmp/detail.json")
+log org "$detail_ranked"
+
+best=$(jq -c '.[0] // empty' <<<"$detail_ranked")
+if [[ -n "$best" ]] && jq -e --argjson th "$REPO_THRESHOLD" '.p >= $th' <<<"$best" >/dev/null; then
+    r=$(jq -r .repo <<<"$best")
+    msg="$key → $GITHUB_ORG/$r ($(jq -r '.p * 100 | round' <<<"$best")%), not cloned: gh repo clone $GITHUB_ORG/$r $CLONES_DIR/$r"
+else
+    guesses=$(jq -rn --argjson a "$local_ranked" --argjson b "$detail_ranked" \
+        '$a + $b | sort_by(-.p) | .[:3] | map("\(.repo) \(.p * 100 | round)%") | join(", ")')
+    msg="No repo found for $key; best guesses: ${guesses:-none}"
+fi
+jq -n --arg m "$msg" '{spawn: [], notify: $m}'
