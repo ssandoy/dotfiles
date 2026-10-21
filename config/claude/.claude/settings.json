@@ -1,4 +1,7 @@
 {
+  "attribution": {
+    "commit": ""
+  },
   "permissions": {
     "allow": [
       "Bash(git push:*)"
@@ -26,6 +29,17 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
@@ -36,7 +50,8 @@
     "browser-flow-plugin@fyk-plugin-marketplace": true,
     "grafana-plugin@fyk-plugin-marketplace": true,
     "nrs8-accounting-plugin@fyk-plugin-marketplace": true,
-    "notion-plugin@fyk-plugin-marketplace": true
+    "notion-plugin@fyk-plugin-marketplace": true,
+    "typesafe@typesafe-ai": true
   },
   "extraKnownMarketplaces": {
     "fyk-plugin-marketplace": {
@@ -44,10 +59,13 @@
         "source": "git",
         "url": "git@github.com:Fyk-Konsulenter/fyk-plugin-marketplace.git"
       }
+    },
+    "typesafe-ai": {
+      "source": {
+        "source": "github",
+        "repo": "typesafe-ai/skills"
+      }
     }
-  },
-  "attribution": {
-    "commit": ""
   },
   "effortLevel": "xhigh",
   "tui": "fullscreen",
