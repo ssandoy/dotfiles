@@ -1,4 +1,4 @@
-model = "gpt-6-astra"
+model = "gpt-6-luna"
 model_reasoning_effort = "medium"
 personality = "pragmatic"
 notify = ["/Users/ssandoy/.local/bin/agent-notify", "Codex"]
@@ -37,6 +37,15 @@ trust_level = "trusted"
 [projects."/Users/ssandoy/git/wine-rater"]
 trust_level = "trusted"
 
+[projects."/home/sander.sandoy/git/enduser-empowerment-portal-backend-for-frontend"]
+trust_level = "trusted"
+
+[projects."/home/sander.sandoy/git/enduser-empowerment"]
+trust_level = "trusted"
+
+[projects."/home/sander.sandoy/git/auth"]
+trust_level = "trusted"
+
 [notice]
 hide_gpt5_1_migration_prompt = true
 "hide_gpt-5.1-codex-max_migration_prompt" = true
@@ -49,11 +58,13 @@ hide_gpt5_1_migration_prompt = true
 
 [tui]
 notifications = false
+screen_reader_detection_done = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 3
 "gpt-5.6-sol" = 1
-gpt-6-astra = 1
+gpt-6-astra = 4
+"gpt-6.1-sol" = 2
 
 [features]
 hooks = true
