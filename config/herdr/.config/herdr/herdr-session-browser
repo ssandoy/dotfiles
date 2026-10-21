@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # herdr port of tmux-session-browser: fzf-pick another workspace and focus it.
 # herdr's workspace API doesn't expose a last-focused timestamp (unlike tmux's
-# #{session_last_attached}), so this lists workspaces in whatever order
-# `herdr workspace list` returns them rather than most-recently-used first.
+# #{session_last_attached}), so instead of most-recently-used first this
+# sorts workspaces by agent attention: blocked, then done, then working, then
+# idle/unknown, keeping `herdr workspace list` order within each group.
 set -euo pipefail
 
 # Repeated presses of the keybinding used to spawn a fresh picker pane every
@@ -33,7 +34,15 @@ if [[ -n "$current_label" ]]; then
 fi
 border_label="${border_label} "
 
-rows=$(jq -r '.result.workspaces[] | select(.focused | not) | [.workspace_id, .label] | @tsv' <<<"$workspaces_json")
+rows=$(
+    jq -r '
+        {blocked: 0, done: 1, working: 2, idle: 3} as $rank |
+        {blocked: "!", done: "✓", working: "…", idle: " "} as $icon |
+        [.result.workspaces[] | select(.focused | not)] |
+        sort_by($rank[.agent_status] // 4)[] |
+        [.workspace_id, ($icon[.agent_status] // " ") + " " + .label] | @tsv
+    ' <<<"$workspaces_json"
+)
 
 if [[ -z "$rows" ]]; then
     exit 0
