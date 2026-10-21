@@ -73,6 +73,7 @@ packages=(
   vim
   vscode
   mise
+  npm
   nvim
   notifications
   ghostty
