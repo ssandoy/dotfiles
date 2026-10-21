@@ -5,7 +5,7 @@ set -euo pipefail
 current=$(herdr pane current --current)
 workspace_id=$(jq -r '.result.pane.workspace_id' <<<"$current")
 
-label="Agents"
+label="Agent"
 
 tab_id=$(
     herdr tab list --workspace "$workspace_id" |
