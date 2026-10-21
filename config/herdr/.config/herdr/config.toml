@@ -94,6 +94,16 @@ key = "prefix+t"
 type = "pane"
 command = "zsh -l"
 
+# Short, wide popup shell for quick one-off commands. TMUX_POPUP_SHELL makes
+# ctrl+w exit the shell (see zsh/eager/23-tmux-popup.zsh), closing the popup.
+[[keys.command]]
+key = "prefix+alt+t"
+type = "popup"
+command = "TMUX_POPUP_SHELL=1 zsh -l"
+description = "open short popup terminal"
+width = "90%"
+height = "30%"
+
 # Jumps to the dedicated "github" workspace running gh-dash (tabbed overview
 # + one-key actions across repos).
 [[keys.command]]
