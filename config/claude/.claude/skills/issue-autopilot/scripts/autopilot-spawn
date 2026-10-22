@@ -14,13 +14,25 @@ short=$(awk '{for(i=1;i<=NF&&i<=4;i++) printf "%s%s", (i>1?" ":""), $i}' <<<"$ti
 branch="issue-$n-$slug"
 path="$ROOT/.worktrees/$branch"
 
+# Reviewer: "author" resolves to the issue creator; skip self (GitHub refuses) and bots.
+reviewer=$REVIEWER
+if [[ "$reviewer" == author ]]; then
+    reviewer=$(gh issue view "$n" -R "$REPO" --json author -q .author.login)
+    [[ "$reviewer" == "$(gh api user -q .login)" || "$reviewer" == app/* || "$reviewer" == *"[bot]" ]] && reviewer=""
+fi
+pr_flags=""
+[[ "$PR_DRAFT" == 1 ]] && pr_flags=" --draft"
+[[ -n "$reviewer" ]] && pr_flags+=" --reviewer $reviewer"
+pr_kind="a DRAFT PR"
+[[ "$PR_DRAFT" == 1 ]] || pr_kind="a PR ready for review"
+
 wrap=""
 [[ -n "$COMMIT_WRAPPER" ]] && wrap=" Wrap git commit/push in \`$COMMIT_WRAPPER\`."
 case "$AUTONOMY" in
 plan) finish="4. Write the plan here and STOP. Wait for the user's go-ahead before implementing." ;;
 implement) finish="4. STOP after verifying. Summarise the change; the user reviews in the Diff tab and decides on commit/PR." ;;
 *) finish="4. Commit with a short Conventional Commit message referencing the issue, e.g. \"fix(scope): summary (#$n)\". Brief or no body. No Co-Authored-By trailer.$wrap
-5. Push and open a DRAFT PR (\`gh pr create --draft\`). Keep title and body concise (a few bullets at most). Body must include \"Closes #$n\" and end with:
+5. Push and open $pr_kind (\`gh pr create$pr_flags\`). Keep title and body concise (a few bullets at most). Body must include \"Closes #$n\" and end with:
    🤖 Generated with [Claude Code](https://claude.com/claude-code)
 6. Stay in this session after the PR is open: PR review feedback is forwarded here automatically. Address it, verify, commit + push to the same branch. If you reply on GitHub, start the reply with 🤖." ;;
 esac

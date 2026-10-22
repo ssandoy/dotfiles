@@ -1,6 +1,6 @@
 ---
 name: issue-autopilot
-description: Sets up an autopilot that watches a GitHub repo's open issues, spawns a herdr worktree workspace with a Claude agent per issue that implements it and opens a draft PR, and forwards PR review comments back to that agent. Use when the user wants issues auto-fixed/auto-implemented, wants to "watch issues and start worktrees", or wants to start, stop or tweak the issue autopilot for a repo.
+description: Sets up an autopilot that watches a GitHub repo's open issues, spawns a herdr worktree workspace with a Claude agent per issue that implements it and opens a PR (draft by default), and forwards PR review comments back to that agent. Use when the user wants issues auto-fixed/auto-implemented, wants to "watch issues and start worktrees", or wants to start, stop or tweak the issue autopilot for a repo.
 ---
 
 # Issue autopilot
@@ -21,6 +21,7 @@ Must be run from inside herdr (`HERDR_ENV=1`).
 1. Determine repo (`gh repo view --json nameWithOwner`) and root (`git rev-parse --show-toplevel`).
 2. If `~/.config/issue-autopilot/<owner>-<repo>.env` doesn't exist, ask the user (AskUserQuestion, one round):
    - Autonomy: `draft-pr` (default) / `implement` (stop for review) / `plan` (plan, then wait)
+   - PRs: draft (default) or ready for review, and whether to request review from the issue creator
    - Which currently open issues to start now (the rest get written to `seen-issues`)
    - Anything to ignore besides Dependency Dashboard
    Pull repo-specific agent rules (commit wrappers, migration policy, etc.) from memory/CLAUDE.md into `COMMIT_WRAPPER` / `EXTRA_RULES` rather than asking.
@@ -31,6 +32,8 @@ Must be run from inside herdr (`HERDR_ENV=1`).
    AUTONOMY=draft-pr
    PERMISSION_MODE=auto
    BASE=main
+   PR_DRAFT=1                 # 0 = open PRs ready for review
+   REVIEWER=''                # author = issue creator (skipped if it's you or a bot), or a GitHub login
    IGNORE_TITLE_REGEX='^Dependency Dashboard$'
    ISSUE_LABEL=autopilot      # only issues with this label get an agent; empty = all
    COMMIT_WRAPPER=''          # e.g. 'mise exec pnpm@12.6.0 --'
@@ -51,7 +54,7 @@ Must be run from inside herdr (`HERDR_ENV=1`).
 
 ## Agent conventions (baked into the spawn prompt)
 
-Short Conventional Commits referencing the issue (`(#n)`), concise draft PR with `Closes #n`, no Co-Authored-By, ask instead of guessing on ambiguous issues, stay in session for forwarded feedback, prefix GitHub replies with 🤖.
+Short Conventional Commits referencing the issue (`(#n)`), concise PR (draft unless `PR_DRAFT=0`, with `--reviewer` when `REVIEWER` is set) with `Closes #n`, no Co-Authored-By, ask instead of guessing on ambiguous issues, stay in session for forwarded feedback, prefix GitHub replies with 🤖.
 
 ## Jira
 

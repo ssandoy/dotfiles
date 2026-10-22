@@ -70,6 +70,8 @@ fi
 IGNORE_TITLE_REGEX=${IGNORE_TITLE_REGEX:-^Dependency Dashboard$}
 ISSUE_LABEL=${ISSUE_LABEL-autopilot}       # only spawn for issues with this label; empty = all
 BASE=${BASE:-main}
+PR_DRAFT=${PR_DRAFT:-1}                   # 1 = open draft PRs, 0 = ready for review
+REVIEWER=${REVIEWER:-}                    # author = issue creator, or a GitHub login; empty = none
 ISSUE_INTERVAL=${ISSUE_INTERVAL:-600}
 FEEDBACK_INTERVAL=${FEEDBACK_INTERVAL:-300}
 
